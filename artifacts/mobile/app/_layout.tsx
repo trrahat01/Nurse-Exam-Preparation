@@ -1,78 +1,59 @@
 import React, { useEffect } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  useFonts,
-} from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { ExamProvider } from '@/contexts/ExamContext';
+import { useAuthStore } from '@/src/store/authStore';
 
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, staleTime: 1000 * 60 * 5 },
+    queries: { retry: 1, staleTime: 1000 * 60 * 5, refetchOnWindowFocus: false },
   },
 });
 
-function RootLayoutNav() {
-  return (
-    <Stack screenOptions={{ headerBackTitle: 'Back', headerTintColor: '#0891B2' }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="auth/login" options={{ title: 'Sign In', headerShown: false }} />
-      <Stack.Screen name="auth/register" options={{ title: 'Create Account', headerShown: false }} />
-      <Stack.Screen name="auth/forgot-password" options={{ title: 'Reset Password' }} />
-      <Stack.Screen name="category/[id]" options={{ title: 'Chapters' }} />
-      <Stack.Screen name="exam/index" options={{ headerShown: false }} />
-      <Stack.Screen name="exam/result" options={{ headerShown: false }} />
-      <Stack.Screen name="exam/review" options={{ title: 'Review Answers' }} />
-      <Stack.Screen name="daily" options={{ title: 'Daily Practice', headerShown: false }} />
-      <Stack.Screen name="bookmarks" options={{ title: 'Bookmarks' }} />
-      <Stack.Screen name="search" options={{ title: 'Search Questions', headerShown: false }} />
-    </Stack>
-  );
-}
-
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-  });
+  const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
+  const initialize = useAuthStore(s => s.initialize);
+  const isLoading = useAuthStore(s => s.isLoading);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
+    initialize();
+  }, []);
 
-  if (!fontsLoaded && !fontError) return null;
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded || isLoading) return null;
 
   return (
-    <SafeAreaProvider>
-      <ErrorBoundary>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <ExamProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <KeyboardProvider>
-                  <RootLayoutNav />
-                </KeyboardProvider>
-              </GestureHandlerRootView>
-            </ExamProvider>
-          </AuthProvider>
+          <StatusBar style="auto" />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="auth/login" />
+            <Stack.Screen name="auth/register" />
+            <Stack.Screen name="auth/forgot-password" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="exam/index" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="exam/result" options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="exam/review" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="category/[id]" />
+            <Stack.Screen name="daily" />
+            <Stack.Screen name="search" />
+            <Stack.Screen name="bookmarks" />
+            <Stack.Screen name="settings" />
+            <Stack.Screen name="analytics" />
+          </Stack>
         </QueryClientProvider>
-      </ErrorBoundary>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

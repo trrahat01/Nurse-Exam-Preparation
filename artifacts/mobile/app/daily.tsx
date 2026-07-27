@@ -1,103 +1,71 @@
-import React from 'react';
-import {
-  ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState } from 'react';
+import { View, Text, Pressable, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useColors } from '@/hooks/useColors';
-import { useExam } from '@/contexts/ExamContext';
-import { useDailyQuestions } from '@/lib/queries';
-
-const MODES = [
-  { count: 20, label: '20 Questions', time: '20 Minutes', icon: 'lightning-bolt', color: '#059669', bg: '#D1FAE5', type: 'daily_20' as const },
-  { count: 50, label: '50 Questions', time: '50 Minutes', icon: 'fire', color: '#D97706', bg: '#FEF3C7', type: 'daily_50' as const },
-  { count: 100, label: '100 Questions', time: '100 Minutes', icon: 'trophy', color: '#7C3AED', bg: '#EDE9FE', type: 'daily_100' as const },
-];
+import { useExamStore } from '@/src/store/examStore';
+import { fetchDailyQuestions } from '@/src/lib/queries';
 
 export default function DailyScreen() {
-  const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { startExam } = useExam();
-  const { refetch, isFetching } = useDailyQuestions(100);
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const { startExam } = useExamStore();
+  const [loading, setLoading] = useState<20 | 50 | 100 | null>(null);
 
-  const handleStart = async (count: number, type: typeof MODES[0]['type']) => {
-    const { data } = await refetch();
-    const qs = data?.slice(0, count) ?? [];
-    if (qs.length === 0) {
-      Alert.alert('No Questions', 'No questions available. Please import questions first.');
-      return;
+  const startDaily = async (count: 20 | 50 | 100) => {
+    setLoading(count);
+    try {
+      const questions = await fetchDailyQuestions(count);
+      if (!questions.length) {
+        Alert.alert('No Questions', 'No questions found in the database yet.');
+        return;
+      }
+      const examType = count === 20 ? 'daily_20' : count === 50 ? 'daily_50' : 'daily_100';
+      startExam(questions.slice(0, count), examType, count * 60);
+      router.push('/exam');
+    } catch {
+      Alert.alert('Error', 'Failed to start daily practice.');
+    } finally {
+      setLoading(null);
     }
-    if (qs.length < count) {
-      Alert.alert('Limited Questions', `Only ${qs.length} questions available.`);
-    }
-    startExam(qs, type, count * 60);
-    router.push('/exam');
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={['#059669', '#0891B2']}
-        style={[styles.header, { paddingTop: topPad + 20 }]}
-      >
-        <MaterialCommunityIcons name="calendar-star" size={40} color="rgba(255,255,255,0.9)" />
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#0C1A2E" />
+        </Pressable>
         <Text style={styles.title}>Daily Practice</Text>
-        <Text style={styles.sub}>Choose your challenge for today</Text>
-      </LinearGradient>
-
+      </View>
       <View style={styles.content}>
-        {MODES.map(mode => (
-          <Pressable
-            key={mode.type}
-            style={[styles.modeCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => handleStart(mode.count, mode.type)}
-            disabled={isFetching}
-          >
-            <View style={[styles.modeIcon, { backgroundColor: mode.bg }]}>
-              <MaterialCommunityIcons name={mode.icon as any} size={28} color={mode.color} />
-            </View>
-            <View style={styles.modeInfo}>
-              <Text style={[styles.modeName, { color: colors.foreground }]}>{mode.label}</Text>
-              <Text style={[styles.modeTime, { color: colors.mutedForeground }]}>{mode.time} • Random topics</Text>
-            </View>
-            {isFetching ? (
-              <ActivityIndicator color={mode.color} size="small" />
-            ) : (
-              <View style={[styles.startChip, { backgroundColor: mode.bg }]}>
-                <Text style={[styles.startChipText, { color: mode.color }]}>Start</Text>
-                <MaterialCommunityIcons name="arrow-right" size={14} color={mode.color} />
-              </View>
-            )}
-          </Pressable>
-        ))}
-
-        <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <MaterialCommunityIcons name="information-outline" size={18} color={colors.primary} />
-          <Text style={[styles.infoText, { color: colors.mutedForeground }]}>
-            Questions are randomly selected from all categories. No timer penalty — practice at your own pace.
-          </Text>
-        </View>
+        <Pressable style={styles.card} onPress={() => startDaily(20)} disabled={loading !== null}>
+          {loading === 20 ? <ActivityIndicator color="#0891B2" /> : <MaterialCommunityIcons name="numeric-1-box-outline" size={32} color="#0891B2" />}
+          <View><Text style={styles.cardTitle}>Quick Practice</Text><Text style={styles.cardSub}>20 Random Questions</Text></View>
+        </Pressable>
+        <Pressable style={styles.card} onPress={() => startDaily(50)} disabled={loading !== null}>
+          {loading === 50 ? <ActivityIndicator color="#059669" /> : <MaterialCommunityIcons name="numeric-2-box-outline" size={32} color="#059669" />}
+          <View><Text style={styles.cardTitle}>Medium Practice</Text><Text style={styles.cardSub}>50 Random Questions</Text></View>
+        </Pressable>
+        <Pressable style={styles.card} onPress={() => startDaily(100)} disabled={loading !== null}>
+          {loading === 100 ? <ActivityIndicator color="#D97706" /> : <MaterialCommunityIcons name="numeric-3-box-outline" size={32} color="#D97706" />}
+          <View><Text style={styles.cardTitle}>Full Practice</Text><Text style={styles.cardSub}>100 Random Questions</Text></View>
+        </Pressable>
+        <Pressable style={styles.card} onPress={() => startDaily(20)} disabled={loading !== null}>
+          {loading ? <ActivityIndicator color="#7C3AED" /> : <MaterialCommunityIcons name="trophy-outline" size={32} color="#7C3AED" />}
+          <View><Text style={styles.cardTitle}>Daily Challenge</Text><Text style={styles.cardSub}>Complete today's challenge</Text></View>
+        </Pressable>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { alignItems: 'center', paddingBottom: 36, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, gap: 8 },
-  title: { color: '#fff', fontSize: 24, fontFamily: 'Inter_700Bold' },
-  sub: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontFamily: 'Inter_400Regular' },
-  content: { padding: 16, gap: 14, marginTop: 8 },
-  modeCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, borderWidth: 1, padding: 16, gap: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
-  modeIcon: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  modeInfo: { flex: 1, gap: 4 },
-  modeName: { fontSize: 16, fontFamily: 'Inter_700Bold' },
-  modeTime: { fontSize: 13, fontFamily: 'Inter_400Regular' },
-  startChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  startChipText: { fontSize: 13, fontFamily: 'Inter_700Bold' },
-  infoCard: { flexDirection: 'row', borderRadius: 14, borderWidth: 1, padding: 14, gap: 10, alignItems: 'flex-start' },
-  infoText: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 19 },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 20, gap: 12 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E2E8F0' },
+  title: { fontSize: 20, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
+  content: { padding: 16, gap: 12 },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', padding: 20, gap: 16 },
+  cardTitle: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: '#0C1A2E' },
+  cardSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2 },
 });

@@ -1,38 +1,52 @@
 {
   "expo": {
-    "name": "BPSC Nurse Exam Prep",
-    "slug": "mobile",
+    "name": "BPSC Nurse Prep",
+    "slug": "bpsc-nurse-prep",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "bpsc-nurse-prep",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash.png",
-      "resizeMode": "cover",
+      "resizeMode": "contain",
       "backgroundColor": "#0891B2"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.bpscnurse.prep"
     },
-    "android": {},
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0891B2"
+      },
+      "package": "com.bpscnurse.prep",
+      "permissions": [],
+      "softwareKeyboardLayoutMode": "pan"
+    },
     "web": {
+      "bundler": "metro",
+      "output": "single",
       "favicon": "./assets/images/icon.png"
     },
     "plugins": [
-      [
-        "expo-router",
-        {
-          "origin": "https://replit.com/"
-        }
-      ],
+      "expo-router",
       "expo-font",
-      "expo-web-browser"
+      "expo-notifications"
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
+      "typedRoutes": true
+    },
+    "extra": {
+      "supabaseUrl": "",
+      "supabaseAnonKey": "",
+      "router": {},
+      "eas": {
+        "projectId": "7ecc2a79-f15f-41d9-844e-76b57bf68b3a"
+      }
+    },
+    "owner": "trrahat"
   }
 }

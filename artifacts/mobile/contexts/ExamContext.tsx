@@ -13,6 +13,7 @@ interface ExamContextValue {
     markedForReview: string[];
     currentIndex: number;
     timeLeft: number;
+    timeLimit: number;
     isRunning: boolean;
   } | null;
   result: ExamResult | null;
@@ -61,6 +62,7 @@ export function ExamProvider({ children }: { children: React.ReactNode }) {
         markedForReview: [],
         currentIndex: 0,
         timeLeft: limit,
+        timeLimit: limit,
         isRunning: true,
       });
     },
@@ -121,7 +123,7 @@ export function ExamProvider({ children }: { children: React.ReactNode }) {
         return prev;
       }
 
-      const { questions, answers, timeLeft, timeLimit: _tl, examType } = prev;
+      const { questions, answers, timeLeft, examType } = prev;
       const timeLimit = EXAM_TIME[examType];
       const timeTaken = timeLimit - timeLeft;
 

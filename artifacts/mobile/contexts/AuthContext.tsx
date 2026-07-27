@@ -16,6 +16,13 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// Check if Supabase is configured
+const isSupabaseConfigured = () => {
+  const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+  return !!(url && key);
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -23,9 +30,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      // No Supabase configured - auto go to guest mode
+      setIsGuest(true);
+      setLoading(false);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setLoading(false);
+    }).catch(() => {
+      // If Supabase call fails, go to guest mode
+      setIsGuest(true);
       setLoading(false);
     });
 
@@ -42,12 +60,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (!isSupabaseConfigured()) {
+      throw new Error('Supabase not configured. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your .env file.');
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     setIsGuest(false);
   };
 
   const signUp = async (email: string, password: string, name: string) => {
+    if (!isSupabaseConfigured()) {
+      throw new Error('Supabase not configured. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your .env file.');
+    }
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -57,11 +81,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured()) {
+      await supabase.auth.signOut();
+    }
     setIsGuest(false);
   };
 
   const resetPassword = async (email: string) => {
+    if (!isSupabaseConfigured()) {
+      throw new Error('Supabase not configured.');
+    }
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) throw error;
   };
