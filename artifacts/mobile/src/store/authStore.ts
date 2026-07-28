@@ -24,41 +24,21 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   initialize: async () => {
     try {
-      // Check if guest mode was saved
-      const guest = await AsyncStorage.getItem('guest_mode');
-      if (guest === 'true') {
-        set({ isLoading: false, isGuest: true });
-        return;
-      }
-      
-      if (!isSupabaseConfigured()) { 
-        await AsyncStorage.setItem('guest_mode', 'true');
-        set({ isLoading: false, isGuest: true }); 
-        return; 
-      }
-      
-      // Try to restore session - catch auth errors gracefully
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          set({ user: session.user, isAuthenticated: true, isLoading: false });
-          return;
-        }
-      } catch (authErr: unknown) {
-        // Auth failed (invalid key, network, etc) - auto guest mode
-        console.warn('Auth init failed:', authErr instanceof Error ? authErr.message : String(authErr));
-      }
-      
-      // No session or auth failed - auto guest mode
+      // ALWAYS go to guest mode on app start - no repeated login
       await AsyncStorage.setItem('guest_mode', 'true');
       set({ isLoading: false, isGuest: true });
     } catch { 
-      await AsyncStorage.setItem('guest_mode', 'true');
       set({ isLoading: false, isGuest: true }); 
     }
   },
 
   signIn: async (email, password) => {
+    if (!isSupabaseConfigured()) {
+      // No Supabase? Just set guest anyway
+      await AsyncStorage.setItem('guest_mode', 'true');
+      set({ isGuest: true, isLoading: false });
+      return;
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     const { data: { user } } = await supabase.auth.getUser();
@@ -73,9 +53,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signOut: async () => {
-    if (isSupabaseConfigured()) await supabase.auth.signOut();
-    await AsyncStorage.setItem('guest_mode', 'false');
-    set({ user: null, isAuthenticated: false, isGuest: false });
+    try { if (isSupabaseConfigured()) await supabase.auth.signOut(); } catch {}
+    // After signout, auto-set guest mode so they don't see login again
+    await AsyncStorage.setItem('guest_mode', 'true');
+    set({ user: null, isAuthenticated: false, isGuest: true });
   },
 
   resetPassword: async (email) => {

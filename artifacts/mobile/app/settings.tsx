@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -34,21 +34,30 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Preferences</Text>
         <View style={styles.card}>
-          <Pressable style={styles.row}>
+          <Pressable style={styles.row} onPress={() => Alert.alert('Notifications', 'Notification settings coming soon. Stay tuned for updates!')}>
             <MaterialCommunityIcons name="bell-outline" size={22} color="#64748B" />
-            <Text style={styles.rowLabel}>Notifications</Text>
+            <View style={styles.rowContent}>
+              <Text style={styles.rowLabel}>Notifications</Text>
+              <Text style={styles.rowSub}>Get reminders for daily practice</Text>
+            </View>
             <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
           </Pressable>
           <View style={styles.divider} />
-          <Pressable style={styles.row}>
+          <Pressable style={styles.row} onPress={() => Alert.alert('Dark Mode', 'Dark mode support coming soon. Please check for app updates!')}>
             <MaterialCommunityIcons name="theme-light-dark" size={22} color="#64748B" />
-            <Text style={styles.rowLabel}>Dark Mode</Text>
+            <View style={styles.rowContent}>
+              <Text style={styles.rowLabel}>Dark Mode</Text>
+              <Text style={styles.rowSub}>Coming in next update</Text>
+            </View>
             <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
           </Pressable>
           <View style={styles.divider} />
-          <Pressable style={styles.row}>
+          <Pressable style={styles.row} onPress={() => Alert.alert('About NursePrep BD', 'BPSC Nurse Prep v1.0.0\n\nSenior Staff Nurse Exam Preparation\n\nDeveloped for Bangladesh nursing professionals preparing for the BPSC exam.\n\nFeatures: 1000+ MCQs, Mock Tests, Performance Analytics, Offline Support')}>
             <MaterialCommunityIcons name="information-outline" size={22} color="#64748B" />
-            <Text style={styles.rowLabel}>About</Text>
+            <View style={styles.rowContent}>
+              <Text style={styles.rowLabel}>About</Text>
+              <Text style={styles.rowSub}>Version 1.0.0</Text>
+            </View>
             <Text style={styles.rowValue}>v1.0.0</Text>
           </Pressable>
         </View>

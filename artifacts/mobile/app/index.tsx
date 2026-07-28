@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuthStore } from '@/src/store/authStore';
 
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
@@ -50,8 +51,6 @@ function FeatureItem({ icon, text }: { icon: string; text: string }) {
     </View>
   );
 }
-
-import { useAuthStore } from '@/src/store/authStore';
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 24 },
