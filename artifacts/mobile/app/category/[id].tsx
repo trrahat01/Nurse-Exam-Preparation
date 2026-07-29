@@ -3,18 +3,23 @@ import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator, Alert }
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
-import { fetchQuestionsBySubcategory } from '@/src/lib/queries';
+import { fetchQuestionsBySubcategory, fetchCategoryQuestionStats } from '@/src/lib/queries';
 import { CATEGORY_CONFIG } from '@/src/types';
 
 export default function CategoryScreen() {
   const { id, chapter } = useLocalSearchParams<{ id: string; chapter?: string }>();
   const { startExam } = useExamStore();
   const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState<Record<string, { total: number; seen: number; unseen: number }>>({});
   const handledChapter = useRef<string | null>(null);
 
   const catName = id as string;
   const cfg = CATEGORY_CONFIG[catName];
   const chapters = cfg?.chapters ?? [];
+
+  useEffect(() => {
+    fetchCategoryQuestionStats().then(setStats).catch(() => setStats({}));
+  }, [catName]);
 
   const handleChapterPress = (chapterName: string) => {
     router.push({
@@ -67,6 +72,9 @@ export default function CategoryScreen() {
             <Text style={[styles.bannerTitle, { color: cfg.color }]}>{cfg.name}</Text>
             <Text style={[styles.bannerSub, { color: cfg.color + 'AA' }]}>
               {chapters.length} chapters available
+            </Text>
+            <Text style={[styles.bannerSub, { color: cfg.color + 'AA' }]}>
+              {stats[catName]?.total ? `${stats[catName].total.toLocaleString()} total questions · ${stats[catName].unseen.toLocaleString()} new` : 'Loading question counts...'}
             </Text>
           </View>
         ) : null

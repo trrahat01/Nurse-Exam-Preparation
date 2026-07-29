@@ -1,0 +1,96 @@
+========================================
+NURSE EXAM PREPARATION - PLAY STORE INFO
+========================================
+
+APP NAME:
+Nurse Exam Preparation
+
+PACKAGE NAME (SEO optimized - already set):
+com.nurseexampreparation.bpsc
+
+SHORT DESCRIPTION (80 chars max):
+Master nursing exams with 40,000+ MCQs, mock tests & detailed analytics for nurses.
+
+FULL DESCRIPTION:
+The ultimate nursing exam preparation app with 40,000+ carefully curated multiple-choice questions covering all major nursing subjects and exams. Whether you're preparing for government recruitment, university exams, or international nursing certifications, this app has everything you need to succeed.
+
+COMPREHENSIVE QUESTION BANK:
+✓ 40,000+ Practice Questions - The largest MCQ collection for nursing exams
+✓ 4 Major Categories: Nursing Science, Bangla, English, General Knowledge
+✓ 20+ Subcategories covering all nursing specialties
+✓ Questions from real past exams and expert-curated content
+✓ Regular updates with new questions
+
+EXAMS COVERED:
+• BPSC Senior Staff Nurse
+• Bangladesh Nursing Council (BNC) Exams
+• BSc Nursing, Diploma in Nursing Exams
+• Government & Private Hospital Recruitment
+• Midwifery & Public Health Nursing Exams
+• International Nursing Exams (NCLEX, HAAD, etc.)
+• All Nursing University & College Exams
+
+FEATURES:
+✓ Full Mock Tests - Simulate real exam conditions with timer
+✓ Timed Practice - 60-minute exams with auto-submit
+✓ Instant Results - Detailed score analysis after each test
+✓ Answer Review - See mistakes with correct answers explained
+✓ Performance Analytics - Track improvement over time
+✓ Bookmark Questions - Save important questions for review
+✓ Smart Progress Tracking - Identify weak areas
+✓ Study Reminders - Stay on track with notifications
+✓ Offline Access - Practice without internet
+✓ Dark Mode - Comfortable night-time studying
+✓ User-friendly Interface - Clean, modern, easy to navigate
+
+CATEGORIES:
+1. Nursing Science
+   - Medical Surgical Nursing
+   - Fundamental of Nursing
+   - Pharmacology
+   - Anatomy & Physiology
+   - Pediatric Nursing
+   - Community Health Nursing
+   - Obstetrics & Gynecology
+   - Psychiatric Nursing
+   - Emergency & Critical Care
+   - Microbiology
+   - Nutrition & Dietetics
+
+2. Bangla
+   - Bangla Grammar
+   - Bangla Literature
+   - Composition & Comprehension
+
+3. English
+   - English Grammar
+   - Vocabulary
+   - Reading Comprehension
+   - Sentence Completion
+
+4. General Knowledge
+   - Bangladesh Affairs
+   - International Affairs
+   - Science & Technology
+   - Computer Basics
+
+PERFECT FOR:
+- Nursing students preparing for exams
+- Staff nurses seeking promotion
+- Healthcare professionals upgrading qualifications
+- Anyone pursuing a nursing career in Bangladesh & abroad
+
+SCREENSHOTS NEEDED (8 screenshots, 1080×1920px):
+1. Welcome/Onboarding screen
+2. Home Screen with 4 main categories
+3. Question with multiple choice options  
+4. Mock Exam timer in action
+5. Quiz Results with score breakdown
+6. Answer Review - showing mistakes & correct answer
+7. Performance Analytics / Progress chart
+8. Category selection for practice
+
+CATEGORY: Education
+TAGS: nursing exam, nurse mcq, nursing preparation, bnc exam, staff nurse, nursing questions, bpsc nurse, medical exam prep
+
+PRIVACY POLICY URL: (Create at https://app-privacy-policy-generator.nisrulz.com/)

@@ -4,10 +4,29 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/authStore';
+import { clearQuestionHistory } from '@/src/lib/queries';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { user, isGuest, signOut } = useAuthStore();
+
+  const handleResetSeen = () => {
+    Alert.alert(
+      'Reset Seen Questions',
+      'This will allow previously seen questions to appear again in your exams. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            await clearQuestionHistory();
+            Alert.alert('Done', 'Question history has been reset. You may now see previously answered questions again.');
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }}>
@@ -32,6 +51,20 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Study Tools</Text>
+        <View style={styles.card}>
+          <Pressable style={styles.row} onPress={handleResetSeen}>
+            <MaterialCommunityIcons name="refresh" size={22} color="#D97706" />
+            <View style={styles.rowContent}>
+              <Text style={styles.rowLabel}>Reset Seen Questions</Text>
+              <Text style={styles.rowSub}>Allow old questions to appear again</Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>Preferences</Text>
         <View style={styles.card}>
           <Pressable style={styles.row} onPress={() => Alert.alert('Notifications', 'Notification settings coming soon. Stay tuned for updates!')}>
@@ -52,7 +85,7 @@ export default function SettingsScreen() {
             <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
           </Pressable>
           <View style={styles.divider} />
-          <Pressable style={styles.row} onPress={() => Alert.alert('About NursePrep BD', 'BPSC Nurse Prep v1.0.0\n\nSenior Staff Nurse Exam Preparation\n\nDeveloped for Bangladesh nursing professionals preparing for the BPSC exam.\n\nFeatures: 1000+ MCQs, Mock Tests, Performance Analytics, Offline Support')}>
+          <Pressable style={styles.row} onPress={() => Alert.alert('About Nurse Exam Preparation', 'Nurse Exam Preparation v1.0.0\n\nAll-in-one nursing exam preparation app\n\n40,000+ MCQs covering all nursing subjects\n\nDeveloped for nursing professionals preparing for BPSC, BNC, BSc Nursing, Diploma, and all nursing exams in Bangladesh.\n\nFeatures: 40,000+ MCQs, Mock Tests, Performance Analytics, Offline Support, Smart Review')}>
             <MaterialCommunityIcons name="information-outline" size={22} color="#64748B" />
             <View style={styles.rowContent}>
               <Text style={styles.rowLabel}>About</Text>

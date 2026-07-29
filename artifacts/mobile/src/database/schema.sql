@@ -152,6 +152,19 @@ CREATE TABLE IF NOT EXISTS user_answers (
 CREATE INDEX IF NOT EXISTS idx_user_answers_user_id ON user_answers(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_answers_exam_id ON user_answers(exam_id);
 
+-- Question Exposures
+CREATE TABLE IF NOT EXISTS question_exposures (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+  exam_type TEXT DEFAULT 'general',
+  served_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, question_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_question_exposures_user_id ON question_exposures(user_id);
+CREATE INDEX IF NOT EXISTS idx_question_exposures_question_id ON question_exposures(question_id);
+
 -- Bookmarks
 CREATE TABLE IF NOT EXISTS bookmarks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -268,6 +281,15 @@ DROP POLICY IF EXISTS "Users read own answers" ON user_answers;
 DROP POLICY IF EXISTS "Users insert own answers" ON user_answers;
 CREATE POLICY "Users read own answers" ON user_answers FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users insert own answers" ON user_answers FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Question exposures: users own their rows
+ALTER TABLE question_exposures ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users read own question exposures" ON question_exposures;
+DROP POLICY IF EXISTS "Users insert own question exposures" ON question_exposures;
+DROP POLICY IF EXISTS "Users delete own question exposures" ON question_exposures;
+CREATE POLICY "Users read own question exposures" ON question_exposures FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users insert own question exposures" ON question_exposures FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users delete own question exposures" ON question_exposures FOR DELETE USING (auth.uid() = user_id);
 
 -- Bookmarks: users own their rows
 ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;

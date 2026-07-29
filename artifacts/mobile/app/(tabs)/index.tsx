@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/authStore';
 import { useExamStore } from '@/src/store/examStore';
-import { fetchMockQuestions, fetchResults } from '@/src/lib/queries';
-import { CATEGORY_CONFIG, MOCK_DISTRIBUTION } from '@/src/types';
+import { fetchMockQuestions, fetchCategoryQuestionStats, fetchTotalQuestionCount } from '@/src/lib/queries';
+import { CATEGORY_CONFIG } from '@/src/types';
 
 const CATEGORIES = Object.values(CATEGORY_CONFIG);
 
@@ -14,10 +14,27 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { user, isGuest } = useAuthStore();
   const { savedResults, loadSavedResults, startExam } = useExamStore();
-  const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [categoryStats, setCategoryStats] = useState<Record<string, { total: number; seen: number; unseen: number }>>({});
+  const [totalQuestions, setTotalQuestions] = useState(0);
 
-  useEffect(() => { loadSavedResults(); }, []);
+  useEffect(() => {
+    loadSavedResults();
+    loadQuestionCounts();
+  }, []);
+
+  const loadQuestionCounts = async () => {
+    try {
+      const [counts, total] = await Promise.all([
+        fetchCategoryQuestionStats(),
+        fetchTotalQuestionCount(),
+      ]);
+      setCategoryStats(counts);
+      setTotalQuestions(total);
+    } catch (e) {
+      console.error('Failed to load question counts:', e);
+    }
+  };
 
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] ?? (isGuest ? 'Guest' : 'Student');
   const totalExams = savedResults.length;
@@ -53,7 +70,7 @@ export default function HomeScreen() {
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.greeting}>Hello, {firstName}</Text>
-            <Text style={styles.subtitle}>BPSC Senior Staff Nurse Exam</Text>
+            <Text style={styles.subtitle}>Nurse Exam Preparation</Text>
           </View>
           <Pressable style={styles.settingsBtn} onPress={() => router.push('/settings')}>
             <MaterialCommunityIcons name="cog-outline" size={24} color="#fff" />
@@ -76,6 +93,14 @@ export default function HomeScreen() {
             <Text style={styles.statLbl}>Best</Text>
           </View>
         </View>
+
+        {/* Total Questions Badge */}
+        {totalQuestions > 0 && (
+          <View style={styles.totalBadge}>
+            <MaterialCommunityIcons name="book-open-variant" size={16} color="#fff" />
+            <Text style={styles.totalBadgeText}>{totalQuestions.toLocaleString()} Questions Available</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.content}>
@@ -89,22 +114,28 @@ export default function HomeScreen() {
 
         <Text style={styles.sectionTitle}>Categories</Text>
         <View style={styles.catGrid}>
-          {CATEGORIES.map((cat) => (
-            <Pressable
-              key={cat.name}
-              style={[styles.catCard, { backgroundColor: cat.bgColor }]}
-              onPress={() => router.push({ pathname: '/category/[id]', params: { id: cat.name } })}
-            >
-              <View style={[styles.catIcon, { backgroundColor: cat.color + '20' }]}>
-                <MaterialCommunityIcons name={cat.icon as any} size={28} color={cat.color} />
-              </View>
-              <Text style={[styles.catName, { color: cat.color }]}>{cat.name}</Text>
-              <Text style={styles.catDesc} numberOfLines={2}>{cat.description}</Text>
-              <Text style={[styles.catCount, { color: cat.color }]}>
-                {MOCK_DISTRIBUTION[cat.name as keyof typeof MOCK_DISTRIBUTION] || 0} Q
-              </Text>
-            </Pressable>
-          ))}
+          {CATEGORIES.map((cat) => {
+            const stat = categoryStats[cat.name] || { total: 0, seen: 0, unseen: 0 };
+            return (
+              <Pressable
+                key={cat.name}
+                style={[styles.catCard, { backgroundColor: cat.bgColor }]}
+                onPress={() => router.push({ pathname: '/category/[id]', params: { id: cat.name } })}
+              >
+                <View style={[styles.catIcon, { backgroundColor: cat.color + '20' }]}>
+                  <MaterialCommunityIcons name={cat.icon as any} size={28} color={cat.color} />
+                </View>
+                <Text style={[styles.catName, { color: cat.color }]}>{cat.name}</Text>
+                <Text style={styles.catDesc} numberOfLines={2}>{cat.description}</Text>
+                <Text style={[styles.catCount, { color: cat.color }]}>
+                  {stat.total > 0 ? `${stat.total.toLocaleString()} total` : 'Loading...'}
+                </Text>
+                <Text style={[styles.catSeen, { color: cat.color }]}>
+                  {stat.total > 0 ? `${stat.unseen.toLocaleString()} new` : ''}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         {savedResults.length > 0 && (
@@ -160,6 +191,8 @@ const styles = StyleSheet.create({
   statNum: { color: '#fff', fontSize: 22, fontFamily: 'Inter_700Bold' },
   statLbl: { color: '#BAE6FD', fontSize: 11, fontFamily: 'Inter_400Regular', marginTop: 2 },
   statDivider: { width: 1, height: 32, backgroundColor: 'rgba(255,255,255,0.2)' },
+  totalBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, alignSelf: 'center' },
+  totalBadgeText: { color: '#fff', fontSize: 12, fontFamily: 'Inter_600SemiBold' },
   content: { padding: 16, gap: 16 },
   sectionTitle: { fontSize: 18, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
   actionRow: { flexDirection: 'row', gap: 10 },
@@ -173,6 +206,7 @@ const styles = StyleSheet.create({
   catName: { fontSize: 15, fontFamily: 'Inter_700Bold' },
   catDesc: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#64748B', lineHeight: 16 },
   catCount: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
+  catSeen: { fontSize: 11, fontFamily: 'Inter_400Regular', marginTop: -4 },
   resultRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', padding: 14, gap: 12 },
   resultIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   resultInfo: { flex: 1, gap: 2 },

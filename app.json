@@ -1,3 +1,49 @@
 {
-  "expo": {}
+  "expo": {
+    "name": "Nurse Exam Preparation",
+    "slug": "bpsc-nurse-prep",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "nurse-exam-prep",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0891B2"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.nurseexampreparation.nursing"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0891B2"
+      },
+      "package": "com.nurseexampreparation.nursing",
+      "permissions": [],
+      "softwareKeyboardLayoutMode": "pan"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-notifications"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "supabaseUrl": "",
+      "supabaseAnonKey": "",
+      "router": {}
+    },
+    "owner": "trrahat"
+  }
 }

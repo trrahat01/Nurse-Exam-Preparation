@@ -1,28 +1,28 @@
 {
   "expo": {
-    "name": "BPSC Nurse Prep",
+    "name": "Nurse Exam Preparation",
     "slug": "bpsc-nurse-prep",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "bpsc-nurse-prep",
+    "scheme": "nurse-exam-prep",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0891B2"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.bpscnurse.prep"
+      "bundleIdentifier": "com.nurseexampreparation.nursing"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0891B2"
       },
-      "package": "com.bpscnurse.prep",
+      "package": "com.nurseexampreparation.nursing",
       "permissions": [],
       "softwareKeyboardLayoutMode": "pan"
     },
@@ -42,10 +42,7 @@
     "extra": {
       "supabaseUrl": "",
       "supabaseAnonKey": "",
-      "router": {},
-      "eas": {
-        "projectId": "7ecc2a79-f15f-41d9-844e-76b57bf68b3a"
-      }
+      "router": {}
     },
     "owner": "trrahat"
   }
