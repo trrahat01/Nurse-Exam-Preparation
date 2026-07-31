@@ -24,31 +24,39 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   initialize: async () => {
     try {
-      // ALWAYS go to guest mode on app start - no repeated login
+      const guestMode = await AsyncStorage.getItem('guest_mode');
+      if (guestMode === 'false') {
+        // User was logged in, check if session is still valid
+        const supabase = getSupabaseClient();
+        if (supabase) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            set({ user, isAuthenticated: true, isGuest: false, isLoading: false });
+            return;
+          }
+        }
+      }
+      // Default to guest mode
       await AsyncStorage.setItem('guest_mode', 'true');
       set({ isLoading: false, isGuest: true });
-    } catch { 
-      set({ isLoading: false, isGuest: true }); 
+    } catch {
+      set({ isLoading: false, isGuest: true });
     }
   },
 
   signIn: async (email, password) => {
     if (!isSupabaseConfigured()) {
-      await AsyncStorage.setItem('guest_mode', 'true');
-      set({ isGuest: true, isLoading: false });
-      return;
+      throw new Error('Supabase not configured');
     }
     const supabase = getSupabaseClient();
     if (!supabase) {
-      await AsyncStorage.setItem('guest_mode', 'true');
-      set({ isGuest: true, isLoading: false });
-      return;
+      throw new Error('Supabase not configured');
     }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     const { data: { user } } = await supabase.auth.getUser();
     await AsyncStorage.setItem('guest_mode', 'false');
-    set({ user, isAuthenticated: true, isGuest: false });
+    set({ user, isAuthenticated: true, isGuest: false, isLoading: false });
   },
 
   signUp: async (email, password, name) => {
