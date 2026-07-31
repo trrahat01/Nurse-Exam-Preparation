@@ -1,15 +1,13 @@
 {
   "expo": {
     "name": "Nurse Exam Preparation",
-    "slug": "bpsc-nurse-prep",
+    "slug": "workspace",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "nurse-exam-prep",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./artifacts/mobile/assets/images/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0891B2"
     },
@@ -19,30 +17,18 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./artifacts/mobile/assets/images/adaptive-icon.png",
         "backgroundColor": "#0891B2"
       },
       "package": "com.nurseexampreparation.nursing",
       "permissions": [],
       "softwareKeyboardLayoutMode": "pan"
     },
-    "web": {
-      "bundler": "metro",
-      "output": "single",
-      "favicon": "./assets/images/icon.png"
-    },
-    "plugins": [
-      "expo-router",
-      "expo-font",
-      "expo-notifications"
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
     "extra": {
-      "supabaseUrl": "",
-      "supabaseAnonKey": "",
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "df63fccb-b556-46ef-a7fd-a62bd30a7e61"
+      }
     },
     "owner": "trrahat"
   }

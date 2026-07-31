@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Nurse Exam Preparation",
-    "slug": "bpsc-nurse-prep",
+    "slug": "workspace",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -42,7 +42,10 @@
     "extra": {
       "supabaseUrl": "",
       "supabaseAnonKey": "",
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "df63fccb-b556-46ef-a7fd-a62bd30a7e61"
+      }
     },
     "owner": "trrahat"
   }

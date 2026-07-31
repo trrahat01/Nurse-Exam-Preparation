@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 20.1.0",
+    "version": ">= 21.4.0",
     "appVersionSource": "remote"
   },
   "build": {
@@ -8,8 +8,10 @@
       "developmentClient": true,
       "distribution": "internal"
     },
+    "preview": {
+      "distribution": "internal"
+    },
     "apk": {
-      "distribution": "internal",
       "android": {
         "buildType": "apk"
       }
@@ -17,10 +19,12 @@
     "aab": {
       "android": {
         "buildType": "app-bundle"
-      },
-      "autoIncrement": true
+      }
     },
     "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
       "autoIncrement": true
     }
   },
