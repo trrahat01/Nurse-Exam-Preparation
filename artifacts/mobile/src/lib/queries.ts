@@ -1,8 +1,9 @@
-import { supabase, isSupabaseConfigured } from './supabase';
+import { getSupabaseClient, isSupabaseConfigured } from './supabase';
 import type { Question, MockResult, Bookmark, AnswerOption, ExamType } from '@/src/types';
 import { getSeenQuestionIds, filterUnseenQuestions, markQuestionsSeen, clearSeenQuestions } from './seenQuestions';
+import { getMockQuestions, getMockQuestionsByCategory, getMockMockQuestions, getMockDailyQuestions } from './mockData';
 
-const shuffle = (arr: Question[]) => arr.sort(() => Math.random() - 0.5);
+const shuffle = (arr: Question[]) => [...arr].sort(() => Math.random() - 0.5);
 const PAGE_SIZE = 1000;
 
 type QuestionStats = { total: number; seen: number; unseen: number };
@@ -10,6 +11,8 @@ type QuestionStats = { total: number; seen: number; unseen: number };
 async function getCurrentUserId(): Promise<string | null> {
   if (!isSupabaseConfigured()) return null;
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return null;
     const { data } = await supabase.auth.getUser();
     return data.user?.id ?? null;
   } catch {
@@ -18,6 +21,8 @@ async function getCurrentUserId(): Promise<string | null> {
 }
 
 async function getServerSeenQuestionIds(userId: string): Promise<Set<string>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return new Set();
   const seen = new Set<string>();
   let from = 0;
 
@@ -51,6 +56,8 @@ async function getMergedSeenQuestionIds(): Promise<Set<string>> {
 }
 
 async function fetchAllActiveQuestionRows(): Promise<Pick<Question, 'id' | 'category'>[]> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return getMockQuestions().map(q => ({ id: q.id, category: q.category }));
   const rows: Pick<Question, 'id' | 'category'>[] = [];
   let from = 0;
 
@@ -73,6 +80,21 @@ async function fetchAllActiveQuestionRows(): Promise<Pick<Question, 'id' | 'cate
 }
 
 async function fetchQuestionPool(filters: { category?: string; subcategory?: string }, count: number, markSeen = true): Promise<Question[]> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    // Use mock data when Supabase is not configured
+    let mockQuestions = getMockQuestions();
+    if (filters.category) {
+      mockQuestions = mockQuestions.filter(q => q.category === filters.category);
+    }
+    const shuffled = shuffle(mockQuestions);
+    const selected = shuffled.slice(0, Math.min(count, shuffled.length));
+    if (markSeen) {
+      await markQuestionsSeen(selected.map(q => q.id));
+    }
+    return selected;
+  }
+
   const seenIds = await getMergedSeenQuestionIds();
   const unseenCandidates: Question[] = [];
   const seenCandidates: Question[] = [];
@@ -124,19 +146,32 @@ async function fetchQuestionPool(filters: { category?: string; subcategory?: str
 }
 
 export async function fetchCategories(): Promise<any[]> {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) {
+    return [
+      { id: '1', name: 'Nursing', slug: 'nursing', icon: 'medical-bag', color: '#0891B2', bg_color: '#E0F2FE', description: 'Nursing Science & Clinical Practice', order_index: 1 },
+      { id: '2', name: 'Bangla', slug: 'bangla', icon: 'alphabetical', color: '#7C3AED', bg_color: '#EDE9FE', description: 'Bangla Language & Literature', order_index: 2 },
+      { id: '3', name: 'English', slug: 'english', icon: 'book-open-variant', color: '#059669', bg_color: '#D1FAE5', description: 'English Language & Grammar', order_index: 3 },
+      { id: '4', name: 'General Knowledge', slug: 'general-knowledge', icon: 'earth', color: '#D97706', bg_color: '#FEF3C7', description: 'GK, Current Affairs & Bangladesh Affairs', order_index: 4 },
+    ];
+  }
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
     const { data, error } = await supabase.from('categories').select('*').order('order_index', { ascending: true });
     if (error) return [];
     return data ?? [];
   } catch { return []; }
 }
 
-/**
- * Get question counts per category from the database
- */
 export async function fetchCategoryQuestionCounts(): Promise<Record<string, number>> {
-  if (!isSupabaseConfigured()) return {};
+  if (!isSupabaseConfigured()) {
+    const mock = getMockQuestions();
+    const counts: Record<string, number> = {};
+    for (const q of mock) {
+      counts[q.category] = (counts[q.category] || 0) + 1;
+    }
+    return counts;
+  }
   try {
     const stats = await fetchCategoryQuestionStats();
     const counts: Record<string, number> = {};
@@ -148,7 +183,18 @@ export async function fetchCategoryQuestionCounts(): Promise<Record<string, numb
 }
 
 export async function fetchCategoryQuestionStats(): Promise<Record<string, QuestionStats>> {
-  if (!isSupabaseConfigured()) return {};
+  if (!isSupabaseConfigured()) {
+    const mock = getMockQuestions();
+    const seenIds = await getSeenQuestionIds();
+    const stats: Record<string, QuestionStats> = {};
+    for (const q of mock) {
+      if (!stats[q.category]) stats[q.category] = { total: 0, seen: 0, unseen: 0 };
+      stats[q.category].total += 1;
+      if (seenIds.has(q.id)) stats[q.category].seen += 1;
+      else stats[q.category].unseen += 1;
+    }
+    return stats;
+  }
   try {
     const rows = await fetchAllActiveQuestionRows();
     const seenIds = await getMergedSeenQuestionIds();
@@ -168,12 +214,11 @@ export async function fetchCategoryQuestionStats(): Promise<Record<string, Quest
   }
 }
 
-/**
- * Get total question count from the database
- */
 export async function fetchTotalQuestionCount(): Promise<number> {
-  if (!isSupabaseConfigured()) return 0;
+  if (!isSupabaseConfigured()) return getMockQuestions().length;
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return 0;
     const { count, error } = await supabase
       .from('questions')
       .select('*', { count: 'exact', head: true })
@@ -184,8 +229,10 @@ export async function fetchTotalQuestionCount(): Promise<number> {
 }
 
 export async function fetchMockQuestions(): Promise<Question[]> {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) return getMockMockQuestions();
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return getMockMockQuestions();
     const DIST: Record<string, number> = { Nursing: 60, 'General Knowledge': 15, English: 15, Bangla: 10 };
     let selected: Question[] = [];
     for (const [category, count] of Object.entries(DIST)) {
@@ -202,18 +249,22 @@ export async function fetchMockQuestions(): Promise<Question[]> {
     const finalQuestions = shuffle(selected).slice(0, 100);
     await markQuestionsSeen(finalQuestions.map(q => q.id));
     return finalQuestions;
-  } catch (e) { console.warn('fetchMockQuestions failed:', e); return []; }
+  } catch (e) { console.warn('fetchMockQuestions failed:', e); return getMockMockQuestions(); }
 }
 
 export async function fetchDailyQuestions(count: number): Promise<Question[]> {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) return getMockDailyQuestions(count);
   try {
     return await fetchQuestionPool({}, count);
-  } catch { return []; }
+  } catch { return getMockDailyQuestions(count); }
 }
 
 export async function fetchQuestionsBySubcategory(subcategory: string, page = 0, limit = 20): Promise<Question[]> {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) {
+    const mock = getMockQuestions();
+    const from = page * limit;
+    return mock.slice(from, from + limit);
+  }
   try {
     const pool = await fetchQuestionPool({ subcategory }, limit * (page + 1));
     const from = page * limit;
@@ -222,15 +273,23 @@ export async function fetchQuestionsBySubcategory(subcategory: string, page = 0,
 }
 
 export async function fetchQuestionsByCategory(category: string, count: number): Promise<Question[]> {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) {
+    const mock = getMockQuestionsByCategory(category);
+    return shuffle(mock).slice(0, Math.min(count, mock.length));
+  }
   try {
     return await fetchQuestionPool({ category }, count);
   } catch { return []; }
 }
 
 export async function searchQuestions(query: string): Promise<Question[]> {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) {
+    const mock = getMockQuestions();
+    return mock.filter(q => q.question.toLowerCase().includes(query.toLowerCase())).slice(0, 50);
+  }
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
     const { data, error } = await supabase.from('questions').select('*').ilike('question', `%${query}%`).eq('active', true).limit(50);
     if (error) return [];
     return data ?? [];
@@ -240,6 +299,8 @@ export async function searchQuestions(query: string): Promise<Question[]> {
 export async function fetchResults(userId: string): Promise<MockResult[]> {
   if (!isSupabaseConfigured()) return [];
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
     const { data, error } = await supabase.from('mock_results').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20);
     if (error) return [];
     return data ?? [];
@@ -252,6 +313,8 @@ export async function saveResult(payload: {
 }): Promise<MockResult | null> {
   if (!isSupabaseConfigured()) return null;
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return null;
     const { data, error } = await supabase.from('mock_results').insert(payload).select().single();
     if (error) return null;
     return data;
@@ -261,6 +324,8 @@ export async function saveResult(payload: {
 export async function fetchBookmarks(userId: string): Promise<Bookmark[]> {
   if (!isSupabaseConfigured()) return [];
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
     const { data, error } = await supabase.from('bookmarks').select('*, question:questions(*)').eq('user_id', userId).order('created_at', { ascending: false });
     if (error) return [];
     return data ?? [];
@@ -270,6 +335,8 @@ export async function fetchBookmarks(userId: string): Promise<Bookmark[]> {
 export async function toggleBookmark(userId: string, questionId: string, isBookmarked: boolean): Promise<void> {
   if (!isSupabaseConfigured()) return;
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
     if (isBookmarked) await supabase.from('bookmarks').delete().eq('user_id', userId).eq('question_id', questionId);
     else await supabase.from('bookmarks').insert({ user_id: userId, question_id: questionId });
   } catch {}
@@ -280,6 +347,8 @@ export async function clearQuestionHistory(): Promise<void> {
     await clearSeenQuestions();
     const userId = await getCurrentUserId();
     if (!userId) return;
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
     await supabase.from('question_exposures').delete().eq('user_id', userId);
   } catch {}
 }

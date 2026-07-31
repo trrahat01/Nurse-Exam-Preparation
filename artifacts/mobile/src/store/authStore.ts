@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase, isSupabaseConfigured } from '@/src/lib/supabase';
+import { getSupabaseClient, isSupabaseConfigured } from '@/src/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
 interface AuthState {
@@ -34,7 +34,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signIn: async (email, password) => {
     if (!isSupabaseConfigured()) {
-      // No Supabase? Just set guest anyway
+      await AsyncStorage.setItem('guest_mode', 'true');
+      set({ isGuest: true, isLoading: false });
+      return;
+    }
+    const supabase = getSupabaseClient();
+    if (!supabase) {
       await AsyncStorage.setItem('guest_mode', 'true');
       set({ isGuest: true, isLoading: false });
       return;
@@ -48,19 +53,23 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signUp: async (email, password, name) => {
     if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error('Supabase not configured');
     const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } });
     if (error) throw error;
   },
 
   signOut: async () => {
-    try { if (isSupabaseConfigured()) await supabase.auth.signOut(); } catch {}
-    // After signout, auto-set guest mode so they don't see login again
+    const supabase = getSupabaseClient();
+    try { if (supabase) await supabase.auth.signOut(); } catch {}
     await AsyncStorage.setItem('guest_mode', 'true');
     set({ user: null, isAuthenticated: false, isGuest: true });
   },
 
   resetPassword: async (email) => {
     if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error('Supabase not configured');
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) throw error;
   },
