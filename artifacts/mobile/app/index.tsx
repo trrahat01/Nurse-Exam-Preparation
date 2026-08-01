@@ -12,7 +12,7 @@ export default function WelcomeScreen() {
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#0891B2' }]}>
       <View style={styles.topSection}>
         <View style={styles.logoContainer}>
-          <Image source={require('../../assets/images/icon.png')} style={styles.logoImage} resizeMode="contain" />
+          <Image source={require('../assets/images/icon.png')} style={styles.logoImage} resizeMode="contain" />
         </View>
         <Text style={styles.title}>BPSC Nurse Prep</Text>
         <Text style={styles.subtitle}>Senior Staff Nurse Exam Preparation</Text>
