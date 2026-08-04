@@ -1,13 +1,15 @@
 {
   "expo": {
     "name": "Nurse Exam Preparation",
-    "slug": "workspace",
+    "slug": "nurse-exam-preparation",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./artifacts/mobile/assets/images/icon.png",
+    "scheme": "nurse-exam-prep",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./artifacts/mobile/assets/images/icon.png",
+      "image": "./artifacts/mobile/assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#0891B2"
     },
@@ -24,11 +26,16 @@
       "permissions": [],
       "softwareKeyboardLayoutMode": "pan"
     },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./artifacts/mobile/assets/images/icon.png"
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "df63fccb-b556-46ef-a7fd-a62bd30a7e61"
-      }
+      "router": {}
     },
     "owner": "trrahat"
   }

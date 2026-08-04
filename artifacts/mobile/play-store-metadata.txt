@@ -5,8 +5,8 @@ NURSE EXAM PREPARATION - PLAY STORE INFO
 APP NAME:
 Nurse Exam Preparation
 
-PACKAGE NAME (SEO optimized - already set):
-com.nurseexampreparation.bpsc
+PACKAGE NAME (already set):
+com.nurseexampreparation.nursing
 
 SHORT DESCRIPTION (80 chars max):
 Master nursing exams with 40,000+ MCQs, mock tests & detailed analytics for nurses.
@@ -22,8 +22,8 @@ COMPREHENSIVE QUESTION BANK:
 ✓ Regular updates with new questions
 
 EXAMS COVERED:
-• BPSC Senior Staff Nurse
-• Bangladesh Nursing Council (BNC) Exams
+• Government Nursing Recruitment Exams
+• Nursing Council Exams
 • BSc Nursing, Diploma in Nursing Exams
 • Government & Private Hospital Recruitment
 • Midwifery & Public Health Nursing Exams
@@ -38,9 +38,7 @@ FEATURES:
 ✓ Performance Analytics - Track improvement over time
 ✓ Bookmark Questions - Save important questions for review
 ✓ Smart Progress Tracking - Identify weak areas
-✓ Study Reminders - Stay on track with notifications
-✓ Offline Access - Practice without internet
-✓ Dark Mode - Comfortable night-time studying
+✓ No Repeat Questions - Smart system ensures you see new questions
 ✓ User-friendly Interface - Clean, modern, easy to navigate
 
 CATEGORIES:
@@ -78,12 +76,12 @@ PERFECT FOR:
 - Nursing students preparing for exams
 - Staff nurses seeking promotion
 - Healthcare professionals upgrading qualifications
-- Anyone pursuing a nursing career in Bangladesh & abroad
+- Anyone pursuing a nursing career
 
 SCREENSHOTS NEEDED (8 screenshots, 1080×1920px):
 1. Welcome/Onboarding screen
 2. Home Screen with 4 main categories
-3. Question with multiple choice options  
+3. Question with multiple choice options
 4. Mock Exam timer in action
 5. Quiz Results with score breakdown
 6. Answer Review - showing mistakes & correct answer
@@ -91,6 +89,12 @@ SCREENSHOTS NEEDED (8 screenshots, 1080×1920px):
 8. Category selection for practice
 
 CATEGORY: Education
-TAGS: nursing exam, nurse mcq, nursing preparation, bnc exam, staff nurse, nursing questions, bpsc nurse, medical exam prep
+TAGS: nursing exam, nurse mcq, nursing preparation, staff nurse, nursing questions, medical exam prep, nurse test
 
 PRIVACY POLICY URL: (Create at https://app-privacy-policy-generator.nisrulz.com/)
+
+SUPPORT EMAIL:
+trdevworks@gmail.com
+
+CONTACT:
+For any questions, issues, or suggestions: trdevworks@gmail.com

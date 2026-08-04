@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,7 +13,13 @@ export default function ReviewScreen() {
   const { result, clearExam } = useExamStore();
   const [filter, setFilter] = useState<Filter>('all');
 
-  if (!result) { router.replace('/(tabs)/mock'); return null; }
+  useEffect(() => {
+    if (!result) {
+      router.replace('/(tabs)/mock');
+    }
+  }, [result]);
+
+  if (!result) return null;
 
   const { questions, answers } = result;
   const filtered = questions.filter(q => {

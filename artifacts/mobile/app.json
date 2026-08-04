@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Nurse Exam Preparation",
-    "slug": "workspace",
+    "slug": "nurse-exam-preparation",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#0891B2"
     },
@@ -40,11 +40,11 @@
       "typedRoutes": true
     },
     "extra": {
-      "supabaseUrl": "",
-      "supabaseAnonKey": "",
+      "supabaseUrl": "https://kdlqsxxzozjjaflwoylp.supabase.co",
+      "supabaseAnonKey": "sb_publishable_9skTG1J4vb6WcdSvddzBIQ_-c9boaHm",
       "router": {},
       "eas": {
-        "projectId": "df63fccb-b556-46ef-a7fd-a62bd30a7e61"
+        "projectId": "305f469c-7cec-461c-bc65-83ad4d1ae97d"
       }
     },
     "owner": "trrahat"

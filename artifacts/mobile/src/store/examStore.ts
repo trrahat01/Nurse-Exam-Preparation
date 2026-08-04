@@ -24,6 +24,7 @@ interface ExamState {
   clearExam: () => void;
   loadSavedResults: () => Promise<void>;
   saveResult: (result: ExamResult) => Promise<void>;
+  viewResult: (result: ExamResult) => void;
   tickTimer: () => void;
 }
 
@@ -95,6 +96,8 @@ export const useExamStore = create<ExamState>((set, get) => ({
   },
 
   clearExam: () => set({ session: null, result: null }),
+
+  viewResult: (result) => set({ result }),
 
   loadSavedResults: async () => {
     try {

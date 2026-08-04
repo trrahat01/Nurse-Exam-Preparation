@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '@/src/store/authStore';
+import { useBookmarkStore } from '@/src/store/bookmarkStore';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -20,9 +21,11 @@ export default function RootLayout() {
   const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
   const initialize = useAuthStore(s => s.initialize);
   const isLoading = useAuthStore(s => s.isLoading);
+  const loadBookmarks = useBookmarkStore(s => s.loadBookmarks);
 
   useEffect(() => {
     initialize();
+    loadBookmarks();
   }, []);
 
   useEffect(() => {

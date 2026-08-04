@@ -1,17 +1,46 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Alert, Platform } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useExamStore } from '@/src/store/examStore';
+import { useBookmarkStore } from '@/src/store/bookmarkStore';
+import { useAuthStore } from '@/src/store/authStore';
+import { toggleBookmark } from '@/src/lib/queries';
 import type { AnswerOption } from '@/src/types';
 
 export default function ExamScreen() {
   const insets = useSafeAreaInsets();
-  const { session, submitExam, setAnswer, toggleMark, goToQuestion, clearExam, tickTimer } = useExamStore();
+  const { questionId } = useLocalSearchParams<{ questionId?: string }>();
+  const { session, result, submitExam, setAnswer, toggleMark, goToQuestion, clearExam, tickTimer, startExam } = useExamStore();
+  const { user } = useAuthStore();
+  const { loadBookmarks, addBookmark, removeBookmark, isBookmarked: checkBookmarked, findBookmark } = useBookmarkStore();
   const [showGrid, setShowGrid] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Load bookmarks on mount
+  useEffect(() => {
+    loadBookmarks();
+  }, []);
+
+  // Handle opening a specific question from bookmarks
+  useEffect(() => {
+    if (questionId) {
+      const bookmark = findBookmark(questionId);
+      if (bookmark?.question) {
+        startExam([bookmark.question], 'practice');
+      }
+    }
+  }, [questionId]);
+
+  // Auto-navigate to results when exam is auto-submitted (time up) or manually submitted
+  useEffect(() => {
+    if (session?.examType === 'practice') return;
+    if (!session?.isRunning && result) {
+      router.replace('/exam/result');
+    }
+  }, [session?.isRunning, result]);
 
   useEffect(() => {
     if (!session) { router.replace('/(tabs)/mock'); return; }
@@ -36,6 +65,7 @@ export default function ExamScreen() {
 
   const selectedAnswer = answers[question.id] ?? null;
   const isMarked = markedForReview.includes(question.id);
+  const isBookmarked = checkBookmarked(question.id);
   const answered = Object.keys(answers).length;
   const marked = markedForReview.length;
 
@@ -57,6 +87,21 @@ export default function ExamScreen() {
     ]);
   };
 
+  const handleBookmark = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (user?.id) {
+      await toggleBookmark(user.id, question.id, isBookmarked);
+      // Refresh server bookmarks
+      loadBookmarks();
+    } else {
+      if (isBookmarked) {
+        await removeBookmark(question.id);
+      } else {
+        await addBookmark(question);
+      }
+    }
+  };
+
   const opts: AnswerOption[] = ['a', 'b', 'c', 'd'];
   const optTexts: Record<AnswerOption, string> = { a: question.option_a, b: question.option_b, c: question.option_c, d: question.option_d };
 
@@ -75,9 +120,14 @@ export default function ExamScreen() {
             <Text style={styles.examType}>{examType === 'mock' ? 'Mock Test' : isPractice ? 'Practice' : 'Daily Practice'}</Text>
             <Text style={styles.qNum}>{currentIndex + 1} / {questions.length}</Text>
           </View>
-          <Pressable onPress={() => setShowGrid(g => !g)}>
-            <MaterialCommunityIcons name="view-grid-outline" size={24} color={showGrid ? '#0891B2' : '#0C1A2E'} />
-          </Pressable>
+          <View style={styles.topActions}>
+            <Pressable onPress={handleBookmark} style={styles.bookmarkBtn}>
+              <MaterialCommunityIcons name={isBookmarked ? 'bookmark' : 'bookmark-outline'} size={24} color={isBookmarked ? '#7C3AED' : '#0C1A2E'} />
+            </Pressable>
+            <Pressable onPress={() => setShowGrid(g => !g)}>
+              <MaterialCommunityIcons name="view-grid-outline" size={24} color={showGrid ? '#0891B2' : '#0C1A2E'} />
+            </Pressable>
+          </View>
         </View>
 
         {!isPractice && (
@@ -187,6 +237,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   topBar: { paddingHorizontal: 16, paddingBottom: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', gap: 8 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  topActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  bookmarkBtn: { padding: 2 },
   examInfo: { alignItems: 'center' },
   examType: { fontSize: 14, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
   qNum: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#64748B' },

@@ -1,6 +1,8 @@
 import { getSupabaseClient, isSupabaseConfigured } from './supabase';
 import type { Question, MockResult, Bookmark, AnswerOption, ExamType } from '@/src/types';
+import { CATEGORY_CONFIG } from '@/src/types';
 import { getSeenQuestionIds, filterUnseenQuestions, markQuestionsSeen, clearSeenQuestions } from './seenQuestions';
+import { getMockQuestions, getMockQuestionsByCategory, getMockMockQuestions, getMockDailyQuestions } from './mockData';
 
 const shuffle = (arr: Question[]) => [...arr].sort(() => Math.random() - 0.5);
 const PAGE_SIZE = 1000;
@@ -54,38 +56,103 @@ async function getMergedSeenQuestionIds(): Promise<Set<string>> {
   return new Set([...localSeen, ...serverSeen]);
 }
 
-async function fetchAllActiveQuestionRows(): Promise<Pick<Question, 'id' | 'category'>[]> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return [];
-  const rows: Pick<Question, 'id' | 'category'>[] = [];
-  let from = 0;
+export async function fetchCategoryQuestionStats(): Promise<Record<string, QuestionStats>> {
+  if (!isSupabaseConfigured()) {
+    // Use mock data stats
+    const mockQuestions = getMockQuestions();
+    const stats: Record<string, QuestionStats> = {};
+    for (const q of mockQuestions) {
+      const category = q.category || 'Unknown';
+      if (!stats[category]) stats[category] = { total: 0, seen: 0, unseen: 0 };
+      stats[category].total += 1;
+      stats[category].unseen += 1;
+    }
+    return stats;
+  }
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return {};
 
-  while (true) {
-    const { data, error } = await supabase
+    const seenIds = await getMergedSeenQuestionIds();
+    const stats: Record<string, QuestionStats> = {};
+
+    // Fetch id + category for seen detection
+    const { data: categories } = await supabase
       .from('questions')
       .select('id, category')
-      .eq('active', true)
-      .order('created_at', { ascending: false })
-      .range(from, from + PAGE_SIZE - 1);
+      .eq('active', true);
 
-    if (error || !data || data.length === 0) break;
+    if (categories) {
+      const rows = categories as { id: string; category: string }[];
+      // Count totals per category
+      const totals: Record<string, number> = {};
+      for (const row of rows) {
+        const category = row.category || 'Unknown';
+        totals[category] = (totals[category] || 0) + 1;
+      }
 
-    rows.push(...(data as Pick<Question, 'id' | 'category'>[]));
-    if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
+      // Initialize stats
+      for (const [category, total] of Object.entries(totals)) {
+        stats[category] = { total, seen: 0, unseen: total };
+      }
+
+      // Count seen per category (only for seen IDs we have)
+      if (seenIds.size > 0) {
+        for (const row of rows) {
+          const category = row.category || 'Unknown';
+          if (seenIds.has(row.id)) {
+            stats[category].seen += 1;
+            stats[category].unseen -= 1;
+          }
+        }
+      }
+    }
+
+    return stats;
+  } catch (e) {
+    console.warn('fetchCategoryQuestionStats failed:', e);
+    // Fall back to mock data stats
+    const mockQuestions = getMockQuestions();
+    const stats: Record<string, QuestionStats> = {};
+    for (const q of mockQuestions) {
+      const category = q.category || 'Unknown';
+      if (!stats[category]) stats[category] = { total: 0, seen: 0, unseen: 0 };
+      stats[category].total += 1;
+      stats[category].unseen += 1;
+    }
+    return stats;
   }
+}
 
-  return rows;
+export async function fetchTotalQuestionCount(): Promise<number> {
+  if (!isSupabaseConfigured()) return getMockQuestions().length;
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return getMockQuestions().length;
+    const { count, error } = await supabase
+      .from('questions')
+      .select('*', { count: 'exact', head: true })
+      .eq('active', true);
+    if (error) return getMockQuestions().length;
+    return count || getMockQuestions().length;
+  } catch { return getMockQuestions().length; }
 }
 
 async function fetchQuestionPool(filters: { category?: string; subcategory?: string }, count: number, markSeen = true): Promise<Question[]> {
   const supabase = getSupabaseClient();
-  if (!supabase) return [];
-  
+  if (!supabase) {
+    // Use mock data fallback
+    let pool = getMockQuestions();
+    if (filters.category) pool = pool.filter(q => q.category === filters.category);
+    if (filters.subcategory) pool = pool.filter(q => q.subcategory === filters.subcategory);
+    return shuffle(pool).slice(0, count);
+  }
+
   const seenIds = await getMergedSeenQuestionIds();
   const unseenCandidates: Question[] = [];
   const seenCandidates: Question[] = [];
   let from = 0;
+  const maxFetch = Math.max(count * 3, 100); // Fetch at most 3x needed, min 100
 
   while (true) {
     let query = supabase.from('questions').select('*').eq('active', true);
@@ -100,8 +167,14 @@ async function fetchQuestionPool(filters: { category?: string; subcategory?: str
     unseenCandidates.push(...unseen);
     seenCandidates.push(...batch);
 
+    // Stop early if we have enough unseen candidates
+    if (unseenCandidates.length >= count) break;
+
     if (batch.length < PAGE_SIZE) break;
     from += PAGE_SIZE;
+
+    // Safety limit - don't fetch more than maxFetch total
+    if (from >= maxFetch) break;
   }
 
   const selected: Question[] = [];
@@ -126,21 +199,32 @@ async function fetchQuestionPool(filters: { category?: string; subcategory?: str
   }
 
   const finalQuestions = shuffle(selected).slice(0, count);
-  if (markSeen) {
+  if (markSeen && finalQuestions.length > 0) {
     await markQuestionsSeen(finalQuestions.map(q => q.id));
   }
   return finalQuestions;
 }
 
 export async function fetchCategories(): Promise<any[]> {
-  if (!isSupabaseConfigured()) return [];
+  const mockCategories = () => Object.values(CATEGORY_CONFIG).map((cfg: any, i: number) => ({
+    id: String(i + 1),
+    name: cfg.name,
+    slug: cfg.name.toLowerCase().replace(/\s+/g, '-'),
+    icon: cfg.icon,
+    color: cfg.color,
+    bg_color: cfg.bgColor,
+    description: cfg.description,
+    order_index: i,
+  }));
+
+  if (!isSupabaseConfigured()) return mockCategories();
   try {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
+    if (!supabase) return mockCategories();
     const { data, error } = await supabase.from('categories').select('*').order('order_index', { ascending: true });
-    if (error) return [];
-    return data ?? [];
-  } catch { return []; }
+    if (error) return mockCategories();
+    return data ?? mockCategories();
+  } catch { return mockCategories(); }
 }
 
 export async function fetchCategoryQuestionCounts(): Promise<Record<string, number>> {
@@ -155,46 +239,11 @@ export async function fetchCategoryQuestionCounts(): Promise<Record<string, numb
   } catch { return {}; }
 }
 
-export async function fetchCategoryQuestionStats(): Promise<Record<string, QuestionStats>> {
-  if (!isSupabaseConfigured()) return {};
-  try {
-    const rows = await fetchAllActiveQuestionRows();
-    const seenIds = await getMergedSeenQuestionIds();
-    const stats: Record<string, QuestionStats> = {};
-
-    for (const row of rows) {
-      const category = row.category || 'Unknown';
-      if (!stats[category]) stats[category] = { total: 0, seen: 0, unseen: 0 };
-      stats[category].total += 1;
-      if (seenIds.has(row.id)) stats[category].seen += 1;
-      else stats[category].unseen += 1;
-    }
-
-    return stats;
-  } catch {
-    return {};
-  }
-}
-
-export async function fetchTotalQuestionCount(): Promise<number> {
-  if (!isSupabaseConfigured()) return 0;
-  try {
-    const supabase = getSupabaseClient();
-    if (!supabase) return 0;
-    const { count, error } = await supabase
-      .from('questions')
-      .select('*', { count: 'exact', head: true })
-      .eq('active', true);
-    if (error) return 0;
-    return count || 0;
-  } catch { return 0; }
-}
-
 export async function fetchMockQuestions(): Promise<Question[]> {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) return getMockMockQuestions();
   try {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
+    if (!supabase) return getMockMockQuestions();
     const DIST: Record<string, number> = { Nursing: 60, 'General Knowledge': 15, English: 15, Bangla: 10 };
     let selected: Question[] = [];
     for (const [category, count] of Object.entries(DIST)) {
@@ -209,39 +258,50 @@ export async function fetchMockQuestions(): Promise<Question[]> {
     }
 
     const finalQuestions = shuffle(selected).slice(0, 100);
-    await markQuestionsSeen(finalQuestions.map(q => q.id));
+    if (finalQuestions.length > 0) {
+      await markQuestionsSeen(finalQuestions.map(q => q.id));
+    }
     return finalQuestions;
-  } catch (e) { console.warn('fetchMockQuestions failed:', e); return []; }
+  } catch (e) { console.warn('fetchMockQuestions failed:', e); return getMockMockQuestions(); }
 }
 
 export async function fetchDailyQuestions(count: number): Promise<Question[]> {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) return getMockDailyQuestions(count);
   try {
     return await fetchQuestionPool({}, count);
-  } catch { return []; }
+  } catch { return getMockDailyQuestions(count); }
 }
 
 export async function fetchQuestionsBySubcategory(subcategory: string, page = 0, limit = 20): Promise<Question[]> {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) {
+    const pool = getMockQuestions().filter(q => q.subcategory === subcategory);
+    return pool.slice(page * limit, (page + 1) * limit);
+  }
   try {
     const pool = await fetchQuestionPool({ subcategory }, limit * (page + 1));
     const from = page * limit;
     return pool.slice(from, from + limit);
-  } catch { return []; }
+  } catch { return getMockQuestions().slice(page * limit, (page + 1) * limit); }
 }
 
 export async function fetchQuestionsByCategory(category: string, count: number): Promise<Question[]> {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) return getMockQuestionsByCategory(category).slice(0, count);
   try {
     return await fetchQuestionPool({ category }, count);
-  } catch { return []; }
+  } catch { return getMockQuestionsByCategory(category).slice(0, count); }
 }
 
 export async function searchQuestions(query: string): Promise<Question[]> {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) {
+    const q = query.toLowerCase();
+    return getMockQuestions().filter(item => item.question.toLowerCase().includes(q)).slice(0, 50);
+  }
   try {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
+    if (!supabase) {
+      const q = query.toLowerCase();
+      return getMockQuestions().filter(item => item.question.toLowerCase().includes(q)).slice(0, 50);
+    }
     const { data, error } = await supabase.from('questions').select('*').ilike('question', `%${query}%`).eq('active', true).limit(50);
     if (error) return [];
     return data ?? [];

@@ -9,7 +9,7 @@ import { fetchDailyQuestions } from '@/src/lib/queries';
 export default function DailyScreen() {
   const insets = useSafeAreaInsets();
   const { startExam } = useExamStore();
-  const [loading, setLoading] = useState<20 | 50 | 100 | null>(null);
+  const [loading, setLoading] = useState<20 | 50 | 100 | 'challenge' | null>(null);
 
   const startDaily = async (count: 20 | 50 | 100) => {
     setLoading(count);
@@ -24,6 +24,23 @@ export default function DailyScreen() {
       router.push('/exam');
     } catch {
       Alert.alert('Error', 'Failed to start daily practice.');
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const startChallenge = async () => {
+    setLoading('challenge');
+    try {
+      const questions = await fetchDailyQuestions(20);
+      if (!questions.length) {
+        Alert.alert('No Questions', 'No questions found in the database yet.');
+        return;
+      }
+      startExam(questions.slice(0, 20), 'challenge', 20 * 60);
+      router.push('/exam');
+    } catch {
+      Alert.alert('Error', 'Failed to start daily challenge.');
     } finally {
       setLoading(null);
     }
@@ -50,8 +67,8 @@ export default function DailyScreen() {
           {loading === 100 ? <ActivityIndicator color="#D97706" /> : <MaterialCommunityIcons name="numeric-3-box-outline" size={32} color="#D97706" />}
           <View><Text style={styles.cardTitle}>Full Practice</Text><Text style={styles.cardSub}>100 Random Questions</Text></View>
         </Pressable>
-        <Pressable style={styles.card} onPress={() => startDaily(20)} disabled={loading !== null}>
-          {loading ? <ActivityIndicator color="#7C3AED" /> : <MaterialCommunityIcons name="trophy-outline" size={32} color="#7C3AED" />}
+        <Pressable style={styles.card} onPress={startChallenge} disabled={loading !== null}>
+          {loading === 'challenge' ? <ActivityIndicator color="#7C3AED" /> : <MaterialCommunityIcons name="trophy-outline" size={32} color="#7C3AED" />}
           <View><Text style={styles.cardTitle}>Daily Challenge</Text><Text style={styles.cardSub}>Complete today's challenge</Text></View>
         </Pressable>
       </View>

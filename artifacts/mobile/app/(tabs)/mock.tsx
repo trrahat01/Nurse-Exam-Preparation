@@ -4,14 +4,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
-import { useAuthStore } from '@/src/store/authStore';
 import { fetchMockQuestions, fetchDailyQuestions } from '@/src/lib/queries';
 import { MOCK_DISTRIBUTION } from '@/src/types';
 
 export default function MockScreen() {
   const insets = useSafeAreaInsets();
-  const { startExam } = useExamStore();
-  const { savedResults } = useExamStore();
+  const { startExam, savedResults } = useExamStore();
   const [mockLoading, setMockLoading] = useState(false);
   const [dailyLoading, setDailyLoading] = useState<'20' | '50' | '100' | null>(null);
 
@@ -60,7 +58,7 @@ export default function MockScreen() {
         <View style={[styles.gradient, { backgroundColor: '#0891B2' }]}>
           <MaterialCommunityIcons name="clipboard-text" size={48} color="rgba(255,255,255,0.8)" />
           <Text style={styles.mockTitle}>Full Mock Test</Text>
-          <Text style={styles.mockSub}>BPSC Exam Pattern • 100 Questions • 60 Minutes</Text>
+          <Text style={styles.mockSub}>Nursing Exam Pattern • 100 Questions • 60 Minutes</Text>
           <View style={styles.distRow}>
             {Object.entries(MOCK_DISTRIBUTION).map(([cat, count]) => (
               <View key={cat} style={styles.distItem}>

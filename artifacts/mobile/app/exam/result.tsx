@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,9 +9,15 @@ export default function ResultScreen() {
   const insets = useSafeAreaInsets();
   const { result, clearExam } = useExamStore();
 
-  if (!result) { router.replace('/(tabs)/mock'); return null; }
+  useEffect(() => {
+    if (!result) {
+      router.replace('/(tabs)/mock');
+    }
+  }, [result]);
 
-  const { score, correct, wrong, skipped, percentage, timeTaken, passed, questions } = result;
+  if (!result) return null;
+
+  const { correct, wrong, skipped, percentage, timeTaken, passed, questions } = result;
   const mm = Math.floor(timeTaken / 60);
   const ss = timeTaken % 60;
 
@@ -32,7 +38,7 @@ export default function ResultScreen() {
 
       <View style={styles.content}>
         <View style={styles.statsGrid}>
-          <StatCard icon="check-circle-outline" iconColor="#059669" iconBg="#D1FAE5" label="Correct" value={correct} subtitle={`${Math.round((correct / questions.length) * 100)}%`} />
+          <StatCard icon="check-circle-outline" iconColor="#059669" iconBg="#D1FAE5" label="Correct" value={correct} subtitle={`${questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0}%`} />
           <StatCard icon="close-circle-outline" iconColor="#DC2626" iconBg="#FEE2E2" label="Wrong" value={wrong} />
           <StatCard icon="minus-circle-outline" iconColor="#D97706" iconBg="#FEF3C7" label="Skipped" value={skipped} />
           <StatCard icon="timer-outline" iconColor="#0891B2" iconBg="#E0F2FE" label="Time" value={`${mm}m ${ss}s`} />
@@ -42,12 +48,12 @@ export default function ResultScreen() {
           {[
             ['Total Questions', questions.length, '#0C1A2E'],
             ['Attempted', correct + wrong, '#0C1A2E'],
-            ['Score', `${score} / ${questions.length}`, '#0891B2'],
+            ['Score', `${correct} / ${questions.length}`, '#0891B2'],
             ['Percentage', `${percentage}%`, passed ? '#059669' : '#DC2626'],
             ['Time Taken', `${mm} min ${ss} sec`, '#0C1A2E'],
             ['Result', passed ? 'PASS' : 'FAIL', passed ? '#059669' : '#DC2626'],
           ].map(([label, value, color], i) => (
-            <React.Fragment key={label as string}>
+            <React.Fragment key={String(label)}>
               {i > 0 && <View style={styles.divider} />}
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>{label}</Text>

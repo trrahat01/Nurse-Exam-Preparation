@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
 import { ChapterItem } from '@/components/ChapterItem';
-import { CATEGORY_CONFIG } from '@/lib/types';
+import { CATEGORY_CONFIG } from '@/src/types';
 
 const CATEGORIES = Object.values(CATEGORY_CONFIG);
 

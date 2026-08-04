@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView, StyleSheet, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -18,6 +18,15 @@ export default function ProfileScreen() {
   const totalExams = savedResults.length;
   const avgScore = totalExams > 0 ? Math.round(savedResults.reduce((s, r) => s + r.percentage, 0) / totalExams) : 0;
   const bestScore = totalExams > 0 ? Math.max(...savedResults.map(r => r.percentage)) : 0;
+
+  const handleEditProfile = () => {
+    if (isGuest) {
+      Alert.alert('Sign In Required', 'Please sign in to edit your profile.');
+      router.push('/auth/login');
+      return;
+    }
+    Alert.alert('Edit Profile', 'Profile editing coming soon. Stay tuned for updates!');
+  };
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
@@ -56,7 +65,7 @@ export default function ProfileScreen() {
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>ACCOUNT</Text>
         <View style={styles.section}>
-          <Pressable style={styles.menuItem}>
+          <Pressable style={styles.menuItem} onPress={handleEditProfile}>
             <View style={styles.menuLeft}>
               <MaterialCommunityIcons name="account-circle-outline" size={20} color="#0891B2" />
               <Text style={styles.menuLabel}>Edit Profile</Text>
@@ -90,6 +99,22 @@ export default function ProfileScreen() {
             </View>
             <Text style={styles.menuValue}>1.0.0</Text>
           </View>
+          <View style={styles.divider} />
+          <Pressable style={styles.menuItem} onPress={() => Alert.alert('About Us', 'Nurse Exam Preparation\n\n40,000+ MCQs for all nursing exams\n\nFor any questions, issues, or suggestions, contact us at:\ntrdevworks@gmail.com')}>
+            <View style={styles.menuLeft}>
+              <MaterialCommunityIcons name="help-circle-outline" size={20} color="#0891B2" />
+              <Text style={styles.menuLabel}>About Us</Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
+          </Pressable>
+          <View style={styles.divider} />
+          <Pressable style={styles.menuItem} onPress={() => Alert.alert('Contact Us', 'For any questions, issues, or suggestions, please email us at:\n\ntrdevworks@gmail.com\n\nWe typically respond within 24-48 hours.')}>
+            <View style={styles.menuLeft}>
+              <MaterialCommunityIcons name="email-outline" size={20} color="#0891B2" />
+              <Text style={styles.menuLabel}>Contact Us</Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
+          </Pressable>
         </View>
 
         {!isGuest && (

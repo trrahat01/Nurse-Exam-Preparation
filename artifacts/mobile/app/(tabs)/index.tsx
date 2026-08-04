@@ -13,7 +13,7 @@ const CATEGORIES = Object.values(CATEGORY_CONFIG);
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { user, isGuest } = useAuthStore();
-  const { savedResults, loadSavedResults, startExam } = useExamStore();
+  const { savedResults, loadSavedResults, startExam, viewResult } = useExamStore();
   const [loading, setLoading] = useState(false);
   const [categoryStats, setCategoryStats] = useState<Record<string, { total: number; seen: number; unseen: number }>>({});
   const [totalQuestions, setTotalQuestions] = useState(0);
@@ -58,6 +58,11 @@ export default function HomeScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewResult = (r: any) => {
+    viewResult(r);
+    router.push('/exam/review');
   };
 
   return (
@@ -145,7 +150,7 @@ export default function HomeScreen() {
               <Pressable
                 key={i}
                 style={styles.resultRow}
-                onPress={() => router.push('/exam/review')}
+                onPress={() => handleViewResult(r)}
               >
                 <View style={[styles.resultIcon, { backgroundColor: r.passed ? '#D1FAE5' : '#FEE2E2' }]}>
                   <MaterialCommunityIcons name={r.passed ? 'check' : 'close'} size={16} color={r.passed ? '#059669' : '#EF4444'} />

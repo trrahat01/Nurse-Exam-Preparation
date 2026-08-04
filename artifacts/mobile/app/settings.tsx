@@ -85,7 +85,7 @@ export default function SettingsScreen() {
             <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
           </Pressable>
           <View style={styles.divider} />
-          <Pressable style={styles.row} onPress={() => Alert.alert('About Nurse Exam Preparation', 'Nurse Exam Preparation v1.0.0\n\nAll-in-one nursing exam preparation app\n\n40,000+ MCQs covering all nursing subjects\n\nDeveloped for nursing professionals preparing for BPSC, BNC, BSc Nursing, Diploma, and all nursing exams in Bangladesh.\n\nFeatures: 40,000+ MCQs, Mock Tests, Performance Analytics, Offline Support, Smart Review')}>
+          <Pressable style={styles.row} onPress={() => Alert.alert('About Nurse Exam Preparation', 'Nurse Exam Preparation v1.0.0\n\nAll-in-one nursing exam preparation app\n\n40,000+ MCQs covering all nursing subjects\n\nDeveloped for nursing professionals preparing for all nursing exams.\n\nFeatures: 40,000+ MCQs, Mock Tests, Performance Analytics, Smart Review\n\nFor any questions, issues, or suggestions, contact us at:\ntrdevworks@gmail.com')}>
             <MaterialCommunityIcons name="information-outline" size={22} color="#64748B" />
             <View style={styles.rowContent}>
               <Text style={styles.rowLabel}>About</Text>

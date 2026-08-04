@@ -14,12 +14,12 @@ export default function WelcomeScreen() {
         <View style={styles.logoContainer}>
           <Image source={require('../assets/images/icon.png')} style={styles.logoImage} resizeMode="contain" />
         </View>
-        <Text style={styles.title}>BPSC Nurse Prep</Text>
-        <Text style={styles.subtitle}>Senior Staff Nurse Exam Preparation</Text>
+        <Text style={styles.title}>Nurse Exam Preparation</Text>
+        <Text style={styles.subtitle}>40,000+ MCQs for All Nursing Exams</Text>
       </View>
 
       <View style={styles.featuresSection}>
-        <FeatureItem icon="book-open-variant" text="Practice Questions" />
+        <FeatureItem icon="book-open-variant" text="40,000+ Practice Questions" />
         <FeatureItem icon="clock-outline" text="Timed Mock Exams" />
         <FeatureItem icon="chart-line" text="Performance Analytics" />
         <FeatureItem icon="bookmark-outline" text="Bookmark & Review" />
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   logoImage: { width: 80, height: 80 },
-  title: { color: '#fff', fontSize: 32, fontFamily: 'Inter_700Bold' },
+  title: { color: '#fff', fontSize: 28, fontFamily: 'Inter_700Bold', textAlign: 'center' },
   subtitle: { color: '#BAE6FD', fontSize: 15, fontFamily: 'Inter_400Regular', textAlign: 'center' },
   featuresSection: { gap: 16, marginBottom: 40 },
   featureItem: { flexDirection: 'row', alignItems: 'center', gap: 14 },

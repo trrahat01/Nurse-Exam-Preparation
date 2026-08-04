@@ -19,7 +19,12 @@ export default function LoginScreen() {
       await signIn(email.trim().toLowerCase(), password);
       router.replace('/(tabs)');
     } catch (e: any) {
-      Alert.alert('Login Failed', e.message || 'Invalid credentials.');
+      const msg = e?.message || 'Invalid credentials.';
+      if (msg.includes('Email not confirmed')) {
+        Alert.alert('Email Not Verified', 'Please check your inbox and click the verification link we sent to your email before signing in.');
+      } else {
+        Alert.alert('Login Failed', msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -37,8 +42,8 @@ export default function LoginScreen() {
           <View style={styles.logoBox}>
             <MaterialCommunityIcons name="medical-bag" size={40} color="#fff" />
           </View>
-          <Text style={styles.appName}>BPSC Nurse Prep</Text>
-          <Text style={styles.tagline}>Senior Staff Nurse Exam Preparation</Text>
+          <Text style={styles.appName}>Nurse Exam Preparation</Text>
+          <Text style={styles.tagline}>40,000+ MCQs for All Nursing Exams</Text>
         </View>
 
         <View style={styles.form}>
@@ -87,7 +92,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center', justifyContent: 'center',
   },
-  appName: { color: '#fff', fontSize: 24, fontFamily: 'Inter_700Bold' },
+  appName: { color: '#fff', fontSize: 24, fontFamily: 'Inter_700Bold', textAlign: 'center' },
   tagline: { color: '#BAE6FD', fontSize: 13, fontFamily: 'Inter_400Regular', textAlign: 'center' },
   form: {
     flex: 1, backgroundColor: '#F8FAFC', borderTopLeftRadius: 28, borderTopRightRadius: 28,
