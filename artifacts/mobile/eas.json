@@ -1,0 +1,44 @@
+{
+  "cli": {
+    "version": ">= 3.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "prebuildCommand": "npx expo prebuild --clean"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "prebuildCommand": "npx expo prebuild --clean"
+    },
+    "apk": {
+      "android": {
+        "buildType": "apk"
+      },
+      "prebuildCommand": "npx expo prebuild --clean"
+    },
+    "aab": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "prebuildCommand": "npx expo prebuild --clean"
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "prebuildCommand": "npx expo prebuild --clean"
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

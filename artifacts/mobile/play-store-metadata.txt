@@ -1,0 +1,225 @@
+========================================
+NURSE EXAM PREPARATION - PLAY STORE INFO
+========================================
+
+APP NAME:
+Nurse Exam Preparation
+
+PACKAGE NAME (already set):
+com.nurseexampreparation.nursing
+
+VERSION:
+1.0.0
+
+SHORT DESCRIPTION (80 chars max):
+Master nursing exams with 40,000+ MCQs, mock tests & detailed analytics for nurses.
+
+FULL DESCRIPTION:
+The ultimate nursing exam preparation app with 40,000+ carefully curated multiple-choice questions covering all major nursing subjects and exams. Whether you're preparing for government recruitment, university exams, or international nursing certifications, this app has everything you need to succeed.
+
+COMPREHENSIVE QUESTION BANK:
+✓ 40,000+ Practice Questions - The largest MCQ collection for nursing exams
+✓ 5 Major Categories: Nursing Science, Bangla, English, General Knowledge, Math
+✓ 60+ Subcategories covering all nursing specialties
+✓ Questions from real past exams and expert-curated content
+✓ Regular updates with new questions
+✓ No duplicate questions - Smart deduplication system
+
+EXAMS COVERED:
+• Government Nursing Recruitment Exams
+• Nursing Council Exams
+• BSc Nursing, Diploma in Nursing Exams
+• Government & Private Hospital Recruitment
+• Midwifery & Public Health Nursing Exams
+• International Nursing Exams (NCLEX, HAAD, etc.)
+• All Nursing University & College Exams
+
+FEATURES:
+✓ Full Mock Tests - Simulate real exam conditions with timer
+✓ Timed Practice - 60-minute exams with auto-submit
+✓ Instant Results - Detailed score analysis after each test
+✓ Answer Review - See mistakes with correct answers explained
+✓ Performance Analytics - Track improvement over time
+✓ Bookmark Questions - Save important questions for review
+✓ Smart Progress Tracking - Identify weak areas
+✓ No Repeat Questions - Smart system ensures you see new questions
+✓ User-friendly Interface - Clean, modern, easy to navigate
+✓ Works Offline - Practice without internet connection
+✓ Guest Mode - Start practicing immediately without signup
+
+CATEGORIES:
+1. Nursing Science (22 chapters)
+   - Medical Surgical Nursing
+   - Anatomy
+   - Physiology
+   - Pharmacology
+   - Pediatric Nursing
+   - Community Nursing
+   - Obstetrics
+   - Gynecology
+   - Microbiology
+   - Pathology
+   - Nutrition
+   - Infection Control
+   - ICU
+   - Emergency Nursing
+   - Psychiatric Nursing
+   - Fundamentals of Nursing
+   - Ethics
+   - Nursing Procedures
+   - Drug Calculation
+   - Research
+   - Leadership
+   - Hospital Management
+
+2. Bangla (9 chapters)
+   - Grammar
+   - Literature
+   - Vocabulary
+   - Idioms
+   - One Word
+   - Authors
+   - Books
+   - Synonyms
+   - Antonyms
+
+3. English (10 chapters)
+   - Grammar
+   - Vocabulary
+   - Sentence Correction
+   - Articles
+   - Voice
+   - Narration
+   - Synonyms
+   - Antonyms
+   - Reading
+   - Idioms
+
+4. General Knowledge (11 chapters)
+   - Bangladesh Affairs
+   - Liberation War
+   - Constitution
+   - International Affairs
+   - ICT
+   - Science
+   - Geography
+   - Organizations
+   - Current Affairs
+   - Economics
+   - Health Programs
+
+5. Math (11 chapters)
+   - Percentage
+   - Ratio
+   - Profit Loss
+   - Average
+   - Simple Interest
+   - Time Work
+   - Time Distance
+   - Age
+   - LCM
+   - HCF
+   - Drug Calculation
+
+PERFECT FOR:
+- Nursing students preparing for exams
+- Staff nurses seeking promotion
+- Healthcare professionals upgrading qualifications
+- Anyone pursuing a nursing career
+
+SCREENSHOTS (10 screenshots, 1080×1920px PNG - READY TO UPLOAD):
+Location: App Screenshot/playstore/
+
+1. 01-welcome-screen.png - Welcome/Onboarding screen
+2. 02-home-screen.png - Home Screen with 5 main categories
+3. 03-categories.png - Category selection
+4. 04-practice-chapters.png - Practice chapters list
+5. 05-question-options.png - Question with multiple choice options
+6. 06-mock-exam.png - Mock Exam timer in action
+7. 07-exam-results.png - Quiz Results with score breakdown
+8. 08-answer-review.png - Answer Review showing mistakes & correct answer
+9. 09-analytics.png - Performance Analytics / Progress chart
+10. 10-bookmarks.png - Bookmarked questions
+
+All screenshots are 1080×1920px PNG format, ready for direct upload to Play Console.
+
+CATEGORY: Education
+TAGS: nursing exam, nurse mcq, nursing preparation, staff nurse, nursing questions, medical exam prep, nurse test, bpsc nurse, nursing mcq
+
+PRIVACY POLICY URL: (Create at https://app-privacy-policy-generator.nisrulz.com/)
+
+SUPPORT EMAIL:
+trdevworks@gmail.com
+
+CONTACT:
+For any questions, issues, or suggestions: trdevworks@gmail.com
+
+========================================
+BUILD INSTRUCTIONS
+========================================
+
+1. Build AAB for Play Store:
+   cd artifacts/mobile
+   eas build --platform android --profile production
+
+2. Build APK for testing:
+   cd artifacts/mobile
+   eas build --platform android --profile apk
+
+3. The AAB file will be available at:
+   https://expo.dev/accounts/trrahat/projects/nurse-exam-preparation/builds
+
+========================================
+PLAY CONSOLE SETUP
+========================================
+
+1. Create Google Play Developer Account ($25 one-time)
+2. Go to https://play.google.com/console
+3. Create app with name "Nurse Exam Preparation"
+4. Upload the AAB file
+5. Complete all required sections:
+   - App content
+   - Data safety
+   - Content rating
+   - Target audience
+   - Store listing
+   - Privacy policy
+6. Submit for review
+
+========================================
+DATA SAFETY FORM
+========================================
+
+Data collected:
+- Email address (for account creation)
+- Name (for profile)
+- App usage data (for analytics)
+
+Data shared: No data shared with third parties
+Security: Data encrypted in transit (HTTPS)
+Deletion: Users can delete account by contacting trdevworks@gmail.com
+
+========================================
+CONTENT RATING
+========================================
+
+Category: Education
+Violence: None
+Sexual content: None
+Profanity: None
+Alcohol/Tobacco/Drugs: None
+Rating: Everyone
+
+========================================
+RELEASE NOTES (Version 1.0.0)
+========================================
+
+Version 1.0.0
+- 40,000+ MCQs for all nursing exams
+- Full mock tests with timer
+- Performance analytics
+- Answer review with explanations
+- Smart question selection (no repeats)
+- Bookmark questions for review
+- Works offline
+- Guest mode available
