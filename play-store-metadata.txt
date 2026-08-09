@@ -1,0 +1,52 @@
+﻿App Title:
+Nurse Exam Preparation
+
+Short Description (80 characters max):
+Independent practice app for nursing exam prep. Not affiliated with any govt body.
+
+Full Description:
+
+⚠️ IMPORTANT LEGAL DISCLAIMER — This app is an INDEPENDENT, UNOFFICIAL study tool. It is NOT a government entity and is NOT affiliated with, endorsed by, sponsored by, or a representative of any government, commission, board, or examination authority (including any of the sources listed below). All practice content is independently curated for self-study only and does not guarantee any examination result.
+Nurse Exam Preparation — independent study tool for nursing candidates preparing for competitive exams.
+Building on official nursing curriculum and published exam syllabi, the app offers 40,000+ practice questions across Nursing Science, Bangla, English, General Knowledge, and Math, with 60+ subcategories and full mock tests.
+
+FEATURES:
+- 40,000+ Practice Questions
+- 5 Major Categories: Nursing Science, Bangla, English, General Knowledge, Math
+- 60+ Subcategories covering nursing specialties
+- Full Mock Tests with timers & auto-submit
+- Instant Results & Answer Review with explanations
+- Performance Analytics & Progress Tracking
+- Bookmark Questions for review
+- Works Offline & Guest Mode
+
+EXAMS PREPARED FOR:
+- Government Nursing Recruitment Exams (see official sources below)
+- Nursing Council & Board Exams
+- BSc Nursing & Diploma in Nursing Exams
+- Hospital Recruitment Exams
+- Midwifery & Public Health Nursing Exams
+- International Nursing Exams (NCLEX-style, HAAD-style, etc.)
+
+OFFICIAL PUBLIC SOURCES (public curricula & syllabi referenced only to structure practice topics):
+- DGNM Bangladesh (Directorate General of Nursing & Midwifery): https://dgnm.gov.bd
+- Bangladesh Public Service Commission: http://www.bpsc.gov.bd
+- Ministry of Health & Family Welfare, Bangladesh: https://mohfw.gov.bd
+
+DISCLAIMER:
+This app is an independent study tool and is NOT affiliated with, endorsed by, or a representative of any government entity, commission, or examination board. All question content is independently curated for practice based on publicly available syllabi. Practice questions are for self-study only and do not guarantee exam results. Exam/board names belong to their respective owners.
+
+Privacy Policy URL:
+https://trrahat01.github.io/Nurse-Exam-Preparation/privacy-policy.html
+
+Data Deletion URL:
+https://trrahat01.github.io/Nurse-Exam-Preparation/deletion.html
+
+Contact Email:
+trdevworks@gmail.com
+
+Category:
+Education
+
+Price:
+Free

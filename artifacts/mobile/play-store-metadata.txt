@@ -15,6 +15,7 @@ SHORT DESCRIPTION (80 chars max):
 Master nursing exams with 40,000+ MCQs, mock tests & detailed analytics for nurses.
 
 FULL DESCRIPTION:
+⚠️ IMPORTANT LEGAL DISCLAIMER — This app is an INDEPENDENT, UNOFFICIAL study tool. It is NOT a government entity and is NOT affiliated with, endorsed by, sponsored by, or a representative of any government, commission, board, or examination authority (including any of the sources listed below). All practice content is independently curated for self-study only and does not guarantee any examination result.
 The ultimate nursing exam preparation app with 40,000+ carefully curated multiple-choice questions covering all major nursing subjects and exams. Whether you're preparing for government recruitment, university exams, or international nursing certifications, this app has everything you need to succeed.
 
 COMPREHENSIVE QUESTION BANK:
@@ -142,6 +143,14 @@ Location: App Screenshot/playstore/
 10. 10-bookmarks.png - Bookmarked questions
 
 All screenshots are 1080×1920px PNG format, ready for direct upload to Play Console.
+
+OFFICIAL PUBLIC SOURCES (public curricula & syllabi referenced only to structure practice topics):
+- DGNM Bangladesh (Directorate General of Nursing & Midwifery): https://dgnm.gov.bd
+- Bangladesh Public Service Commission (BPSC): http://www.bpsc.gov.bd
+- Ministry of Health & Family Welfare, Bangladesh: https://mohfw.gov.bd
+
+DISCLAIMER:
+This app is an independent study tool and is NOT affiliated with, endorsed by, or a representative of any government entity, commission, or examination board. All question content is independently curated for practice based on publicly available syllabi. Practice questions are for self-study only and do not guarantee exam results. Exam/board names belong to their respective owners.
 
 CATEGORY: Education
 TAGS: nursing exam, nurse mcq, nursing preparation, staff nurse, nursing questions, medical exam prep, nurse test, bpsc nurse, nursing mcq
