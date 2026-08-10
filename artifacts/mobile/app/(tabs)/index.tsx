@@ -7,6 +7,7 @@ import { useAuthStore } from '@/src/store/authStore';
 import { useExamStore } from '@/src/store/examStore';
 import { fetchMockQuestions, fetchCategoryQuestionStats, fetchTotalQuestionCount } from '@/src/lib/queries';
 import { CATEGORY_CONFIG } from '@/src/types';
+import AdBanner from '@/components/AdBanner';
 
 const CATEGORIES = Object.values(CATEGORY_CONFIG);
 
@@ -168,6 +169,8 @@ export default function HomeScreen() {
           </>
         )}
       </View>
+
+      <AdBanner placement="home" />
     </ScrollView>
   );
 }

@@ -53,6 +53,7 @@ export default function RootLayout() {
             <Stack.Screen name="search" />
             <Stack.Screen name="bookmarks" />
             <Stack.Screen name="settings" />
+            <Stack.Screen name="about" />
             <Stack.Screen name="analytics" />
           </Stack>
         </QueryClientProvider>

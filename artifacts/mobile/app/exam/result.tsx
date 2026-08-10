@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
+import AdBanner from '@/components/AdBanner';
 
 export default function ResultScreen() {
   const insets = useSafeAreaInsets();
@@ -73,6 +74,8 @@ export default function ResultScreen() {
           <Text style={styles.btnOutlineText}>Back to Home</Text>
         </Pressable>
       </View>
+
+      <AdBanner placement="result" />
     </ScrollView>
   );
 }
