@@ -36,15 +36,7 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-notifications",
-      [
-        "react-native-google-mobile-ads",
-        {
-          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
-          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
-          "userTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
-        }
-      ]
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true
@@ -54,9 +46,9 @@
       "supabaseAnonKey": "sb_publishable_9skTG1J4vb6WcdSvddzBIQ_-c9boaHm",
       "router": {},
       "eas": {
-        "projectId": "305f469c-7cec-461c-bc65-83ad4d1ae97d"
+        "projectId": "98ff757f-2455-45ec-b47d-6ab79b45ff9f"
       }
     },
-    "owner": "trrahat"
+    "owner": "trrahat26-2"
   }
 }

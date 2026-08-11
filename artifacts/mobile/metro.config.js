@@ -15,4 +15,10 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
+// pnpm (node-linker=hoisted) still keeps packages symlinked to the .pnpm store.
+// Enable Metro symlink resolution so it uses the hoisted node_modules path
+// instead of the .pnpm realpath (fixes "Unable to resolve ... expo-router/entry.js").
+config.resolver.unstable_enableSymlinks = true;
+config.resolver.disableHierarchicalLookup = false;
+
 module.exports = config;
