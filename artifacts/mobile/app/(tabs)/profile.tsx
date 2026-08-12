@@ -25,7 +25,7 @@ export default function ProfileScreen() {
       router.push('/auth/login');
       return;
     }
-    Alert.alert('Edit Profile', 'Profile editing coming soon. Stay tuned for updates!');
+    router.push('/edit-profile');
   };
 
   return (

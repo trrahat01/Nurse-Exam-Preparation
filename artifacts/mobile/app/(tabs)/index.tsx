@@ -118,6 +118,15 @@ export default function HomeScreen() {
           <ActionButton icon="magnify" label="Search" sublabel="Questions" color="#D97706" bg="#FEF3C7" onPress={() => router.push('/search')} />
         </View>
 
+        <Pressable style={styles.readingBanner} onPress={() => router.push('/reading')}>
+          <MaterialCommunityIcons name="book-open-page-variant" size={24} color="#059669" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.readingTitle}>Reading Mode</Text>
+            <Text style={styles.readingSub}>Study notes with adjustable text size</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#94A3B8" />
+        </Pressable>
+
         <Text style={styles.sectionTitle}>Categories</Text>
         <View style={styles.catGrid}>
           {CATEGORIES.map((cat) => {
@@ -209,6 +218,9 @@ const styles = StyleSheet.create({
   actionLabel: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#0C1A2E' },
   actionSub: { fontSize: 10, fontFamily: 'Inter_400Regular', color: '#64748B' },
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  readingBanner: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E2E8F0', padding: 14 },
+  readingTitle: { fontSize: 15, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
+  readingSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2 },
   catCard: { width: '47%', borderRadius: 16, padding: 16, gap: 8 },
   catIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   catName: { fontSize: 15, fontFamily: 'Inter_700Bold' },

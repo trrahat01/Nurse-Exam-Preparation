@@ -24,23 +24,30 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   initialize: async () => {
     try {
-      const guestMode = await AsyncStorage.getItem('guest_mode');
-      if (guestMode === 'false') {
-        // User was logged in, check if session is still valid
-        const supabase = getSupabaseClient();
-        if (supabase) {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            set({ user, isAuthenticated: true, isGuest: false, isLoading: false });
-            return;
+      // Always try to restore a persisted session first so login stays "permanent".
+      const supabase = getSupabaseClient();
+      let restored = false;
+      if (supabase) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              restored = true;
+              await AsyncStorage.setItem('guest_mode', 'false');
+              set({ user, isAuthenticated: true, isGuest: false, isLoading: false });
+            }
           }
-        }
+        } catch { /* fall through to guest */ }
       }
-      // Default to guest mode
-      await AsyncStorage.setItem('guest_mode', 'true');
-      set({ isLoading: false, isGuest: true });
+      if (!restored) {
+        // No valid session — default to guest (or honor a previously stored guest flag).
+        const guestMode = await AsyncStorage.getItem('guest_mode');
+        if (guestMode === 'false') await AsyncStorage.setItem('guest_mode', 'true');
+        set({ isLoading: false, isGuest: true, user: null, isAuthenticated: false });
+      }
     } catch {
-      set({ isLoading: false, isGuest: true });
+      set({ isLoading: false, isGuest: true, user: null, isAuthenticated: false });
     }
   },
 

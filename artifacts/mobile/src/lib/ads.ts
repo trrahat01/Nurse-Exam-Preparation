@@ -43,14 +43,16 @@ export const USE_TEST_ADS = true;
 
 /** Only used when USE_TEST_ADS = false. Fill these from your AdMob dashboard. */
 export const REAL_ADS = {
-  // App IDs (also update in app.json plugin config):
-  // Android: ca-app-pub-XXXXXXXXXXXXXXXX/3539209097 style is for units, App ID looks like ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
-  androidAppId: '',
-  iosAppId: '',
+  // App ID: ca-app-pub-7383364741984927~3313458389
+  // Banner: ca-app-pub-7383364741984927/2786844778
+  // Interstitial: ca-app-pub-7383364741984927/5436224695
+  androidAppId: 'ca-app-pub-7383364741984927~3313458389',
+  iosAppId: 'ca-app-pub-7383364741984927~3313458389',
 
   // Banner ad units, format ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
-  homeBanner: { android: '', ios: '' },
-  resultBanner: { android: '', ios: '' },
+  homeBanner: { android: 'ca-app-pub-7383364741984927/2786844778', ios: 'ca-app-pub-7383364741984927/2786844778' },
+  resultBanner: { android: 'ca-app-pub-7383364741984927/2786844778', ios: 'ca-app-pub-7383364741984927/2786844778' },
+  interstitial: 'ca-app-pub-7383364741984927/5436224695',
 };
 
 export type AdPlacement = 'home' | 'result';

@@ -1,14 +1,16 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, Alert, Switch } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/authStore';
+import { useThemeStore } from '@/src/store/themeStore';
 import { clearQuestionHistory } from '@/src/lib/queries';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { user, isGuest, signOut } = useAuthStore();
+  const { theme, setTheme } = useThemeStore();
 
   const handleResetSeen = () => {
     Alert.alert(
@@ -76,11 +78,25 @@ export default function SettingsScreen() {
             <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
           </Pressable>
           <View style={styles.divider} />
-          <Pressable style={styles.row} onPress={() => Alert.alert('Dark Mode', 'Dark mode support coming soon. Please check for app updates!')}>
+          <View style={styles.row}>
             <MaterialCommunityIcons name="theme-light-dark" size={22} color="#64748B" />
             <View style={styles.rowContent}>
               <Text style={styles.rowLabel}>Dark Mode</Text>
-              <Text style={styles.rowSub}>Coming in next update</Text>
+              <Text style={styles.rowSub}>{theme === 'dark' ? 'Dark theme enabled' : 'Light theme'}</Text>
+            </View>
+            <Switch
+              value={theme === 'dark'}
+              onValueChange={(val) => setTheme(val ? 'dark' : 'light')}
+              trackColor={{ false: '#CBD5E1', true: '#0891B2' }}
+              thumbColor="#fff"
+            />
+          </View>
+          <View style={styles.divider} />
+          <Pressable style={styles.row} onPress={() => router.push('/reading')}>
+            <MaterialCommunityIcons name="book-open-variant" size={22} color="#059669" />
+            <View style={styles.rowContent}>
+              <Text style={styles.rowLabel}>Reading Mode</Text>
+              <Text style={styles.rowSub}>Study notes with adjustable text size</Text>
             </View>
             <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
           </Pressable>

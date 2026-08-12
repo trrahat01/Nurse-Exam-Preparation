@@ -213,12 +213,4 @@ export const CATEGORY_CONFIG: Record<string, { name: string; icon: string; color
     description: 'GK, Current Affairs & Bangladesh Affairs',
     chapters: ['Bangladesh Affairs', 'Liberation War', 'Constitution', 'International Affairs', 'ICT', 'Science', 'Geography', 'Organizations', 'Current Affairs', 'Economics', 'Health Programs'],
   },
-  Math: {
-    name: 'Math',
-    icon: 'calculator',
-    color: '#DC2626',
-    bgColor: '#FEE2E2',
-    description: 'Mathematics & Drug Calculation',
-    chapters: ['Percentage', 'Ratio', 'Profit Loss', 'Average', 'Simple Interest', 'Time Work', 'Time Distance', 'Age', 'LCM', 'HCF', 'Drug Calculation'],
-  },
 };

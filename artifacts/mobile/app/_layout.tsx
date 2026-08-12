@@ -8,6 +8,9 @@ import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_7
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '@/src/store/authStore';
 import { useBookmarkStore } from '@/src/store/bookmarkStore';
+import { useThemeStore } from '@/src/store/themeStore';
+import { setupNotifications } from '@/src/lib/notifications';
+import AppSplash from '@/components/AppSplash';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,17 +25,20 @@ export default function RootLayout() {
   const initialize = useAuthStore(s => s.initialize);
   const isLoading = useAuthStore(s => s.isLoading);
   const loadBookmarks = useBookmarkStore(s => s.loadBookmarks);
+  const loadTheme = useThemeStore(s => s.loadTheme);
 
   useEffect(() => {
     initialize();
     loadBookmarks();
+    loadTheme();
+    setupNotifications();
   }, []);
 
   useEffect(() => {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
-  if (!fontsLoaded || isLoading) return null;
+  if (!fontsLoaded || isLoading) return <AppSplash />;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -54,6 +60,8 @@ export default function RootLayout() {
             <Stack.Screen name="bookmarks" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="about" />
+            <Stack.Screen name="reading" />
+            <Stack.Screen name="edit-profile" />
             <Stack.Screen name="analytics" />
           </Stack>
         </QueryClientProvider>
