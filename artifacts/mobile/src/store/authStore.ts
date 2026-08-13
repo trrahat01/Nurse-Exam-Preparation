@@ -23,31 +23,47 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
 
   initialize: async () => {
+    const supabase = getSupabaseClient();
+    let finished = false;
+
+    const finishAsGuest = async () => {
+      if (finished) return;
+      finished = true;
+      const guestMode = await AsyncStorage.getItem('guest_mode');
+      if (guestMode === 'false') await AsyncStorage.setItem('guest_mode', 'true');
+      set({ isLoading: false, isGuest: true, user: null, isAuthenticated: false });
+    };
+
+    if (!supabase) { await finishAsGuest(); return; }
+
     try {
-      // Always try to restore a persisted session first so login stays "permanent".
-      const supabase = getSupabaseClient();
-      let restored = false;
-      if (supabase) {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user) {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              restored = true;
-              await AsyncStorage.setItem('guest_mode', 'false');
-              set({ user, isAuthenticated: true, isGuest: false, isLoading: false });
-            }
-          }
-        } catch { /* fall through to guest */ }
-      }
-      if (!restored) {
-        // No valid session — default to guest (or honor a previously stored guest flag).
-        const guestMode = await AsyncStorage.getItem('guest_mode');
-        if (guestMode === 'false') await AsyncStorage.setItem('guest_mode', 'true');
-        set({ isLoading: false, isGuest: true, user: null, isAuthenticated: false });
+      // Restore any persisted session the moment Supabase loads it from storage.
+      // onAuthStateChange reliably fires with the saved session (INITIAL_SESSION /
+      // SIGNED_IN) even on cold start, fixing the getSession() race that caused
+      // users to appear logged-out after leaving & reopening the app.
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (session?.user) {
+          finished = true;
+          AsyncStorage.setItem('guest_mode', 'false');
+          set({ user: session.user, isAuthenticated: true, isGuest: false, isLoading: false });
+        } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
+          finishAsGuest();
+        }
+      });
+
+      // Fallback direct read for the already-loaded session.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        finished = true;
+        await AsyncStorage.setItem('guest_mode', 'false');
+        set({ user: session.user, isAuthenticated: true, isGuest: false, isLoading: false });
+      } else {
+        // Give the listener a moment to deliver the restored session, then fall
+        // back to guest so the app never hangs on a blank/loading state.
+        setTimeout(() => finishAsGuest(), 1500);
       }
     } catch {
-      set({ isLoading: false, isGuest: true, user: null, isAuthenticated: false });
+      await finishAsGuest();
     }
   },
 
