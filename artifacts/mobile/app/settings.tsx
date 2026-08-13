@@ -107,7 +107,7 @@ export default function SettingsScreen() {
               <Text style={styles.rowLabel}>About & Sources</Text>
               <Text style={styles.rowSub}>Disclaimer, official sources & support</Text>
             </View>
-            <Text style={styles.rowValue}>v1.1.0</Text>
+            <Text style={styles.rowValue}>v1.3.0</Text>
           </Pressable>
         </View>
       </View>

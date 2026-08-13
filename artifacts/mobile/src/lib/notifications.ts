@@ -75,7 +75,7 @@ export async function scheduleDailyReminder(hour = 20, minute = 0): Promise<void
  */
 export async function notifyOnAppUpdate(): Promise<void> {
   try {
-    const version = Constants.expoConfig?.version || '1.2.0';
+    const version = Constants.expoConfig?.version || '1.3.0';
     const key = 'last_announced_version';
     const last = await AsyncStorage.getItem(key);
     if (last === version) return;
