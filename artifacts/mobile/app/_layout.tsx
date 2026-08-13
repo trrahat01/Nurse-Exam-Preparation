@@ -10,7 +10,6 @@ import { useAuthStore } from '@/src/store/authStore';
 import { useBookmarkStore } from '@/src/store/bookmarkStore';
 import { useThemeStore } from '@/src/store/themeStore';
 import { setupNotifications } from '@/src/lib/notifications';
-import AppSplash from '@/components/AppSplash';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,7 +22,6 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
   const initialize = useAuthStore(s => s.initialize);
-  const isLoading = useAuthStore(s => s.isLoading);
   const loadBookmarks = useBookmarkStore(s => s.loadBookmarks);
   const loadTheme = useThemeStore(s => s.loadTheme);
 
@@ -38,7 +36,9 @@ export default function RootLayout() {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
-  if (!fontsLoaded || isLoading) return <AppSplash />;
+  // Hide the native (white) splash as soon as fonts are ready and render the app
+  // immediately — no blue screen, no loading spinner screen.
+  if (!fontsLoaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

@@ -10,7 +10,7 @@ interface AuthState {
   isAuthenticated: boolean;
   initialize: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<{ needsEmailConfirmation: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   continueAsGuest: () => Promise<void>;
@@ -60,7 +60,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw new Error('Supabase not configured');
     }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) {
+      const msg = (error.message || '').toLowerCase();
+      if (msg.includes('not confirmed') || msg.includes('email_not_confirmed')) {
+        throw new Error('Please verify your email first. Check your inbox (and spam) for the verification link we sent.');
+      }
+      throw error;
+    }
     const { data: { user } } = await supabase.auth.getUser();
     await AsyncStorage.setItem('guest_mode', 'false');
     set({ user, isAuthenticated: true, isGuest: false, isLoading: false });
@@ -70,8 +76,21 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
     const supabase = getSupabaseClient();
     if (!supabase) throw new Error('Supabase not configured');
-    const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name } },
+    });
     if (error) throw error;
+
+    // If a session was returned, email confirmation is NOT required → auto-login.
+    if (data.session) {
+      await AsyncStorage.setItem('guest_mode', 'false');
+      set({ user: data.user, isAuthenticated: true, isGuest: false, isLoading: false });
+      return { needsEmailConfirmation: false };
+    }
+    // No session → the user must confirm their email before signing in.
+    return { needsEmailConfirmation: true };
   },
 
   signOut: async () => {

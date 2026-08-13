@@ -18,12 +18,17 @@ export default function RegisterScreen() {
     if (password.length < 6) { Alert.alert('Error', 'Password must be at least 6 characters.'); return; }
     setLoading(true);
     try {
-      await signUp(email.trim().toLowerCase(), password, name.trim());
-      Alert.alert(
-        'Account Created!',
-        'We have sent a verification link to your email. Please check your inbox (and spam folder) and click the link to verify your account before signing in.',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      const res = await signUp(email.trim().toLowerCase(), password, name.trim());
+      if (res.needsEmailConfirmation) {
+        Alert.alert(
+          'Check Your Email',
+          'We sent a verification link to your email. Please check your inbox (and spam folder) and click the link to verify your account, then sign in.',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+      } else {
+        // Email confirmation is disabled / already confirmed → signed straight in.
+        router.replace('/(tabs)');
+      }
     } catch (e: any) {
       Alert.alert('Registration Failed', e.message || 'Something went wrong.');
     } finally {
