@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Email Verified – Nurse Exam Preparation</title>
+  <style>
+    body { font-family: -apple-system, Arial, sans-serif; text-align: center; padding: 40px 20px; color: #0C1A2E; background: #F0F9FF; }
+    .box { max-width: 400px; margin: 40px auto; padding: 28px 24px; background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; }
+    h2 { font-size: 22px; margin: 10px 0; }
+    .ok { font-size: 20px; color: #059669; margin: 6px 0; }
+    .hint { color: #64748B; font-size: 14px; line-height: 1.5; }
+    .btn { display: inline-block; margin-top: 16px; padding: 12px 22px; border-radius: 12px; background: #0891B2; color: #fff; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <img src="./icon.png" alt="Nurse Exam Preparation" width="72" height="72" style="border-radius: 16px;" />
+    <h2>Nurse Exam Preparation</h2>
+    <div class="ok">&#10003; Email verified!</div>
+    <div class="hint">Your email address has been confirmed. You can now sign in to the app and start practicing.</div>
+    <a class="btn" id="open" href="nurse-exam-prep://">Open the App</a>
+  </div>
+  <script>
+    try { window.location.replace('nurse-exam-prep://'); } catch (e) {}
+  </script>
+</body>
+</html>

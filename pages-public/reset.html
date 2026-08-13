@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nurse Exam Preparation – Opening app…</title>
+  <style>
+    body { font-family: -apple-system, Arial, sans-serif; text-align: center; padding: 40px 20px; color: #0C1A2E; background: #F0F9FF; }
+    .box { max-width: 420px; margin: 40px auto; padding: 24px; background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; }
+    h2 { font-size: 22px; margin: 8px 0 16px; }
+  a { color: #0891B2; }
+    .hint { color: #64748B; font-size: 14px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <img src="./icon.png" alt="Nurse Exam Preparation" width="72" height="72" style="border-radius: 16px;" />
+    <h2>Nurse Exam Preparation</h2>
+    <!-- Forward the recovery/verification token from the email link straight into the app. -->
+    <div class="hint" id="msg">Opening Nurse Exam Preparation…</div>
+  </div>
+  <script>
+    (function () {
+      var hash = window.location.hash || '';
+      var qs = window.location.search || '';
+      // The token usually arrives in the hash (PKCE) or the query string.
+      var suffix = hash || qs;
+      var deep = 'nurse-exam-prep://reset-password' + suffix;
+      try { window.location.replace(deep); } catch (e) {}
+      setTimeout(function () {
+        document.getElementById('msg').innerHTML =
+          "If the app doesn't open, make sure Nurse Exam Preparation is installed, then " +
+          '<a href="' + deep + '">tap here</a>.';
+      }, 900);
+    })();
+  </script>
+</body>
+</html>
