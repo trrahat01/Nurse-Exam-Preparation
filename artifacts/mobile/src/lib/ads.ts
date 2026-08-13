@@ -1,45 +1,19 @@
 import { Platform } from 'react-native';
+import { TestIds } from 'react-native-google-mobile-ads';
 
 /**
- * ⚠️ AdMob is currently DISABLED (ADS_ENABLED = false).
+ * ADMOB CONFIGURATION.
+ * Ads are ENABLED using react-native-google-mobile-ads@15 (Google Ads SDK 24.1.0,
+ * Kotlin-compatible with Expo SDK 54).
  *
- * Reason: the AdMob native module (react-native-google-mobile-ads v16) pulls the
- * Google Ads SDK 25.4.0, which is compiled with Kotlin 2.3.0. Expo SDK 54 only
- * supports Kotlin up to 2.2.20, so the module could not compile. Ads are disabled
- * so the app can build and ship.
- *
- * To re-enable ads in a later update:
- *  1) Install a compatible version of react-native-google-mobile-ads.
- *  2) Add the "react-native-google-mobile-ads" config plugin (with your real App
- *     IDs) to app.json.
- *  3) Put your real (test) banner unit IDs in REAL_ADS below.
- *  4) Set USE_TEST_ADS = false and ADS_ENABLED = true.
- *  5) Rebuild.
+ * - ADS_ENABLED = false → disables all ads.
+ * - USE_TEST_ADS = false → uses your REAL AdMob IDs below (real revenue).
+ *   Set USE_TEST_ADS = true to show Google's official test ads (no revenue).
  */
+export const ADS_ENABLED = true;
 
-/**
- * ============================================================================
- *  ADMOB CONFIGURATION — the single place to control all advertising.
- * ============================================================================
- *
- *  1. ADS_ENABLED  — Master switch. Set to false to disable ads everywhere.
- *  2. USE_TEST_ADS — Uses Google's official test ad units so NO real ad revenue
- *                    is consumed during development. KEEP THIS `true` until you
- *                    have created real AdMob units and pasted the IDs below.
- *  3. REAL_ADS     — Your real AdMob unit IDs (you provide these later).
- *
- *  ⚠️  The AdMob APP IDs live separately in app.json inside the
- *      `react-native-google-mobile-ads` config plugin. Update those there too
- *      when you switch to real ads.
- *
- *  Design note (non-intrusive): only small banners are used, and only when they
- *  can load. There are no interstitials/rewarded ads that interrupt studying.
- * ============================================================================
- */
-export const ADS_ENABLED = false;
-
-/** Set to `false` only after REAL_ADS contains valid IDs. */
-export const USE_TEST_ADS = true;
+/** Set to `false` to use your real IDs (real revenue). Keep `true` for testing. */
+export const USE_TEST_ADS = false;
 
 /** Only used when USE_TEST_ADS = false. Fill these from your AdMob dashboard. */
 export const REAL_ADS = {
@@ -75,10 +49,12 @@ export function shouldShowAds(): boolean {
  */
 export function getBannerUnitId(placement: AdPlacement): string | null {
   if (!ADS_ENABLED || isWeb) return null;
-
-  return null; // Ads disabled — no ad unit id is used.
-
+  if (USE_TEST_ADS) return TestIds.BANNER;
   const ids = PLACEMENTS[placement];
   const id = Platform.OS === 'ios' ? ids.ios : ids.android;
   return id && id.length > 0 ? id : null;
+}
+
+export function getInterstitialUnitId(): string {
+  return USE_TEST_ADS ? TestIds.INTERSTITIAL : REAL_ADS.interstitial;
 }

@@ -36,7 +36,15 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-7383364741984927~3313458389",
+          "iosAppId": "ca-app-pub-7383364741984927~3313458389",
+          "userTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
