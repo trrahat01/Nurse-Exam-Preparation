@@ -15,6 +15,16 @@ export const ADS_ENABLED = true;
 /** Set to `false` to use your real IDs (real revenue). Keep `true` for testing. */
 export const USE_TEST_ADS = false;
 
+/**
+ * When true, if a REAL ad fails to load (e.g. "no fill" before the app is live /
+ * approved) we automatically fall back to a Google TEST ad so something always
+ * shows while you verify the integration.
+ *
+ * ⚠️ Set this to `false` for the production release so real users never see
+ * "Test ad" banners.
+ */
+export const ALLOW_TEST_FALLBACK = true;
+
 /** Only used when USE_TEST_ADS = false. Fill these from your AdMob dashboard. */
 export const REAL_ADS = {
   // App ID: ca-app-pub-7383364741984927~3313458389
