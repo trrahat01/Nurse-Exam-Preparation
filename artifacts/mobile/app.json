@@ -25,7 +25,7 @@
       },
       "package": "com.nurseexampreparation.nursing",
       "versionCode": 3,
-      "permissions": [],
+      "permissions": ["com.google.android.gms.permission.AD_ID"],
       "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
