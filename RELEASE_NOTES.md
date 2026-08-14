@@ -1,18 +1,14 @@
-# Release Notes — v1.3.0
+# Release Notes — v1.4.0
 
 ## What's New
-- 🎨 **Animated Lottie splash** + cleaner white startup (no blue screen / loading flash)
-- 🔐 **Persistent login** — you stay signed in after closing the app
-- 🌙 **Dark mode** (toggle in Settings)
-- 📖 **Reading Mode** with adjustable text size + light/dark reading theme
-- 🔔 **Daily practice reminders** + **app-update notifications**
-- 👤 **Edit Profile** (name, phone, district, exam target) — text only
-- ➕ **AdMob banners** on Home and Exam Results (non-intrusive)
-- ✂️ Removed the **Math** category (Nursing, Bangla, English, General Knowledge remain)
+- 🎨 Cleaner white startup + animated splash (no blue screen / loading flash)
+- 🔐 **More reliable persistent login** — you stay signed in after closing the app
+- ➕ **More AdMob ads** across Home and Exam Results (still non-intrusive)
+- 🎛 **Smart ad fallback** — test ad shows if a real ad isn't available yet
 - 📧 Improved **email verification & password reset** flow
-- 🐛 Stability, performance, and no-repeat-question improvements
+- 🐛 Stability and performance fixes
 
 ## Technical
-- `react-native-google-mobile-ads@15.8.3` (Kotlin-safe + New-Architecture compatible)
-- Added `AD_ID` permission for working ads
-- Version code 4 · build number 4
+- AdMob: `react-native-google-mobile-ads@15.8.3` + `AD_ID` permission
+- Version code 5 · build number 5
+

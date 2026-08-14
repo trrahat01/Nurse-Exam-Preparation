@@ -97,7 +97,7 @@ export default function AboutScreen() {
             </View>
             <View style={styles.rowContent}>
               <Text style={styles.rowLabel}>Nurse Exam Preparation</Text>
-              <Text style={styles.rowSub}>Version 1.3.0</Text>
+              <Text style={styles.rowSub}>Version 1.4.0</Text>
             </View>
           </View>
           <View style={styles.divider} />
