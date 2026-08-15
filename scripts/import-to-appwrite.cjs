@@ -185,24 +185,38 @@ function parseFile(content) {
   return { docs, matchedStmts };
 }
 
-/** Auto-create the `questions` collection attributes so Appwrite accepts documents. */
+/** Auto-create the `questions` collection (small schema) so Appwrite accepts documents.
+ *  Appwrite caps the TOTAL size of a collection's string attributes, so we keep it lean. */
 async function ensureSchema(dbs) {
+  // 1) create the collection if it doesn't exist yet
+  let exists = true;
+  try { await dbs.getCollection(DATABASE_ID, COLLECTION_ID); }
+  catch (e) { exists = false; }
+  if (!exists) {
+    console.log('Creating collection:', COLLECTION_ID);
+    try {
+      await dbs.createCollection(DATABASE_ID, COLLECTION_ID, 'Questions', [
+        'create("any")', 'read("any")', 'update("any")', 'delete("any")',
+      ]);
+    } catch (ce) { console.error('  createCollection failed:', (ce.message || '').slice(0, 160)); }
+  }
+
+  // 2) add attributes (idempotent)
   const existing = new Set();
   try {
     const res = await dbs.listAttributes(DATABASE_ID, COLLECTION_ID);
     (res.attributes || []).forEach(a => existing.add(a.key));
-  } catch (e) { console.error('  listAttributes:', e.message); }
+  } catch (e) { console.error('  listAttributes:', (e.message || '').slice(0, 120)); }
 
   const spec = [
-    ['category', 'string', 200, true], ['subcategory', 'string', 200, true],
-    ['exam_type', 'string', 50, true], ['subject', 'string', 200, false],
-    ['chapter', 'string', 200, false], ['question', 'string', 8000, true],
-    ['option_a', 'string', 2000, true], ['option_b', 'string', 2000, true],
-    ['option_c', 'string', 2000, true], ['option_d', 'string', 2000, true],
-    ['correct_answer', 'string', 20, true], ['explanation', 'string', 8000, false],
-    ['memory_tip', 'string', 8000, false], ['solution_step', 'string', 8000, false],
-    ['formula', 'string', 2000, false], ['difficulty', 'string', 50, false],
-    ['language', 'string', 50, false],
+    ['category', 'string', 150, true], ['subcategory', 'string', 150, true],
+    ['subject', 'string', 150, false], ['chapter', 'string', 150, false],
+    ['exam_type', 'string', 30, true], ['difficulty', 'string', 10, false],
+    ['language', 'string', 30, false],
+    ['question', 'string', 2000, true],
+    ['option_a', 'string', 1000, true], ['option_b', 'string', 1000, true],
+    ['option_c', 'string', 1000, true], ['option_d', 'string', 1000, true],
+    ['correct_answer', 'string', 20, true], ['explanation', 'string', 2000, false],
     ['importance', 'integer', 0, false],
     ['active', 'boolean', 0, false], ['verified', 'boolean', 0, false],
   ];
@@ -214,11 +228,20 @@ async function ensureSchema(dbs) {
       else if (type === 'boolean') await dbs.createBooleanAttribute(DATABASE_ID, COLLECTION_ID, key, req);
       console.log('  created attribute:', key);
     } catch (e) {
-      if (!/already exists|duplicate/i.test(e.message)) console.error('  attr ' + key + ': ' + e.message);
+      const msg = String(e.message || '');
+      if (/already exists|duplicate/i.test(msg)) existing.add(key);
+      else {
+        console.error('  FAILED attribute ' + key + ': ' + msg.slice(0, 120));
+        if (/maximum|limit|size|index/i.test(msg)) {
+          console.error('  ❌ Collection is over Appwrite\'s attribute-size limit. Delete the "questions" collection in the Appwrite console, then rerun this script (it will recreate it).');
+          process.exit(1);
+        }
+      }
     }
   }
-  // wait until attributes are fully created before writing documents
-  for (let n = 0; n < 30; n++) {
+
+  // wait for attributes to become available before writing documents
+  for (let n = 0; n < 40; n++) {
     let ready = true;
     try {
       const res = await dbs.listAttributes(DATABASE_ID, COLLECTION_ID);
@@ -226,10 +249,21 @@ async function ensureSchema(dbs) {
       (res.attributes || []).forEach(a => status[a.key] = a.status);
       for (const [key] of spec) if (status[key] && status[key] !== 'available') ready = false;
     } catch { ready = false; }
-    if (ready) return;
+    if (ready) break;
     await new Promise(r => setTimeout(r, 1000));
   }
-  console.error('  Warning: attributes may still be processing.');
+
+  // 3) indexes the app's queries rely on (equal filters + fulltext search)
+  const indexDefs = [
+    ['idx_category', 'key', ['category']],
+    ['idx_subcategory', 'key', ['subcategory']],
+    ['idx_exam_type', 'key', ['exam_type']],
+    ['idx_question', 'fulltext', ['question']],
+  ];
+  for (const [key, type, attrs] of indexDefs) {
+    try { await dbs.createIndex(DATABASE_ID, COLLECTION_ID, key, type, attrs); console.log('  created index:', key); }
+    catch (e) { if (!/already exists|duplicate/i.test(String(e.message || ''))) console.error('  index ' + key + ': ' + (e.message || '').slice(0, 120)); }
+  }
 }
 
 async function main() {
