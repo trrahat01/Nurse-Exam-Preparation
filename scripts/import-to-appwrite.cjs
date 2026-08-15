@@ -188,6 +188,13 @@ function parseFile(content) {
 /** Auto-create the `questions` collection (small schema) so Appwrite accepts documents.
  *  Appwrite caps the TOTAL size of a collection's string attributes, so we keep it lean. */
 async function ensureSchema(dbs) {
+  // 0) optional forced rebuild: delete the (often over-limit) collection first
+  if (process.env.RESET_COLLECTION === '1') {
+    try {
+      await dbs.deleteCollection(DATABASE_ID, COLLECTION_ID);
+      console.log('Deleted existing "questions" collection (reset).');
+    } catch (e) { /* collection may not exist — that's fine */ }
+  }
   // 1) create the collection if it doesn't exist yet
   let exists = true;
   try { await dbs.getCollection(DATABASE_ID, COLLECTION_ID); }
