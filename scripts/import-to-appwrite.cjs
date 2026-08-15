@@ -5,7 +5,11 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { Client, Databases, ID } = require('node-appwrite');
+const LOCAL_APPWRITE = path.resolve(__dirname, '..', 'artifacts', 'mobile', 'node_modules', 'node-appwrite');
+function loadAppwrite() {
+  try { return require('node-appwrite'); } catch { return require(LOCAL_APPWRITE); }
+}
+const { Client, Databases, ID } = loadAppwrite();
 
 const ENDPOINT   = process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT   || 'https://tor.cloud.appwrite.io/v1';
 const PROJECT_ID = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || '6a7f8d46003d6384946a';
