@@ -11,7 +11,7 @@ export default function ProfileScreen() {
   const { user, isGuest, signOut } = useAuthStore();
   const { savedResults } = useExamStore();
 
-  const name = user?.user_metadata?.full_name ?? (isGuest ? 'Guest User' : 'Student');
+  const name = user?.name ?? (isGuest ? 'Guest User' : 'Student');
   const email = user?.email ?? '';
   const initials = name.split(' ').map((part: string) => part[0]).join('').toUpperCase().slice(0, 2);
 

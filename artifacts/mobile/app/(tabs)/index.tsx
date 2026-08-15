@@ -37,7 +37,7 @@ export default function HomeScreen() {
     }
   };
 
-  const firstName = user?.user_metadata?.full_name?.split(' ')[0] ?? (isGuest ? 'Guest' : 'Student');
+  const firstName = user?.name?.split(' ')[0] ?? (isGuest ? 'Guest' : 'Student');
   const totalExams = savedResults.length;
   const avgScore = savedResults.length
     ? Math.round(savedResults.reduce((s, r) => s + r.percentage, 0) / savedResults.length)

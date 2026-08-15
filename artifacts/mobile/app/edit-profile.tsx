@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/authStore';
-import { getSupabaseClient, isSupabaseConfigured } from '@/src/lib/supabase';
+import { account, databases, ID, Query, Permission, Role, APPWRITE_DATABASE_ID, APPWRITE_COLLECTIONS, isAppwriteConfigured } from '@/src/lib/appwrite';
 
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -20,20 +20,21 @@ export default function EditProfileScreen() {
 
   useEffect(() => {
     if (!user) return;
-    setFullName((user.user_metadata?.full_name as string) || '');
+    setFullName((user?.name as string) || '');
     loadProfile();
-  }, [user?.id]);
+  }, [user?.$id]);
 
   const loadProfile = async () => {
-    if (!isSupabaseConfigured()) return;
+    if (!isAppwriteConfigured()) return;
     try {
-      const supabase = getSupabaseClient();
-      if (!supabase || !user) return;
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
-      if (data) {
-        setPhone(data.phone || '');
-        setDistrict(data.district || '');
-        setExamTarget(data.exam_target || '');
+      const res = await databases.listDocuments(APPWRITE_DATABASE_ID, APPWRITE_COLLECTIONS.profiles, [
+        Query.equal('user_id', [user!.$id]), Query.limit(1),
+      ]);
+      if (res.documents.length > 0) {
+        const d = res.documents[0];
+        setPhone(d.phone || '');
+        setDistrict(d.district || '');
+        setExamTarget(d.exam_target || '');
       }
     } catch {}
   };
@@ -42,18 +43,26 @@ export default function EditProfileScreen() {
     if (!user) return;
     setSaving(true);
     try {
-      const supabase = getSupabaseClient();
-      if (supabase && isSupabaseConfigured()) {
-        // Update auth metadata (name) + profiles row (no image upload to save space).
-        await supabase.auth.updateUser({ data: { full_name: fullName.trim() } });
-        await supabase.from('profiles').upsert({
-          id: user.id,
-          full_name: fullName.trim(),
+      if (fullName.trim()) await account.updateName(fullName.trim());
+      if (isAppwriteConfigured()) {
+        const data = {
+          user_id: user.$id,
+          user_name: fullName.trim(),
           phone: phone.trim(),
           district: district.trim(),
           exam_target: examTarget.trim(),
-          updated_at: new Date().toISOString(),
-        });
+        };
+        const res = await databases.listDocuments(APPWRITE_DATABASE_ID, APPWRITE_COLLECTIONS.profiles, [
+          Query.equal('user_id', [user.$id]), Query.limit(1),
+        ]);
+        if (res.documents.length > 0) {
+          await databases.updateDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTIONS.profiles, res.documents[0].$id, data);
+        } else {
+          await databases.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTIONS.profiles, ID.unique(), data, [
+            Permission.read(Role.user(user.$id)),
+            Permission.write(Role.user(user.$id)),
+          ]);
+        }
       }
       Alert.alert('Saved', 'Your profile has been updated.', [{ text: 'OK', onPress: () => router.back() }]);
     } catch (e: any) {

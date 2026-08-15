@@ -1,16 +1,26 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getSupabaseClient, isSupabaseConfigured } from '@/src/lib/supabase';
-import type { User } from '@supabase/supabase-js';
+import type { Models } from 'appwrite';
+import {
+  account,
+  appwriteClient,
+  ID,
+  isAppwriteConfigured,
+  getRedirectBase,
+  saveSessionToken,
+  getStoredSessionToken,
+  clearStoredSessionToken,
+} from '@/src/lib/appwrite';
 
 interface AuthState {
-  user: User | null;
+  user: Models.User<Models.Preferences> | null;
   isGuest: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
   initialize: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<{ needsEmailConfirmation: boolean }>;
+  verifyEmail: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   continueAsGuest: () => Promise<void>;
@@ -23,10 +33,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
 
   initialize: async () => {
-    const supabase = getSupabaseClient();
     let finished = false;
-
-    const finishAsGuest = async () => {
+    const finishGuest = async () => {
       if (finished) return;
       finished = true;
       const guestMode = await AsyncStorage.getItem('guest_mode');
@@ -34,94 +42,64 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ isLoading: false, isGuest: true, user: null, isAuthenticated: false });
     };
 
-    if (!supabase) { await finishAsGuest(); return; }
+    if (!isAppwriteConfigured()) { await finishGuest(); return; }
 
     try {
-      // Restore any persisted session the moment Supabase loads it from storage.
-      // onAuthStateChange reliably fires with the saved session (INITIAL_SESSION /
-      // SIGNED_IN) even on cold start, fixing the getSession() race that caused
-      // users to appear logged-out after leaving & reopening the app.
-      supabase.auth.onAuthStateChange((event, session) => {
-        if (session?.user) {
-          finished = true;
-          AsyncStorage.setItem('guest_mode', 'false');
-          set({ user: session.user, isAuthenticated: true, isGuest: false, isLoading: false });
-        } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
-          finishAsGuest();
+      const token = await getStoredSessionToken();
+      if (token) {
+        appwriteClient.setSession(token);
+        try {
+          const user = await account.get();
+          await AsyncStorage.setItem('guest_mode', 'false');
+          set({ user, isAuthenticated: true, isGuest: false, isLoading: false });
+          return;
+        } catch {
+          await clearStoredSessionToken();
         }
-      });
-
-      // Fallback direct read for the already-loaded session.
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        finished = true;
-        await AsyncStorage.setItem('guest_mode', 'false');
-        set({ user: session.user, isAuthenticated: true, isGuest: false, isLoading: false });
-      } else {
-        // Give the listener a moment to deliver the restored session, then fall
-        // back to guest so the app never hangs on a blank/loading state.
-        setTimeout(() => finishAsGuest(), 1500);
       }
+      await finishGuest();
     } catch {
-      await finishAsGuest();
+      await finishGuest();
     }
   },
 
   signIn: async (email, password) => {
-    if (!isSupabaseConfigured()) {
-      throw new Error('Supabase not configured');
-    }
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      throw new Error('Supabase not configured');
-    }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      const msg = (error.message || '').toLowerCase();
-      if (msg.includes('not confirmed') || msg.includes('email_not_confirmed')) {
-        throw new Error('Please verify your email first. Check your inbox (and spam) for the verification link we sent.');
-      }
-      throw error;
-    }
-    const { data: { user } } = await supabase.auth.getUser();
+    if (!isAppwriteConfigured()) throw new Error('Appwrite not configured');
+    const session = await account.createEmailPasswordSession(email.trim().toLowerCase(), password);
+    await saveSessionToken(session.secret);
+    appwriteClient.setSession(session.secret);
+    const user = await account.get();
     await AsyncStorage.setItem('guest_mode', 'false');
     set({ user, isAuthenticated: true, isGuest: false, isLoading: false });
+    if (!user.emailVerification) {
+      try { await account.createVerification(getRedirectBase() + '/verify.html'); } catch {}
+    }
   },
 
   signUp: async (email, password, name) => {
-    if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
-    const supabase = getSupabaseClient();
-    if (!supabase) throw new Error('Supabase not configured');
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: name } },
-    });
-    if (error) throw error;
+    if (!isAppwriteConfigured()) throw new Error('Appwrite not configured');
+    const user = await account.create(ID.unique(), email.trim().toLowerCase(), password, name);
+    // Appwrite: send a verification email.
+    try { await account.createVerification(getRedirectBase() + '/verify.html'); } catch {}
+    set({ user, isAuthenticated: false, isGuest: false });
+    return { needsEmailConfirmation: !user.emailVerification };
+  },
 
-    // If a session was returned, email confirmation is NOT required → auto-login.
-    if (data.session) {
-      await AsyncStorage.setItem('guest_mode', 'false');
-      set({ user: data.user, isAuthenticated: true, isGuest: false, isLoading: false });
-      return { needsEmailConfirmation: false };
-    }
-    // No session → the user must confirm their email before signing in.
-    return { needsEmailConfirmation: true };
+  verifyEmail: async () => {
+    if (!isAppwriteConfigured()) return;
+    try { await account.createVerification(getRedirectBase() + '/verify.html'); } catch {}
   },
 
   signOut: async () => {
-    const supabase = getSupabaseClient();
-    try { if (supabase) await supabase.auth.signOut(); } catch {}
+    try { await account.deleteSession('current'); } catch {}
+    await clearStoredSessionToken();
     await AsyncStorage.setItem('guest_mode', 'true');
     set({ user: null, isAuthenticated: false, isGuest: true });
   },
 
   resetPassword: async (email) => {
-    if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
-    const supabase = getSupabaseClient();
-    if (!supabase) throw new Error('Supabase not configured');
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) throw error;
+    if (!isAppwriteConfigured()) throw new Error('Appwrite not configured');
+    await account.createRecovery(email.trim().toLowerCase(), getRedirectBase() + '/reset.html');
   },
 
   continueAsGuest: async () => {

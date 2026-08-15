@@ -50,8 +50,10 @@
       "typedRoutes": true
     },
     "extra": {
-      "supabaseUrl": "https://kdlqsxxzozjjaflwoylp.supabase.co",
-      "supabaseAnonKey": "sb_publishable_9skTG1J4vb6WcdSvddzBIQ_-c9boaHm",
+      "appwriteEndpoint": "https://tor.cloud.appwrite.io/v1",
+      "appwriteProjectId": "6a7f8d46003d6384946a",
+      "appwriteDatabaseId": "",
+      "appwriteRedirectBase": "https://trrahat01.github.io/nurse-prep-pages",
       "router": {},
       "eas": {
         "projectId": "98ff757f-2455-45ec-b47d-6ab79b45ff9f"

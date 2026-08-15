@@ -89,8 +89,8 @@ export default function ExamScreen() {
 
   const handleBookmark = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (user?.id) {
-      await toggleBookmark(user.id, question.id, isBookmarked);
+    if (user?.$id) {
+      await toggleBookmark(user.$id, question.id, isBookmarked);
       // Refresh server bookmarks
       loadBookmarks();
     } else {

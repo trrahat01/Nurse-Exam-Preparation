@@ -19,18 +19,18 @@ export default function BookmarksScreen() {
 
   useEffect(() => {
     loadBookmarks();
-    if (user?.id) {
+    if (user?.$id) {
       refreshServerBookmarks();
     } else {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.$id]);
 
   const refreshServerBookmarks = async () => {
     setLoading(true);
     try {
-      if (!user?.id) { loadServerBookmarks([]); return; }
-      const data = await fetchBookmarks(user.id);
+      if (!user?.$id) { loadServerBookmarks([]); return; }
+      const data = await fetchBookmarks(user.$id);
       // Convert server Bookmark to BookmarkItem format
       const items: BookmarkItem[] = data.map(b => ({
         id: b.id,
@@ -47,8 +47,8 @@ export default function BookmarksScreen() {
   };
 
   const handleRemove = async (bookmark: CombinedBookmark) => {
-    if (user?.id) {
-      await toggleBookmark(user.id, bookmark.question_id, true);
+    if (user?.$id) {
+      await toggleBookmark(user.$id, bookmark.question_id, true);
       loadServerBookmarks(serverBookmarks.filter(b => b.id !== bookmark.id));
     } else {
       await removeBookmark(bookmark.question_id);
