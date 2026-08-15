@@ -6,8 +6,10 @@ const projectRoot = __dirname;
 
 const config = require('expo/metro-config').getDefaultConfig(projectRoot);
 
-// Watch all files within the monorepo
-config.watchFolders = [workspaceRoot];
+// Windows without watchman: use Metro's built-in Node watcher (avoids
+// "Failed to start watch mode"). Do NOT watch the whole workspace root —
+// that overflowing the file watcher on Windows with the large SQL dumps.
+config.watcher.useWatchman = false;
 
 // Ensure Metro can resolve packages from the workspace root
 config.resolver.nodeModulesPaths = [
