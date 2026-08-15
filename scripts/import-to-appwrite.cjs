@@ -193,7 +193,9 @@ async function ensureSchema(dbs) {
     try {
       await dbs.deleteCollection(DATABASE_ID, COLLECTION_ID);
       console.log('Deleted existing "questions" collection (reset).');
-    } catch (e) { /* collection may not exist — that's fine */ }
+    } catch (e) {
+      console.error('  ⚠ RESET deleteCollection failed:', (e.message || '').slice(0, 140));
+    }
   }
   // 1) create the collection if it doesn't exist yet
   let exists = true;
