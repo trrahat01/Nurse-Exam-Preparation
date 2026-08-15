@@ -11,6 +11,18 @@ const config = require('expo/metro-config').getDefaultConfig(projectRoot);
 // that overflowing the file watcher on Windows with the large SQL dumps.
 config.watcher.useWatchman = false;
 
+// Watch only the app tree (not the giant pnpm store / SQL dumps / git).
+config.watchFolders = [projectRoot];
+
+// Tell Metro to skip the enormous pnpm store & non-source dirs when watching.
+config.resolver.blockList = [
+  /node_modules[\\/]\.pnpm([\\/]|$)/,
+  /\.git([\\/]|$)/,
+  /\.expo([\\/]|$)/,
+  /\.sql$/i,
+  /backups([\\/]|$)/,
+];
+
 // Ensure Metro can resolve packages from the workspace root
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
