@@ -110,7 +110,7 @@ const COL_MAP = {
   explanation: 'explanation', explaination: 'explanation', solution: 'explanation',
   memory_tip: 'memory_tip', formula: 'formula', solution_step: 'solution_step',
   difficulty: 'difficulty', level: 'difficulty',
-  importance: 'importance', language: 'language', tags: 'tags',
+  importance: 'importance', language: 'language',
   active: 'active', is_active: 'active', verified: 'verified',
   subject: 'subject', topic: 'subject', chapter: 'chapter', exam: 'exam_type',
   exam_type: 'exam_type', exam_name: 'exam_type', mark: 'importance',
@@ -185,6 +185,53 @@ function parseFile(content) {
   return { docs, matchedStmts };
 }
 
+/** Auto-create the `questions` collection attributes so Appwrite accepts documents. */
+async function ensureSchema(dbs) {
+  const existing = new Set();
+  try {
+    const res = await dbs.listAttributes(DATABASE_ID, COLLECTION_ID);
+    (res.attributes || []).forEach(a => existing.add(a.key));
+  } catch (e) { console.error('  listAttributes:', e.message); }
+
+  const spec = [
+    ['category', 'string', 200, true], ['subcategory', 'string', 200, true],
+    ['exam_type', 'string', 50, true], ['subject', 'string', 200, false],
+    ['chapter', 'string', 200, false], ['question', 'string', 8000, true],
+    ['option_a', 'string', 2000, true], ['option_b', 'string', 2000, true],
+    ['option_c', 'string', 2000, true], ['option_d', 'string', 2000, true],
+    ['correct_answer', 'string', 20, true], ['explanation', 'string', 8000, false],
+    ['memory_tip', 'string', 8000, false], ['solution_step', 'string', 8000, false],
+    ['formula', 'string', 2000, false], ['difficulty', 'string', 50, false],
+    ['language', 'string', 50, false],
+    ['importance', 'integer', 0, false],
+    ['active', 'boolean', 0, false], ['verified', 'boolean', 0, false],
+  ];
+  for (const [key, type, size, req] of spec) {
+    if (existing.has(key)) continue;
+    try {
+      if (type === 'string') await dbs.createStringAttribute(DATABASE_ID, COLLECTION_ID, key, size, req);
+      else if (type === 'integer') await dbs.createIntegerAttribute(DATABASE_ID, COLLECTION_ID, key, req);
+      else if (type === 'boolean') await dbs.createBooleanAttribute(DATABASE_ID, COLLECTION_ID, key, req);
+      console.log('  created attribute:', key);
+    } catch (e) {
+      if (!/already exists|duplicate/i.test(e.message)) console.error('  attr ' + key + ': ' + e.message);
+    }
+  }
+  // wait until attributes are fully created before writing documents
+  for (let n = 0; n < 30; n++) {
+    let ready = true;
+    try {
+      const res = await dbs.listAttributes(DATABASE_ID, COLLECTION_ID);
+      const status = {};
+      (res.attributes || []).forEach(a => status[a.key] = a.status);
+      for (const [key] of spec) if (status[key] && status[key] !== 'available') ready = false;
+    } catch { ready = false; }
+    if (ready) return;
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  console.error('  Warning: attributes may still be processing.');
+}
+
 async function main() {
   if (!API_KEY || /<|>/i.test(API_KEY)) {
     console.error('❗ Set APPWRITE_SERVER_KEY to a real API key (Settings -> API Keys -> Create, scope: databases.documents.create + read).');
@@ -192,6 +239,10 @@ async function main() {
   }
   const client = new Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID).setKey(API_KEY);
   const databases = new Databases(client);
+
+  console.log('Ensuring questions collection schema...');
+  await ensureSchema(databases);
+  console.log('Schema ready. Uploading documents...\n');
 
   const dir = path.resolve(__dirname, '..', 'artifacts', 'mobile');
   const only = process.env.SINGLE_FILE;
