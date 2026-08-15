@@ -10,6 +10,7 @@ import { useAuthStore } from '@/src/store/authStore';
 import { useBookmarkStore } from '@/src/store/bookmarkStore';
 import { useThemeStore } from '@/src/store/themeStore';
 import { setupNotifications } from '@/src/lib/notifications';
+import AppSplash from '@/components/AppSplash';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,9 +37,8 @@ export default function RootLayout() {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
-  // Hide the native (white) splash as soon as fonts are ready and render the app
-  // immediately — no blue screen, no loading spinner screen.
-  if (!fontsLoaded) return null;
+  // Show the animated (Lottie) splash only while fonts load, then render immediately.
+  if (!fontsLoaded) return <AppSplash />;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

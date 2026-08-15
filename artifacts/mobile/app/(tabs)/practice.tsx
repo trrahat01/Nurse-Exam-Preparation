@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
 import { ChapterItem } from '@/components/ChapterItem';
 import { CATEGORY_CONFIG } from '@/src/types';
+import AdBanner from '@/components/AdBanner';
 
 const CATEGORIES = Object.values(CATEGORY_CONFIG);
 
@@ -96,6 +97,7 @@ export default function PracticeScreen() {
             }
           />
         ))}
+        <AdBanner placement="practice" />
       </ScrollView>
     </View>
   );

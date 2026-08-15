@@ -52,8 +52,8 @@
     "extra": {
       "appwriteEndpoint": "https://tor.cloud.appwrite.io/v1",
       "appwriteProjectId": "6a7f8d46003d6384946a",
-      "appwriteDatabaseId": "",
-      "appwriteRedirectBase": "https://trrahat01.github.io/nurse-prep-pages",
+      "appwriteDatabaseId": "6a7fb93d003c66502e27",
+      "appwriteRedirectBase": "nurse-exam-prep://",
       "router": {},
       "eas": {
         "projectId": "98ff757f-2455-45ec-b47d-6ab79b45ff9f"

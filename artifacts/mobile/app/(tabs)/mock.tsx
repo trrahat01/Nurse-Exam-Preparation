@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
 import { fetchMockQuestions, fetchDailyQuestions } from '@/src/lib/queries';
 import { MOCK_DISTRIBUTION } from '@/src/types';
+import AdBanner from '@/components/AdBanner';
 
 export default function MockScreen() {
   const insets = useSafeAreaInsets();
@@ -117,6 +118,7 @@ export default function MockScreen() {
           </>
         )}
       </View>
+      <AdBanner placement="mock" />
     </ScrollView>
   );
 }

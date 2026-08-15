@@ -39,7 +39,7 @@ export { client as appwriteClient };
 
 /** Appwrite redirect URLs for email verification / password reset (GitHub Pages). */
 export function getRedirectBase(): string {
-  return extra.appwriteRedirectBase || 'https://trrahat01.github.io/nurse-prep-pages';
+  return extra.appwriteRedirectBase || 'nurse-exam-prep://';
 }
 
 export function isAppwriteConfigured(): boolean {

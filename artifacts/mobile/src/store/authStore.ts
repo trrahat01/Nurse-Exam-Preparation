@@ -72,7 +72,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     await AsyncStorage.setItem('guest_mode', 'false');
     set({ user, isAuthenticated: true, isGuest: false, isLoading: false });
     if (!user.emailVerification) {
-      try { await account.createVerification(getRedirectBase() + '/verify.html'); } catch {}
+      try { await account.createVerification(getRedirectBase() + '/reset-password?context=verify&'); } catch {}
     }
   },
 
@@ -80,14 +80,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (!isAppwriteConfigured()) throw new Error('Appwrite not configured');
     const user = await account.create(ID.unique(), email.trim().toLowerCase(), password, name);
     // Appwrite: send a verification email.
-    try { await account.createVerification(getRedirectBase() + '/verify.html'); } catch {}
+    try { await account.createVerification(getRedirectBase() + '/reset-password?context=verify&'); } catch {}
     set({ user, isAuthenticated: false, isGuest: false });
     return { needsEmailConfirmation: !user.emailVerification };
   },
 
   verifyEmail: async () => {
     if (!isAppwriteConfigured()) return;
-    try { await account.createVerification(getRedirectBase() + '/verify.html'); } catch {}
+    try { await account.createVerification(getRedirectBase() + '/reset-password?context=verify&'); } catch {}
   },
 
   signOut: async () => {
@@ -99,7 +99,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   resetPassword: async (email) => {
     if (!isAppwriteConfigured()) throw new Error('Appwrite not configured');
-    await account.createRecovery(email.trim().toLowerCase(), getRedirectBase() + '/reset.html');
+    await account.createRecovery(email.trim().toLowerCase(), getRedirectBase() + '/reset-password?context=recovery&');
   },
 
   continueAsGuest: async () => {

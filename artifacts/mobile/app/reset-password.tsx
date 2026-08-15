@@ -4,7 +4,7 @@ import * as Linking from 'expo-linking';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { parseRecoveryParams, completePasswordReset, RecoveryParams } from '@/src/lib/recovery';
+import { parseRecoveryParams, completePasswordReset, completeEmailVerification, RecoveryParams } from '@/src/lib/recovery';
 
 export default function ResetPasswordScreen() {
   const insets = useSafeAreaInsets();
@@ -14,6 +14,7 @@ export default function ResetPasswordScreen() {
   const [p1, setP1] = useState('');
   const [p2, setP2] = useState('');
   const [saving, setSaving] = useState(false);
+  const [verified, setVerified] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -21,7 +22,13 @@ export default function ResetPasswordScreen() {
       const p = parseRecoveryParams(linkUrl || initial);
       if (!p) { setStep('invalid'); return; }
       setParams(p);
-      setStep('ready');
+      if (p.context === 'verify') {
+        const ok = await completeEmailVerification(p);
+        if (ok) { setVerified(true); setStep('ready'); }
+        else { setStep('invalid'); }
+      } else {
+        setStep('ready');
+      }
     })();
   }, [linkUrl]);
 
