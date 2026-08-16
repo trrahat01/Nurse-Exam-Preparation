@@ -1,18 +1,22 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
+import { showInterstitial } from '@/src/lib/ads';
 import AdBanner from '@/components/AdBanner';
 
 export default function ResultScreen() {
   const insets = useSafeAreaInsets();
   const { result, clearExam } = useExamStore();
+  const shownAd = useRef(false);
 
   useEffect(() => {
-    if (!result) {
-      router.replace('/(tabs)/mock');
+    // Show one interstitial ad right before/at the result (once per result).
+    if (result && !shownAd.current) {
+      shownAd.current = true;
+      showInterstitial();
     }
   }, [result]);
 

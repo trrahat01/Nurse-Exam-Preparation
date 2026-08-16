@@ -1,5 +1,3 @@
-import { account, isAppwriteConfigured } from './appwrite';
-
 export interface RecoveryParams {
   userId: string;
   secret: string;
@@ -25,8 +23,10 @@ function parseUrl(rawUrl: string | null | undefined): URLSearchParams | null {
 }
 
 /**
- * Appwrite email links carry `userId` and `secret` in the query string.
- * `context` tells us whether to verify email or reset the password.
+ * Email verification & password reset now happen via the hosted backend's web
+ * pages (backend/api/verify.php and backend/api/password-reset.php), not through
+ * in-app secret confirmations. These helpers remain for the in-app screen, but
+ * no longer touch any external auth service.
  */
 export function parseRecoveryParams(rawUrl: string | null | undefined): RecoveryParams | null {
   const params = parseUrl(rawUrl);
@@ -38,22 +38,10 @@ export function parseRecoveryParams(rawUrl: string | null | undefined): Recovery
   return { userId, secret, context };
 }
 
-export async function completePasswordReset(params: RecoveryParams, newPassword: string): Promise<boolean> {
-  if (!isAppwriteConfigured()) return false;
-  try {
-    await account.updateRecovery(params.userId, params.secret, newPassword);
-    return true;
-  } catch {
-    return false;
-  }
+export async function completePasswordReset(_params: RecoveryParams, _newPassword: string): Promise<boolean> {
+  return false; // password reset now uses the backend web form
 }
 
-export async function completeEmailVerification(params: RecoveryParams): Promise<boolean> {
-  if (!isAppwriteConfigured()) return false;
-  try {
-    await account.updateVerification(params.userId, params.secret);
-    return true;
-  } catch {
-    return false;
-  }
+export async function completeEmailVerification(_params: RecoveryParams): Promise<boolean> {
+  return false; // email verification now uses the backend web page
 }

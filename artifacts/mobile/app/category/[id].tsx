@@ -5,6 +5,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
 import { fetchQuestionsBySubcategory, fetchCategoryQuestionStats } from '@/src/lib/queries';
 import { CATEGORY_CONFIG } from '@/src/types';
+import NativeAdBanner from '@/components/NativeAdBanner';
 
 export default function CategoryScreen() {
   const { id, chapter } = useLocalSearchParams<{ id: string; chapter?: string }>();
@@ -97,6 +98,7 @@ export default function CategoryScreen() {
           <Text style={styles.emptyText}>No chapters configured for this category.</Text>
         </View>
       }
+      ListFooterComponent={<NativeAdBanner />}
     />
   );
 }

@@ -7,7 +7,7 @@ import { useAuthStore } from '@/src/store/authStore';
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { signIn, continueAsGuest } = useAuthStore();
+  const { signIn, continueAsGuest, resendVerification } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,13 +20,26 @@ export default function LoginScreen() {
       router.replace('/(tabs)');
     } catch (e: any) {
       const msg = e?.message || 'Invalid credentials.';
-      if (msg.includes('Email not confirmed')) {
-        Alert.alert('Email Not Verified', 'Please check your inbox and click the verification link we sent to your email before signing in.');
+      if ((msg || '').toLowerCase().includes('email not confirmed') || (msg || '').toLowerCase().includes('not verified')) {
+        Alert.alert('Email Not Verified', 'Please verify your email before signing in. Check your inbox (and spam folder) for the link we sent.', [
+          { text: 'Resend Link', onPress: handleResend },
+          { text: 'OK' },
+        ]);
       } else {
         Alert.alert('Login Failed', msg);
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email || !password) { Alert.alert('Resend Verification', 'Enter your email and password first, then tap Resend.'); return; }
+    try {
+      await resendVerification(email.trim(), password);
+      Alert.alert('Check Your Email', 'A new verification link has been sent. Check your inbox (and spam).');
+    } catch (err: any) {
+      Alert.alert('Could Not Resend', err?.message || 'Please try again.');
     }
   };
 

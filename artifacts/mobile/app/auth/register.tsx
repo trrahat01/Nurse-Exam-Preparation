@@ -7,7 +7,7 @@ import { useAuthStore } from '@/src/store/authStore';
 
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
-  const { signUp } = useAuthStore();
+  const { signUp, resendVerification } = useAuthStore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,7 +23,10 @@ export default function RegisterScreen() {
         Alert.alert(
           'Check Your Email',
           'We sent a verification link to your email. Please check your inbox (and spam folder) and click the link to verify your account, then sign in.',
-          [{ text: 'OK', onPress: () => router.back() }]
+          [
+            { text: 'Resend Link', onPress: handleResend },
+            { text: 'OK', onPress: () => router.back() },
+          ]
         );
       } else {
         // Email confirmation is disabled / already confirmed → signed straight in.
@@ -33,6 +36,15 @@ export default function RegisterScreen() {
       Alert.alert('Registration Failed', e.message || 'Something went wrong.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    try {
+      await resendVerification(email.trim(), password);
+      Alert.alert('Check Your Email', 'A new verification link has been sent. Check your inbox (and spam).');
+    } catch (err: any) {
+      Alert.alert('Could Not Resend', err?.message || 'Please try again.');
     }
   };
 

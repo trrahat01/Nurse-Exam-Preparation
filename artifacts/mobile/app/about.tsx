@@ -4,6 +4,7 @@ import * as Linking from 'expo-linking';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import Constants from 'expo-constants';
 
 const SOURCES: { name: string; desc: string; url: string; color: string; bg: string }[] = [
   {
@@ -97,7 +98,7 @@ export default function AboutScreen() {
             </View>
             <View style={styles.rowContent}>
               <Text style={styles.rowLabel}>Nurse Exam Preparation</Text>
-              <Text style={styles.rowSub}>Version 1.4.0</Text>
+              <Text style={styles.rowSub}>Version {Constants.expoConfig?.version ?? '1.0.0'}  (build {Constants.expoConfig?.android?.versionCode ?? '-'})</Text>
             </View>
           </View>
           <View style={styles.divider} />

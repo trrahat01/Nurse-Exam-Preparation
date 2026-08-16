@@ -1,109 +1,116 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Models } from 'appwrite';
+import { auth, firebaseConfigured } from '@/src/lib/firebase';
 import {
-  account,
-  appwriteClient,
-  ID,
-  isAppwriteConfigured,
-  getRedirectBase,
-  saveSessionToken,
-  getStoredSessionToken,
-  clearStoredSessionToken,
-} from '@/src/lib/appwrite';
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as fbSignOut,
+  sendPasswordResetEmail,
+  sendEmailVerification,
+  onAuthStateChanged,
+} from 'firebase/auth';
+
+export interface AuthUser {
+  uid: string;
+  $id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  email_verified: boolean;
+  emailVerification: boolean;
+}
+
+function toUser(u: any): AuthUser | null {
+  if (!u) return null;
+  return {
+    uid: u.uid,
+    $id: u.uid,
+    name: u.displayName || '',
+    email: u.email || '',
+    emailVerified: !!u.emailVerified,
+    email_verified: !!u.emailVerified,
+    emailVerification: !!u.emailVerified,
+  };
+}
 
 interface AuthState {
-  user: Models.User<Models.Preferences> | null;
+  user: AuthUser | null;
   isGuest: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
   initialize: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<{ needsEmailConfirmation: boolean }>;
-  verifyEmail: () => Promise<void>;
-  signOut: () => Promise<void>;
+  resendVerification: (email: string, password: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  signOut: () => Promise<void>;
   continueAsGuest: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isGuest: false,
-  isLoading: true,
-  isAuthenticated: false,
+export const useAuthStore = create<AuthState>((set) => {
+  let unsub: (() => void) | null = null;
 
-  initialize: async () => {
-    let finished = false;
-    const finishGuest = async () => {
-      if (finished) return;
-      finished = true;
-      const guestMode = await AsyncStorage.getItem('guest_mode');
-      if (guestMode === 'false') await AsyncStorage.setItem('guest_mode', 'true');
-      set({ isLoading: false, isGuest: true, user: null, isAuthenticated: false });
-    };
+  return {
+    user: null,
+    isGuest: false,
+    isLoading: true,
+    isAuthenticated: false,
 
-    if (!isAppwriteConfigured()) { await finishGuest(); return; }
+    initialize: async () => {
+      const finishGuest = async () => {
+        const guestMode = await AsyncStorage.getItem('guest_mode');
+        if (guestMode === 'false') await AsyncStorage.setItem('guest_mode', 'true');
+        set({ isLoading: false, isGuest: true, user: null, isAuthenticated: false });
+      };
 
-    try {
-      const token = await getStoredSessionToken();
-      if (token) {
-        appwriteClient.setSession(token);
-        try {
-          const user = await account.get();
+      // No Firebase keys configured yet → run in guest/offline mode.
+      if (!firebaseConfigured || !auth) { await finishGuest(); return; }
+
+      unsub = onAuthStateChanged(auth, async (u) => {
+        if (u) {
           await AsyncStorage.setItem('guest_mode', 'false');
-          set({ user, isAuthenticated: true, isGuest: false, isLoading: false });
-          return;
-        } catch {
-          await clearStoredSessionToken();
+          set({ user: toUser(u), isAuthenticated: true, isGuest: false, isLoading: false });
+        } else {
+          set({ user: null, isAuthenticated: false });
+          await finishGuest();
         }
-      }
-      await finishGuest();
-    } catch {
-      await finishGuest();
-    }
-  },
+      });
+    },
 
-  signIn: async (email, password) => {
-    if (!isAppwriteConfigured()) throw new Error('Appwrite not configured');
-    const session = await account.createEmailPasswordSession(email.trim().toLowerCase(), password);
-    await saveSessionToken(session.secret);
-    appwriteClient.setSession(session.secret);
-    const user = await account.get();
-    await AsyncStorage.setItem('guest_mode', 'false');
-    set({ user, isAuthenticated: true, isGuest: false, isLoading: false });
-    if (!user.emailVerification) {
-      try { await account.createVerification(getRedirectBase() + '/reset-password?context=verify&'); } catch {}
-    }
-  },
+    signIn: async (email, password) => {
+      if (!auth) throw new Error('Firebase is not configured.');
+      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      await AsyncStorage.setItem('guest_mode', 'false');
+      // onAuthStateChanged updates the user.
+    },
 
-  signUp: async (email, password, name) => {
-    if (!isAppwriteConfigured()) throw new Error('Appwrite not configured');
-    const user = await account.create(ID.unique(), email.trim().toLowerCase(), password, name);
-    // Appwrite: send a verification email.
-    try { await account.createVerification(getRedirectBase() + '/reset-password?context=verify&'); } catch {}
-    set({ user, isAuthenticated: false, isGuest: false });
-    return { needsEmailConfirmation: !user.emailVerification };
-  },
+    signUp: async (email, password) => {
+      if (!auth) throw new Error('Firebase is not configured.');
+      const cred = await createUserWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      try { await sendEmailVerification(cred.user); } catch (e) { console.warn('sendEmailVerification failed', e); }
+      set({ user: toUser(cred.user), isGuest: false, isAuthenticated: true });
+      return { needsEmailConfirmation: true };
+    },
 
-  verifyEmail: async () => {
-    if (!isAppwriteConfigured()) return;
-    try { await account.createVerification(getRedirectBase() + '/reset-password?context=verify&'); } catch {}
-  },
+    resendVerification: async () => {
+      if (!auth?.currentUser) throw new Error('Sign in first, then resend the verification email.');
+      await sendEmailVerification(auth.currentUser);
+    },
 
-  signOut: async () => {
-    try { await account.deleteSession('current'); } catch {}
-    await clearStoredSessionToken();
-    await AsyncStorage.setItem('guest_mode', 'true');
-    set({ user: null, isAuthenticated: false, isGuest: true });
-  },
+    resetPassword: async (email) => {
+      if (!auth) throw new Error('Firebase is not configured.');
+      await sendPasswordResetEmail(auth, email.trim().toLowerCase());
+    },
 
-  resetPassword: async (email) => {
-    if (!isAppwriteConfigured()) throw new Error('Appwrite not configured');
-    await account.createRecovery(email.trim().toLowerCase(), getRedirectBase() + '/reset-password?context=recovery&');
-  },
+    signOut: async () => {
+      try { if (auth) await fbSignOut(auth); } catch { /* ignore */ }
+      await AsyncStorage.setItem('guest_mode', 'true');
+      set({ user: null, isAuthenticated: false, isGuest: true });
+    },
 
-  continueAsGuest: async () => {
-    await AsyncStorage.setItem('guest_mode', 'true');
-    set({ isGuest: true, isLoading: false });
-  },
-}));
+    continueAsGuest: async () => {
+      await AsyncStorage.setItem('guest_mode', 'true');
+      set({ isGuest: true, isLoading: false });
+    },
+  };
+});

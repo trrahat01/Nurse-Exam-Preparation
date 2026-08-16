@@ -18,6 +18,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(false);
   const [categoryStats, setCategoryStats] = useState<Record<string, { total: number; seen: number; unseen: number }>>({});
   const [totalQuestions, setTotalQuestions] = useState(0);
+  const [countsLoaded, setCountsLoaded] = useState(false);
 
   useEffect(() => {
     loadSavedResults();
@@ -34,6 +35,8 @@ export default function HomeScreen() {
       setTotalQuestions(total);
     } catch (e) {
       console.error('Failed to load question counts:', e);
+    } finally {
+      setCountsLoaded(true);
     }
   };
 
@@ -143,10 +146,10 @@ export default function HomeScreen() {
                 <Text style={[styles.catName, { color: cat.color }]}>{cat.name}</Text>
                 <Text style={styles.catDesc} numberOfLines={2}>{cat.description}</Text>
                 <Text style={[styles.catCount, { color: cat.color }]}>
-                  {stat.total > 0 ? `${stat.total.toLocaleString()} total` : 'Loading...'}
+                  {countsLoaded ? `${stat.total.toLocaleString()} total` : 'Loading...'}
                 </Text>
                 <Text style={[styles.catSeen, { color: cat.color }]}>
-                  {stat.total > 0 ? `${stat.unseen.toLocaleString()} new` : ''}
+                  {countsLoaded ? `${stat.unseen.toLocaleString()} new` : ''}
                 </Text>
               </Pressable>
             );

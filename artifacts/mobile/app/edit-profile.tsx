@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/authStore';
-import { account, databases, ID, Query, Permission, Role, APPWRITE_DATABASE_ID, APPWRITE_COLLECTIONS, isAppwriteConfigured } from '@/src/lib/appwrite';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -25,16 +25,13 @@ export default function EditProfileScreen() {
   }, [user?.$id]);
 
   const loadProfile = async () => {
-    if (!isAppwriteConfigured()) return;
     try {
-      const res = await databases.listDocuments(APPWRITE_DATABASE_ID, APPWRITE_COLLECTIONS.profiles, [
-        Query.equal('user_id', [user!.$id]), Query.limit(1),
-      ]);
-      if (res.documents.length > 0) {
-        const d = res.documents[0];
-        setPhone(d.phone || '');
-        setDistrict(d.district || '');
-        setExamTarget(d.exam_target || '');
+      const saved = await AsyncStorage.getItem('user_profile');
+      if (saved) {
+        const p = JSON.parse(saved);
+        setPhone(p.phone || '');
+        setDistrict(p.district || '');
+        setExamTarget(p.exam_target || '');
       }
     } catch {}
   };
@@ -43,27 +40,14 @@ export default function EditProfileScreen() {
     if (!user) return;
     setSaving(true);
     try {
-      if (fullName.trim()) await account.updateName(fullName.trim());
-      if (isAppwriteConfigured()) {
-        const data = {
-          user_id: user.$id,
-          user_name: fullName.trim(),
-          phone: phone.trim(),
-          district: district.trim(),
-          exam_target: examTarget.trim(),
-        };
-        const res = await databases.listDocuments(APPWRITE_DATABASE_ID, APPWRITE_COLLECTIONS.profiles, [
-          Query.equal('user_id', [user.$id]), Query.limit(1),
-        ]);
-        if (res.documents.length > 0) {
-          await databases.updateDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTIONS.profiles, res.documents[0].$id, data);
-        } else {
-          await databases.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTIONS.profiles, ID.unique(), data, [
-            Permission.read(Role.user(user.$id)),
-            Permission.write(Role.user(user.$id)),
-          ]);
-        }
-      }
+      const profile = {
+        user_id: String(user.$id ?? user.uid ?? ''),
+        user_name: fullName.trim(),
+        phone: phone.trim(),
+        district: district.trim(),
+        exam_target: examTarget.trim(),
+      };
+      await AsyncStorage.setItem('user_profile', JSON.stringify(profile));
       Alert.alert('Saved', 'Your profile has been updated.', [{ text: 'OK', onPress: () => router.back() }]);
     } catch (e: any) {
       Alert.alert('Error', e?.message || 'Could not save profile.');

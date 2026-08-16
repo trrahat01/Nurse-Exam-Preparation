@@ -11,6 +11,7 @@ import { useBookmarkStore } from '@/src/store/bookmarkStore';
 import { useThemeStore } from '@/src/store/themeStore';
 import { setupNotifications } from '@/src/lib/notifications';
 import AppSplash from '@/components/AppSplash';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -45,26 +46,32 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <StatusBar style="auto" />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="auth/login" />
-            <Stack.Screen name="auth/register" />
-            <Stack.Screen name="auth/forgot-password" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="exam/index" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="exam/result" options={{ animation: 'slide_from_bottom' }} />
-            <Stack.Screen name="exam/review" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="category/[id]" />
-            <Stack.Screen name="daily" />
-            <Stack.Screen name="search" />
-            <Stack.Screen name="bookmarks" />
-            <Stack.Screen name="settings" />
-            <Stack.Screen name="about" />
-            <Stack.Screen name="reading" />
-            <Stack.Screen name="edit-profile" />
-            <Stack.Screen name="reset-password" />
-            <Stack.Screen name="analytics" />
-          </Stack>
+          <ErrorBoundary
+            onError={(error, stackTrace) => {
+              console.error('[ErrorBoundary]', error, stackTrace);
+            }}
+          >
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="auth/login" />
+              <Stack.Screen name="auth/register" />
+              <Stack.Screen name="auth/forgot-password" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="exam/index" options={{ animation: 'slide_from_right' }} />
+              <Stack.Screen name="exam/result" options={{ animation: 'slide_from_bottom' }} />
+              <Stack.Screen name="exam/review" options={{ animation: 'slide_from_right' }} />
+              <Stack.Screen name="category/[id]" />
+              <Stack.Screen name="daily" />
+              <Stack.Screen name="search" />
+              <Stack.Screen name="bookmarks" />
+              <Stack.Screen name="settings" />
+              <Stack.Screen name="about" />
+              <Stack.Screen name="reading" />
+              <Stack.Screen name="edit-profile" />
+              <Stack.Screen name="reset-password" />
+              <Stack.Screen name="analytics" />
+            </Stack>
+          </ErrorBoundary>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

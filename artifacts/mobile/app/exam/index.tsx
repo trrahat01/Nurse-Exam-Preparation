@@ -9,6 +9,7 @@ import { useBookmarkStore } from '@/src/store/bookmarkStore';
 import { useAuthStore } from '@/src/store/authStore';
 import { toggleBookmark } from '@/src/lib/queries';
 import type { AnswerOption } from '@/src/types';
+import AdBanner from '@/components/AdBanner';
 
 export default function ExamScreen() {
   const insets = useSafeAreaInsets();
@@ -89,16 +90,15 @@ export default function ExamScreen() {
 
   const handleBookmark = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (user?.$id) {
-      await toggleBookmark(user.$id, question.id, isBookmarked);
-      // Refresh server bookmarks
-      loadBookmarks();
+    // Always keep a local copy so bookmarks work offline / for guests, and the
+    // Bookmarks screen shows them even if the server sync fails.
+    if (isBookmarked) {
+      await removeBookmark(question.id);
     } else {
-      if (isBookmarked) {
-        await removeBookmark(question.id);
-      } else {
-        await addBookmark(question);
-      }
+      await addBookmark(question);
+    }
+    if (user?.$id) {
+      try { await toggleBookmark(user.$id, question.id, isBookmarked); } catch { /* server sync is best-effort */ }
     }
   };
 
@@ -206,6 +206,8 @@ export default function ExamScreen() {
             <Text style={styles.explainText}>{question.explanation}</Text>
           </View>
         )}
+
+        <AdBanner placement="practice" />
       </ScrollView>
 
       {/* Bottom Nav */}
