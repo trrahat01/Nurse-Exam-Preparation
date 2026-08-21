@@ -1,15 +1,21 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/authStore';
 import { useExamStore } from '@/src/store/examStore';
+import { getStreak, type StreakData } from '@/src/lib/streak';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, isGuest, signOut } = useAuthStore();
   const { savedResults } = useExamStore();
+  const [streak, setStreak] = useState<StreakData>({ current: 0, best: 0, lastDate: null, studiedToday: false });
+
+  useEffect(() => {
+    getStreak().then(setStreak);
+  }, []);
 
   const name = user?.name ?? (isGuest ? 'Guest User' : 'Student');
   const email = user?.email ?? '';
@@ -61,6 +67,27 @@ export default function ProfileScreen() {
           </View>
         </View>
       )}
+
+      {/* Daily streak — motivating, works for guests too */}
+      <View style={styles.streakCard}>
+        <View style={styles.streakItem}>
+          <MaterialCommunityIcons name={streak.studiedToday ? 'fire' : 'fire-outline'} size={26} color="#F97316" />
+          <Text style={styles.streakVal}>{streak.current}</Text>
+          <Text style={styles.streakLbl}>Day Streak</Text>
+        </View>
+        <View style={styles.streakDivider} />
+        <View style={styles.streakItem}>
+          <MaterialCommunityIcons name="trophy-outline" size={26} color="#D97706" />
+          <Text style={styles.streakVal}>{streak.best}</Text>
+          <Text style={styles.streakLbl}>Best Streak</Text>
+        </View>
+        <View style={styles.streakDivider} />
+        <View style={styles.streakItem}>
+          <MaterialCommunityIcons name={streak.studiedToday ? 'check-circle' : 'calendar-today'} size={26} color={streak.studiedToday ? '#059669' : '#64748B'} />
+          <Text style={styles.streakVal}>{streak.studiedToday ? 'Done' : '-'}</Text>
+          <Text style={styles.streakLbl}>Today's Quiz</Text>
+        </View>
+      </View>
 
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>ACCOUNT</Text>
@@ -149,6 +176,11 @@ const styles = StyleSheet.create({
   loginBtn: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, marginTop: 6 },
   loginBtnText: { color: '#fff', fontSize: 13, fontFamily: 'Inter_600SemiBold' },
   statsRow: { flexDirection: 'row', margin: 16, backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', elevation: 2 },
+  streakCard: { flexDirection: 'row', marginHorizontal: 16, marginTop: 4, marginBottom: 8, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#FDE68A', paddingVertical: 16, overflow: 'hidden' },
+  streakItem: { flex: 1, alignItems: 'center', gap: 2 },
+  streakVal: { fontSize: 20, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
+  streakLbl: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2, textAlign: 'center' },
+  streakDivider: { width: 1, backgroundColor: '#F1F5F9' },
   statItem: { flex: 1, alignItems: 'center', paddingVertical: 16 },
   statVal: { fontSize: 20, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
   statLbl: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2 },

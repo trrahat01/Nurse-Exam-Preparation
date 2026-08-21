@@ -1,42 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
-import { NativeAd, NativeAdView, NativeAsset, NativeAssetType } from 'react-native-google-mobile-ads';
 import { shouldShowAds, getNativeAdUnitId } from '@/src/lib/ads';
 
-// Reuse one loaded native ad across mounts (ad units are limited).
+// Metro's global `require` — used to lazy-load the AdMob module ONLY on real
+// native builds. In Expo Go the module is never imported (it would crash).
+declare const require: (id: string) => any;
+
 let cachedNativeAd: any = null;
 
 /**
- * A "native advanced" banner ad (renders as a normal-looking card).
- * Loads a single NativeAd from react-native-google-mobile-ads and renders it
- * with a custom template. Only shown in native builds (not Expo Go).
+ * A "native advanced" banner ad (renders as a normal-looking card). Loads a
+ * single NativeAd and renders it with a custom template. Only shown in native
+ * builds — never in Expo Go.
  */
 export default function NativeAdBanner() {
   const [ad, setAd] = useState<any>(null);
+  const [ui, setUi] = useState<any>(null); // { NativeAdView, NativeAsset, NativeAssetType }
 
   useEffect(() => {
     if (!shouldShowAds()) return;
     const unitId = getNativeAdUnitId();
     if (!unitId) return;
     let mounted = true;
-    const load = async () => {
+    (async () => {
       try {
+        // Lazy-load the AdMob module ONLY here (Expo Go never reaches this).
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const gma = require('react-native-google-mobile-ads');
         if (!cachedNativeAd) {
-          cachedNativeAd = await NativeAd.createForAdRequest(unitId);
+          cachedNativeAd = await gma.NativeAd.createForAdRequest(unitId);
         }
-        if (mounted) setAd(cachedNativeAd);
+        if (mounted) {
+          setUi({ NativeAdView: gma.NativeAdView, NativeAsset: gma.NativeAsset, NativeAssetType: gma.NativeAssetType });
+          setAd(cachedNativeAd);
+        }
       } catch (err) {
         console.warn('NativeAd load failed:', err);
       }
-    };
-    load();
+    })();
     return () => { mounted = false; };
   }, []);
 
-  if (!ad) return null;
+  if (!ad || !ui) return null;
+  const { NativeAdView, NativeAsset, NativeAssetType } = ui;
+  const nativeAd = ad as any;
 
   return (
-    <NativeAdView nativeAd={ad} style={styles.wrap}>
+    <NativeAdView nativeAd={nativeAd} style={styles.wrap}>
       <View style={styles.card}>
         <View style={styles.header}>
           <NativeAsset assetType={NativeAssetType.ICON}>

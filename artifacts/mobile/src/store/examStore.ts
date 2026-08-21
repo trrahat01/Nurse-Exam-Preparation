@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ExamSession, ExamResult, ExamType, Question, AnswerOption } from '@/src/types';
+import { markStudied } from '@/src/lib/streak';
 
 const EXAM_TIME: Record<ExamType, number> = {
   mock: 3600,
@@ -92,6 +93,8 @@ export const useExamStore = create<ExamState>((set, get) => ({
     const result: ExamResult = { score: correct, correct, wrong, skipped, percentage, timeTaken, passed, examType, answers, questions, categoryBreakdown };
     set({ session: { ...session, isRunning: false }, result });
     get().saveResult(result);
+    // Advance the daily study streak.
+    markStudied();
     return result;
   },
 

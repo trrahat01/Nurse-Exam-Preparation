@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1053263809544",
+    "project_id": "nurse-exam-cb96d",
+    "storage_bucket": "nurse-exam-cb96d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1053263809544:android:b8b2144a291b2e515295bd",
+        "android_client_info": {
+          "package_name": "com.nurseexampreparation.nursing"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0EWGoV38hdPgKdovCsR2ZebYXzOmTbk4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

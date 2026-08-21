@@ -22,3 +22,12 @@ eas-build-log*
 # Question source data (huge SQL dumps ~25 MB). The app bundles its own
 # offlineQuestions.json, and questions are imported into Appwrite directly.
 *.sql
+
+# Generated MCQ banks — kept locally, imported to Supabase separately (NOT part of the app).
+*-nursing.json
+*-management-nursing.json
+drugcalc-nursing.json
+research-nursing.json
+procedures-nursing.json
+leadership-nursing.json
+hospital-management-nursing.json

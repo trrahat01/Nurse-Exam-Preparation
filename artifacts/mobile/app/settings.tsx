@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/authStore';
 import { useThemeStore } from '@/src/store/themeStore';
 import { clearQuestionHistory } from '@/src/lib/queries';
+import Constants from 'expo-constants';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -107,7 +108,7 @@ export default function SettingsScreen() {
               <Text style={styles.rowLabel}>About & Sources</Text>
               <Text style={styles.rowSub}>Disclaimer, official sources & support</Text>
             </View>
-            <Text style={styles.rowValue}>v1.4.0</Text>
+            <Text style={styles.rowValue}>v{Constants.expoConfig?.version ?? '1.6.0'}</Text>
           </Pressable>
         </View>
       </View>

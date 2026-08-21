@@ -12,6 +12,7 @@ import { useThemeStore } from '@/src/store/themeStore';
 import { setupNotifications } from '@/src/lib/notifications';
 import AppSplash from '@/components/AppSplash';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { logAppOpen } from '@/src/lib/analytics';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -32,6 +33,8 @@ export default function RootLayout() {
     loadBookmarks();
     loadTheme();
     setupNotifications();
+    // Track app open for daily active users (Firebase Analytics).
+    logAppOpen('launch');
   }, []);
 
   useEffect(() => {
