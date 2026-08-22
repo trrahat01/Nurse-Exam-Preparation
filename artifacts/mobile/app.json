@@ -22,8 +22,11 @@
         "backgroundColor": "#0891B2"
       },
       "package": "com.nurseexampreparation.nursing",
+      "googleServicesFile": "./google-services.json",
       "versionCode": 7,
-      "permissions": ["com.google.android.gms.permission.AD_ID"],
+      "permissions": [
+        "com.google.android.gms.permission.AD_ID"
+      ],
       "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
@@ -67,6 +70,6 @@
         "projectId": "98ff757f-2455-45ec-b47d-6ab79b45ff9f"
       }
     },
-    "owner": "trrahat26-2"
+    "owner": "trdevworkss-team"
   }
 }

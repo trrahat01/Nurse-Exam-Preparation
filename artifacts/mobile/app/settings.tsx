@@ -6,12 +6,31 @@ import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/authStore';
 import { useThemeStore } from '@/src/store/themeStore';
 import { clearQuestionHistory } from '@/src/lib/queries';
+import { getNotificationPref, setNotificationPref, scheduleDailyReminder, scheduleStreakReminder, cancelDailyReminder } from '@/src/lib/notifications';
+import { getStreak } from '@/src/lib/streak';
 import Constants from 'expo-constants';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { user, isGuest, signOut } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
+  const [notifOn, setNotifOn] = React.useState<boolean>(true);
+
+  React.useEffect(() => { getNotificationPref().then(setNotifOn); }, []);
+
+  const handleToggleNotifications = async (on: boolean) => {
+    setNotifOn(on);
+    await setNotificationPref(on);
+    if (on) {
+      const streak = await getStreak();
+      await scheduleDailyReminder();
+      await scheduleStreakReminder(streak.current);
+      Alert.alert('Daily Reminder On', 'We\u2019ll remind you to practice every day at 8:00 PM so you keep your streak!');
+    } else {
+      await cancelDailyReminder();
+      Alert.alert('Daily Reminder Off', 'You can turn it back on anytime in Settings.');
+    }
+  };
 
   const handleResetSeen = () => {
     Alert.alert(
@@ -70,14 +89,19 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Preferences</Text>
         <View style={styles.card}>
-          <Pressable style={styles.row} onPress={() => Alert.alert('Notifications', 'Notification settings coming soon. Stay tuned for updates!')}>
+          <View style={styles.row}>
             <MaterialCommunityIcons name="bell-outline" size={22} color="#64748B" />
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Notifications</Text>
-              <Text style={styles.rowSub}>Get reminders for daily practice</Text>
+              <Text style={styles.rowLabel}>Daily Reminder</Text>
+              <Text style={styles.rowSub}>Get a nudge at 8 PM to keep your streak</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
-          </Pressable>
+            <Switch
+              value={notifOn}
+              onValueChange={handleToggleNotifications}
+              trackColor={{ false: '#CBD5E1', true: '#0891B2' }}
+              thumbColor="#fff"
+            />
+          </View>
           <View style={styles.divider} />
           <View style={styles.row}>
             <MaterialCommunityIcons name="theme-light-dark" size={22} color="#64748B" />

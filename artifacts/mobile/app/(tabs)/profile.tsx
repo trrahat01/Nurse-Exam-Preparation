@@ -71,7 +71,7 @@ export default function ProfileScreen() {
       {/* Daily streak — motivating, works for guests too */}
       <View style={styles.streakCard}>
         <View style={styles.streakItem}>
-          <MaterialCommunityIcons name={streak.studiedToday ? 'fire' : 'fire-outline'} size={26} color="#F97316" />
+          <MaterialCommunityIcons name={streak.studiedToday ? 'fire' : 'fire-alert'} size={26} color="#F97316" />
           <Text style={styles.streakVal}>{streak.current}</Text>
           <Text style={styles.streakLbl}>Day Streak</Text>
         </View>

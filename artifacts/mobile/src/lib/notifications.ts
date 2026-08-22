@@ -102,3 +102,48 @@ export async function setupNotifications(): Promise<void> {
   if (!ok) return;
   await Promise.allSettled([scheduleDailyReminder(), notifyOnAppUpdate()]);
 }
+
+/** Cancel the daily reminder (called when the user turns notifications off). */
+export async function cancelDailyReminder(): Promise<void> {
+  try { await Notifications.cancelScheduledNotificationAsync(DAILY_REMINDER_ID); } catch {}
+  try { await Notifications.cancelScheduledNotificationAsync(STREAK_REMINDER_ID); } catch {}
+}
+
+// ── Streak reminder ─────────────────────────────────────────
+
+const STREAK_REMINDER_ID = 'streak-reminder';
+const NOTIF_PREF_KEY = 'notifications_enabled';
+
+/** Read the user's notification preference (default: on). */
+export async function getNotificationPref(): Promise<boolean> {
+  try {
+    const v = await AsyncStorage.getItem(NOTIF_PREF_KEY);
+    return v === null ? true : v === 'true';
+  } catch { return true; }
+}
+
+/** Store the user's notification preference. */
+export async function setNotificationPref(on: boolean): Promise<void> {
+  await AsyncStorage.setItem(NOTIF_PREF_KEY, on ? 'true' : 'false');
+}
+
+/**
+ * Schedules a daily "streak" reminder showing the user's current streak fire.
+ * Call after the streak changes so the number is fresh each day.
+ */
+export async function scheduleStreakReminder(streak: number): Promise<void> {
+  try { await Notifications.cancelScheduledNotificationAsync(STREAK_REMINDER_ID); } catch {}
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: STREAK_REMINDER_ID,
+      content: {
+        title: streak > 0 ? `🔥 Day ${streak} — don't lose your streak!` : '📚 Ready for today\u2019s practice?',
+        body: 'Open Nurse Exam Preparation and keep your study streak going. Consistency beats intensity!',
+        sound: true,
+      },
+      trigger: { channelId: 'daily', hour: 20, minute: 0, repeats: true } as any,
+    });
+  } catch (e) {
+    console.warn('scheduleStreakReminder failed:', e);
+  }
+}

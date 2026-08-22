@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scheduleStreakReminder } from './notifications';
 
 const STREAK_KEY = 'study_streak';
 const LAST_STUDY_KEY = 'last_study_date';
@@ -54,6 +55,8 @@ export async function markStudied(): Promise<StreakData> {
     }
     await AsyncStorage.setItem(STREAK_KEY, String(next));
     await AsyncStorage.setItem(LAST_STUDY_KEY, t);
+    // Refresh the streak reminder so the "Day N" number stays current.
+    scheduleStreakReminder(next);
     return { current: next, best: Math.max(best, next), lastDate: t, studiedToday: true };
   } catch {
     return { current: 0, best: 0, lastDate: null, studiedToday: false };
