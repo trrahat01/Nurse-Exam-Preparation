@@ -2,20 +2,43 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useAuthStore } from '@/src/store/authStore';
 import { useExamStore } from '@/src/store/examStore';
 import { getStreak, type StreakData } from '@/src/lib/streak';
+import { getWrongAnswers } from '@/src/lib/wrongAnswers';
+import { fetchTotalQuestionCount } from '@/src/lib/queries';
+import Constants from 'expo-constants';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, isGuest, signOut } = useAuthStore();
   const { savedResults } = useExamStore();
   const [streak, setStreak] = useState<StreakData>({ current: 0, best: 0, lastDate: null, studiedToday: false });
+  const [wrongCount, setWrongCount] = useState(0);
+  const [totalMcqs, setTotalMcqs] = useState(0);
+  const { startExam } = useExamStore();
 
-  useEffect(() => {
-    getStreak().then(setStreak);
-  }, []);
+  // Re-read the streak + weak topics + total whenever the Profile tab is focused.
+  useFocusEffect(
+    React.useCallback(() => {
+      getStreak().then(setStreak);
+      getWrongAnswers().then(w => setWrongCount(w.length));
+      fetchTotalQuestionCount().then(setTotalMcqs).catch(() => setTotalMcqs(0));
+    }, [])
+  );
+
+  const handleWeakQuiz = async () => {
+    const wrong = await getWrongAnswers();
+    if (!wrong.length) { Alert.alert('No Weak Topics', 'Answer questions wrong in practice to build your Weak Topics list.'); return; }
+    const questions: any[] = wrong.map(w => ({
+      id: w.id, category: w.category, question: w.question,
+      option_a: w.option_a, option_b: w.option_b, option_c: w.option_c, option_d: w.option_d,
+      correct_answer: w.correct_answer, explanation: w.explanation,
+    }));
+    startExam(questions, 'practice');
+    router.push('/exam');
+  };
 
   const name = user?.name ?? (isGuest ? 'Guest User' : 'Student');
   const email = user?.email ?? '';
@@ -89,6 +112,20 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* Weak Topics / wrong-answer bank + Flashcards */}
+      <View style={styles.quickRow}>
+        <Pressable style={styles.quickCard} onPress={handleWeakQuiz}>
+          <MaterialCommunityIcons name="rewind-outline" size={24} color="#DC2626" />
+          <Text style={styles.quickLabel}>Weak Topics</Text>
+          <Text style={styles.quickSub}>{wrongCount} to review</Text>
+        </Pressable>
+        <Pressable style={styles.quickCard} onPress={() => router.push('/flashcards')}>
+          <MaterialCommunityIcons name="cards-outline" size={24} color="#0891B2" />
+          <Text style={styles.quickLabel}>Flashcards</Text>
+          <Text style={styles.quickSub}>Review bookmarks</Text>
+        </Pressable>
+      </View>
+
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>ACCOUNT</Text>
         <View style={styles.section}>
@@ -124,10 +161,10 @@ export default function ProfileScreen() {
               <MaterialCommunityIcons name="information-outline" size={20} color="#0891B2" />
               <Text style={styles.menuLabel}>App Version</Text>
             </View>
-            <Text style={styles.menuValue}>1.0.0</Text>
+            <Text style={styles.menuValue}>{Constants.expoConfig?.version ?? '1.6.0'}</Text>
           </View>
           <View style={styles.divider} />
-          <Pressable style={styles.menuItem} onPress={() => Alert.alert('About Us', 'Nurse Exam Preparation\n\n40,000+ MCQs for all nursing exams\n\nFor any questions, issues, or suggestions, contact us at:\ntrdevworks@gmail.com')}>
+          <Pressable style={styles.menuItem} onPress={() => Alert.alert('About Us', `Nurse Exam Preparation\n\n${totalMcqs > 0 ? totalMcqs.toLocaleString() : 'Thousands of'} MCQs for all nursing exams\n\nFor any questions, issues, or suggestions, contact us at:\ntrdevworks@gmail.com`)}>
             <View style={styles.menuLeft}>
               <MaterialCommunityIcons name="help-circle-outline" size={20} color="#0891B2" />
               <Text style={styles.menuLabel}>About Us</Text>
@@ -181,6 +218,10 @@ const styles = StyleSheet.create({
   streakVal: { fontSize: 20, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
   streakLbl: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2, textAlign: 'center' },
   streakDivider: { width: 1, backgroundColor: '#F1F5F9' },
+  quickRow: { flexDirection: 'row', gap: 12, marginHorizontal: 16, marginTop: 4 },
+  quickCard: { flex: 1, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', padding: 16, gap: 4 },
+  quickLabel: { fontSize: 15, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
+  quickSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#64748B' },
   statItem: { flex: 1, alignItems: 'center', paddingVertical: 16 },
   statVal: { fontSize: 20, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
   statLbl: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2 },

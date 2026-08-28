@@ -2,7 +2,7 @@
   "expo": {
     "name": "Nurse Exam Preparation",
     "slug": "nurse-exam-preparation",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "nurse-exam-prep",
@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.nurseexampreparation.nursing",
-      "buildNumber": "7"
+      "buildNumber": "8"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
       },
       "package": "com.nurseexampreparation.nursing",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 7,
+      "versionCode": 8,
       "permissions": [
         "com.google.android.gms.permission.AD_ID"
       ],
@@ -61,10 +61,6 @@
       "typedRoutes": true
     },
     "extra": {
-      "appwriteEndpoint": "https://tor.cloud.appwrite.io/v1",
-      "appwriteProjectId": "6a7f8d46003d6384946a",
-      "appwriteDatabaseId": "6a7fb93d003c66502e27",
-      "appwriteRedirectBase": "nurse-exam-prep://",
       "router": {},
       "eas": {
         "projectId": "98ff757f-2455-45ec-b47d-6ab79b45ff9f"

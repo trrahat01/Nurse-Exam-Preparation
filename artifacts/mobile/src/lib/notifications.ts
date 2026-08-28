@@ -1,17 +1,23 @@
 import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-// Show banners even when the app is in the foreground.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+const IS_EXPO_GO = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+// In Expo Go, local/remote notifications are not fully supported (SDK 53+).
+// Skip setting the handler so we don't trigger Expo Go's push error at startup.
+if (!IS_EXPO_GO) {
+  // Show banners even when the app is in the foreground.
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 const DAILY_REMINDER_ID = 'daily-reminder';
 
@@ -98,6 +104,7 @@ export async function notifyOnAppUpdate(): Promise<void> {
 }
 
 export async function setupNotifications(): Promise<void> {
+  if (IS_EXPO_GO) return; // Expo Go doesn't support local/remote notifications
   const ok = await ensureNotificationsPermission();
   if (!ok) return;
   await Promise.allSettled([scheduleDailyReminder(), notifyOnAppUpdate()]);

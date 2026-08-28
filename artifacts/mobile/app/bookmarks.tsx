@@ -72,6 +72,10 @@ export default function BookmarksScreen() {
           <MaterialCommunityIcons name="arrow-left" size={24} color="#0C1A2E" />
         </Pressable>
         <Text style={styles.title}>Bookmarks</Text>
+        <Pressable onPress={() => router.push('/flashcards')} style={styles.fcBtn}>
+          <MaterialCommunityIcons name="cards-outline" size={20} color="#0891B2" />
+          <Text style={styles.fcText}>Flashcards</Text>
+        </Pressable>
       </View>
 
       {loading ? (
@@ -114,6 +118,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 20, gap: 12 },
   backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E2E8F0' },
   title: { fontSize: 20, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
+  fcBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E0F2FE', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },
+  fcText: { color: '#0891B2', fontSize: 13, fontFamily: 'Inter_700Bold' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingBottom: 80, paddingHorizontal: 40 },
   emptyTitle: { fontSize: 18, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
   emptySub: { fontSize: 14, fontFamily: 'Inter_400Regular', color: '#64748B', textAlign: 'center' },

@@ -67,6 +67,7 @@ export default function RootLayout() {
               <Stack.Screen name="daily" />
               <Stack.Screen name="search" />
               <Stack.Screen name="bookmarks" />
+              <Stack.Screen name="flashcards" />
               <Stack.Screen name="settings" />
               <Stack.Screen name="about" />
               <Stack.Screen name="reading" />

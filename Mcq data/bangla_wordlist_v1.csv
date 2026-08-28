@@ -1,0 +1,81 @@
+category,term,answer,notes
+synonym,আকাশ,গগন,common textbook pair
+synonym,জল,পানি,common textbook pair
+synonym,সূর্য,রবি,common textbook pair
+synonym,চন্দ্র,শশী,common textbook pair
+synonym,নদী,তটিনী,common textbook pair
+synonym,পাখি,বিহঙ্গ,common textbook pair
+synonym,রাজা,নৃপতি,common textbook pair
+synonym,মা,জননী,common textbook pair
+synonym,বাবা,পিতা,common textbook pair
+synonym,সমুদ্র,সাগর,common textbook pair
+synonym,ফুল,পুষ্প,common textbook pair
+synonym,গাছ,বৃক্ষ,common textbook pair
+synonym,বাতাস,বায়ু,common textbook pair
+synonym,আগুন,অগ্নি,common textbook pair
+synonym,রাত,নিশা,common textbook pair
+synonym,দিন,দিবস,common textbook pair
+synonym,ঘর,গৃহ,common textbook pair
+synonym,পথ,রাস্তা,common textbook pair
+synonym,মেঘ,জলদ,common textbook pair
+synonym,পাহাড়,পর্বত,common textbook pair
+synonym,মৃত্যু,মরণ,common textbook pair
+synonym,জীবন,প্রাণ,common textbook pair
+synonym,সোনা,স্বর্ণ,common textbook pair
+synonym,চোখ,নয়ন,common textbook pair
+synonym,মুখ,বদন,common textbook pair
+synonym,হাত,কর,common textbook pair
+synonym,পা,চরণ,common textbook pair
+synonym,কন্যা,মেয়ে,common textbook pair
+synonym,স্ত্রী,পত্নী,common textbook pair
+synonym,স্বামী,ভর্তা,common textbook pair
+synonym,বন,অরণ্য,common textbook pair
+synonym,লতা,বল্লরী,common textbook pair
+synonym,সাপ,সর্প,common textbook pair
+synonym,ঘোড়া,অশ্ব,common textbook pair
+synonym,হাতি,গজ,common textbook pair
+synonym,সিংহ,কেশরী,common textbook pair
+synonym,মাছ,মৎস্য,common textbook pair
+synonym,বৃষ্টি,বর্ষণ,common textbook pair
+synonym,তারা,নক্ষত্র,common textbook pair
+synonym,বন্ধু,সখা,common textbook pair
+antonym,আলো,অন্ধকার,common textbook pair
+antonym,ভালো,মন্দ,common textbook pair
+antonym,উঁচু,নিচু,common textbook pair
+antonym,বড়,ছোট,common textbook pair
+antonym,সুখ,দুঃখ,common textbook pair
+antonym,জীবন,মৃত্যু,common textbook pair
+antonym,আসা,যাওয়া,common textbook pair
+antonym,দিন,রাত,common textbook pair
+antonym,গরম,ঠান্ডা,common textbook pair
+antonym,উপর,নিচ,common textbook pair
+antonym,শীত,গ্রীষ্ম,common textbook pair
+antonym,সত্য,মিথ্যা,common textbook pair
+antonym,হাসি,কান্না,common textbook pair
+antonym,লাভ,ক্ষতি,common textbook pair
+antonym,জয়,পরাজয়,common textbook pair
+antonym,শুরু,শেষ,common textbook pair
+antonym,ধনী,গরিব,common textbook pair
+antonym,সহজ,কঠিন,common textbook pair
+antonym,প্রকাশ্য,গোপন,common textbook pair
+antonym,স্বাধীন,পরাধীন,common textbook pair
+antonym,আপন,পর,common textbook pair
+antonym,শান্ত,অশান্ত,common textbook pair
+antonym,উষ্ণ,শীতল,common textbook pair
+antonym,মিষ্টি,তেতো,common textbook pair
+antonym,পূর্ব,পশ্চিম,common textbook pair
+antonym,উত্তর,দক্ষিণ,common textbook pair
+antonym,প্রিয়,অপ্রিয়,common textbook pair
+antonym,আদর,অনাদর,common textbook pair
+antonym,সচল,অচল,common textbook pair
+antonym,সাধু,অসাধু,common textbook pair
+one_word,যা বলা হয়নি,অনুক্ত,one-word substitution
+one_word,যা পূর্বে ঘটেনি,অভূতপূর্ব,one-word substitution
+one_word,যে নারীর স্বামী মারা গেছে,বিধবা,one-word substitution
+one_word,যিনি বহু ভাষা জানেন,বহুভাষাবিদ,one-word substitution
+one_word,যা চিরস্থায়ী নয়,অস্থায়ী,one-word substitution
+one_word,যা দমন করা যায় না,দুর্দমনীয়,one-word substitution
+one_word,যে নিজের স্বার্থ দেখে,স্বার্থপর,one-word substitution
+one_word,যার কোনো তুলনা নেই,অতুলনীয়,one-word substitution
+one_word,যা স্পর্শ করা যায় না,অস্পৃশ্য,one-word substitution
+one_word,যিনি সব জানেন,সর্বজ্ঞ,one-word substitution

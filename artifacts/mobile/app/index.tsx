@@ -1,12 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/src/store/authStore';
+import { fetchTotalQuestionCount } from '@/src/lib/queries';
 
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
+  const [total, setTotal] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchTotalQuestionCount().then(setTotal).catch(() => setTotal(null));
+  }, []);
+
+  const totalText = total !== null ? `${total.toLocaleString()}+ MCQs` : '10,000+ MCQs';
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#0891B2' }]}>
@@ -15,11 +23,11 @@ export default function WelcomeScreen() {
           <Image source={require('../assets/images/icon.png')} style={styles.logoImage} resizeMode="contain" />
         </View>
         <Text style={styles.title}>Nurse Exam Preparation</Text>
-        <Text style={styles.subtitle}>40,000+ MCQs for All Nursing Exams</Text>
+        <Text style={styles.subtitle}>{totalText} for All Nursing Exams</Text>
       </View>
 
       <View style={styles.featuresSection}>
-        <FeatureItem icon="book-open-variant" text="40,000+ Practice Questions" />
+        <FeatureItem icon="book-open-variant" text={`${total !== null ? total.toLocaleString() : '10,000+'}+ Practice Questions`} />
         <FeatureItem icon="clock-outline" text="Timed Mock Exams" />
         <FeatureItem icon="chart-line" text="Performance Analytics" />
         <FeatureItem icon="bookmark-outline" text="Bookmark & Review" />

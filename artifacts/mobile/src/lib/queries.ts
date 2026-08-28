@@ -62,19 +62,21 @@ async function fetchQuestions(filters: { category?: string; subcategory?: string
 }
 
 export async function fetchCategoryQuestionStats(): Promise<Record<string, QuestionStats>> {
+  const stats: Record<string, QuestionStats> = {};
+  const CATS = ['Nursing', 'General Knowledge', 'English', 'Bangla'];
   if (supabase) {
     try {
-      const { data, error } = await supabase.from('questions').select('category');
-      if (!error && data) {
-        const counts: Record<string, number> = {};
-        for (const r of data) { const c = r.category || 'Unknown'; counts[c] = (counts[c] || 0) + 1; }
-        const stats: Record<string, QuestionStats> = {};
-        for (const [cat, total] of Object.entries(counts)) stats[cat] = { total: total, seen: 0, unseen: total };
-        return stats;
-      }
+      const sb = supabase;
+      await Promise.all(CATS.map(async (cat) => {
+        const { count, error } = await sb
+          .from('questions').select('id', { count: 'exact', head: true }).eq('category', cat);
+        if (!error && typeof count === 'number' && count > 0) {
+          stats[cat] = { total: count, seen: 0, unseen: count };
+        }
+      }));
     } catch { /* ignore */ }
   }
-  return {};
+  return stats;
 }
 
 export async function fetchTotalQuestionCount(): Promise<number> {
@@ -119,8 +121,12 @@ export async function fetchQuestionsByCategory(category: string, count: number):
 }
 
 export async function fetchQuestionsBySubcategory(subcategory: string, page = 0, limit = 20): Promise<Question[]> {
+  // Try exact subcategory first.
   const pool = await fetchQuestions({ subcategory }, ((page + 1) * limit));
-  return pool.slice(page * limit, (page + 1) * limit);
+  if (pool.length > 0) return pool.slice(page * limit, (page + 1) * limit);
+  // Fall back to a generic pool so practice never shows empty.
+  const fallback = await fetchQuestions({}, (((page + 1) * limit)));
+  return fallback.slice(page * limit, (page + 1) * limit);
 }
 
 export async function searchQuestions(query: string): Promise<Question[]> {
@@ -215,4 +221,30 @@ export async function fetchCategoryQuestionCounts(): Promise<Record<string, numb
   const counts: Record<string, number> = {};
   for (const [cat, v] of Object.entries(stats)) counts[cat] = v.total;
   return counts;
+}
+
+/**
+ * Returns the REAL subcategory (chapter) names present in Supabase for a
+ * category, so practice shows chapters that actually have questions.
+ */
+export async function fetchSubcategories(category: string): Promise<string[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('questions').select('subcategory').eq('category', category).limit(1000);
+    if (error || !data) return [];
+    const counts = new Map<string, number>();
+    for (const r of data) {
+      const s = (r.subcategory || '').trim();
+      if (!s || s === 'General') continue;
+      counts.set(s, (counts.get(s) || 0) + 1);
+    }
+    // Only show subcategories that have real questions.
+    return [...counts.entries()]
+      .filter(([, n]) => n > 0)
+      .sort((a, b) => b[1] - a[1])
+      .map(([s]) => s);
+  } catch {
+    return [];
+  }
 }

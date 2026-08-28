@@ -23,6 +23,7 @@ export const REAL_ADS = {
   practiceBanner: { android: 'ca-app-pub-7383364741984927/2786844778', ios: 'ca-app-pub-7383364741984927/2786844778' },
   mockBanner: { android: 'ca-app-pub-7383364741984927/2786844778', ios: 'ca-app-pub-7383364741984927/2786844778' },
   interstitial: 'ca-app-pub-7383364741984927/5436224695',
+  rewarded: 'ca-app-pub-7383364741984927/5553333333', // REPLACE with your rewarded ad unit id
 };
 
 export type AdPlacement = 'home' | 'result' | 'practice' | 'mock';
@@ -108,4 +109,47 @@ export async function showInterstitial(): Promise<void> {
     });
     await done;
   } catch { /* ignore — never block the user */ }
+}
+
+/** Rewarded ad unit id — real or test depending on USE_TEST_ADS. */
+export function getRewardedAdUnitId(): string {
+  return USE_TEST_ADS ? getTestRewardedId() : REAL_ADS.rewarded;
+}
+function getTestRewardedId(): string {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const gma = require('react-native-google-mobile-ads') as any;
+  return (gma?.TestIds?.REWARDED) || 'ca-app-pub-3940256099942544/5224354917';
+}
+
+/**
+ * Shows a rewarded ad that grants a reward ONLY if the user watches it fully.
+ * Resolves `true` when the reward is earned, `false` if the ad didn't load,
+ * was skipped/closed early, or is unavailable (Expo Go / no network).
+ * Never blocks the user — it resolves within ~30s max.
+ */
+export function showRewardedAd(): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    if (!shouldShowAds()) return resolve(false);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const gma = require('react-native-google-mobile-ads') as any;
+      const { RewardedAd, RewardedAdEventType, AdEventType } = gma;
+      const ad = RewardedAd.createForAdRequest(getRewardedAdUnitId());
+      let rewarded = false;
+      let settled = false;
+      const finish = (v: boolean) => {
+        if (!settled) { settled = true; clearTimeout(timer); try { ad.removeAllAdEventListeners?.(); } catch {} resolve(v); }
+      };
+      // Rewarded event fires when the user fully watches (earns the reward).
+      const onReward = ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => { rewarded = true; });
+      const onLoaded = ad.addAdEventListener(AdEventType.LOADED, () => {
+        try { ad.show(); } catch { finish(false); }
+      });
+      const onError = ad.addAdEventListener(AdEventType.ERROR, () => finish(rewarded));
+      const onClosed = ad.addAdEventListener(AdEventType.CLOSED, () => finish(rewarded));
+      // If the ad can't load in 30s, give up.
+      const timer = setTimeout(() => finish(false), 30000);
+      ad.load();
+    } catch { return resolve(false); }
+  });
 }

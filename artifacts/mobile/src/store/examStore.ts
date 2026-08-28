@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ExamSession, ExamResult, ExamType, Question, AnswerOption } from '@/src/types';
 import { markStudied } from '@/src/lib/streak';
+import { addWrongAnswer } from '@/src/lib/wrongAnswers';
 
 const EXAM_TIME: Record<ExamType, number> = {
   mock: 3600,
@@ -95,6 +96,12 @@ export const useExamStore = create<ExamState>((set, get) => ({
     get().saveResult(result);
     // Advance the daily study streak.
     markStudied();
+    // Auto-collect wrong answers into the Weak Topics / wrong-answer bank.
+    questions.forEach(q => {
+      if (answers[q.id] && answers[q.id] !== q.correct_answer) {
+        addWrongAnswer(q);
+      }
+    });
     return result;
   },
 

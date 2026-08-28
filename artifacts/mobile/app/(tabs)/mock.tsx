@@ -26,8 +26,9 @@ export default function MockScreen() {
       }
       startExam(questions, 'mock');
       router.push('/exam');
-    } catch (e) {
-      Alert.alert('Error', 'Failed to load questions');
+    } catch (e: any) {
+      console.error('[startMock]', e);
+      Alert.alert('Error', e?.message ? `Failed to load questions: ${e.message}` : 'Failed to load questions. Check your connection.');
     } finally {
       setMockLoading(false);
     }
@@ -44,8 +45,9 @@ export default function MockScreen() {
       const type = count === 20 ? 'daily_20' as const : count === 50 ? 'daily_50' as const : 'daily_100' as const;
       startExam(questions.slice(0, count), type, count * 60);
       router.push('/exam');
-    } catch (e) {
-      Alert.alert('Error', 'Failed to load questions');
+    } catch (e: any) {
+      console.error('[startDaily]', e);
+      Alert.alert('Error', e?.message ? `Failed to load questions: ${e.message}` : 'Failed to load questions. Check your connection.');
     } finally {
       setDailyLoading(null);
     }

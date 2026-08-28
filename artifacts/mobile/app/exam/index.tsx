@@ -8,6 +8,7 @@ import { useExamStore } from '@/src/store/examStore';
 import { useBookmarkStore } from '@/src/store/bookmarkStore';
 import { useAuthStore } from '@/src/store/authStore';
 import { toggleBookmark } from '@/src/lib/queries';
+import { showRewardedAd } from '@/src/lib/ads';
 import type { AnswerOption } from '@/src/types';
 import AdBanner from '@/components/AdBanner';
 
@@ -18,6 +19,7 @@ export default function ExamScreen() {
   const { user } = useAuthStore();
   const { loadBookmarks, addBookmark, removeBookmark, isBookmarked: checkBookmarked, findBookmark } = useBookmarkStore();
   const [showGrid, setShowGrid] = useState(false);
+  const [hintsUsed, setHintsUsed] = useState<Record<string, string>>({});
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Load bookmarks on mount
@@ -78,6 +80,30 @@ export default function ExamScreen() {
     if (isPractice && selectedAnswer) return;
     setAnswer(question.id, opt);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const handleHint = async () => {
+    if (hintsUsed[question.id]) return; // hint already revealed
+    // Only allow hints in practice mode to keep exams fair.
+    if (!isPractice) { Alert.alert('Practice Only', 'Hints are available in practice mode only.'); return; }
+    Alert.alert('Hint', 'Watch a short ad to reveal a helpful hint for this question.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Watch Ad',
+        onPress: async () => {
+          const rewarded = await showRewardedAd();
+          if (rewarded) {
+            // Reveal a hint: remove one wrong option, leaving 3.
+            const wrongOpts = (['a', 'b', 'c', 'd'] as AnswerOption[]).filter(o => o !== question.correct_answer);
+            const drop = wrongOpts[0];
+            setHintsUsed(prev => ({ ...prev, [question.id]: drop }));
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } else {
+            Alert.alert('Ad Not Available', 'Please try again when a network/ad is available.');
+          }
+        },
+      },
+    ]);
   };
 
   const handleSubmit = () => {
@@ -182,13 +208,24 @@ export default function ExamScreen() {
             </View>
           </View>
           <Text style={styles.qText}>{currentIndex + 1}. {question.question}</Text>
+          {hintsUsed[question.id] ? (
+            <View style={styles.hintBox}>
+              <MaterialCommunityIcons name="lightbulb-on-outline" size={16} color="#B45309" />
+              <Text style={styles.hintText}>Hint: option {hintsUsed[question.id].toUpperCase()} is incorrect.</Text>
+            </View>
+          ) : (
+            <Pressable style={styles.hintBtn} onPress={handleHint}>
+              <MaterialCommunityIcons name="lightbulb-on-outline" size={16} color="#B45309" />
+              <Text style={styles.hintBtnText}>Hint (watch ad)</Text>
+            </Pressable>
+          )}
         </View>
 
         <View style={styles.options}>
           {opts.map(opt => (
             <Pressable
               key={opt}
-              style={[styles.optionBtn, selectedAnswer === opt && styles.optionSelected, isPractice && selectedAnswer && opt === question.correct_answer && { borderColor: '#059669', backgroundColor: '#D1FAE5' }, isPractice && selectedAnswer && opt === selectedAnswer && opt !== question.correct_answer && { borderColor: '#DC2626', backgroundColor: '#FEE2E2' }]}
+              style={[styles.optionBtn, selectedAnswer === opt && styles.optionSelected, hintsUsed[question.id] === opt && { opacity: 0.35 }, isPractice && selectedAnswer && opt === question.correct_answer && { borderColor: '#059669', backgroundColor: '#D1FAE5' }, isPractice && selectedAnswer && opt === selectedAnswer && opt !== question.correct_answer && { borderColor: '#DC2626', backgroundColor: '#FEE2E2' }]}
               onPress={() => handleAnswer(opt)}
               disabled={isPractice && !!selectedAnswer}
             >
@@ -264,6 +301,10 @@ const styles = StyleSheet.create({
   diffBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
   diffText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
   qText: { fontSize: 16, fontFamily: 'Inter_500Medium', color: '#0C1A2E', lineHeight: 24 },
+  hintBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 6, backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  hintBtnText: { color: '#B45309', fontSize: 13, fontFamily: 'Inter_600SemiBold' },
+  hintBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  hintText: { color: '#B45309', fontSize: 13, fontFamily: 'Inter_600SemiBold', flex: 1 },
   options: { gap: 10 },
   optionBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1.5, borderColor: '#E2E8F0', padding: 14 },
   optionSelected: { borderColor: '#0891B2', backgroundColor: '#F0F9FF' },

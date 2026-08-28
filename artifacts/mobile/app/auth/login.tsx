@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, TextInput, ScrollView, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/src/store/authStore';
+import { fetchTotalQuestionCount } from '@/src/lib/queries';
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -11,6 +12,13 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchTotalQuestionCount().then(setTotal).catch(() => setTotal(null));
+  }, []);
+
+  const tagline = total !== null ? `${total.toLocaleString()}+ MCQs for All Nursing Exams` : "MCQs for All Nursing Exams";
 
   const handleLogin = async () => {
     if (!email || !password) { Alert.alert('Error', 'Please enter email and password.'); return; }
@@ -56,7 +64,7 @@ export default function LoginScreen() {
             <MaterialCommunityIcons name="medical-bag" size={40} color="#fff" />
           </View>
           <Text style={styles.appName}>Nurse Exam Preparation</Text>
-          <Text style={styles.tagline}>40,000+ MCQs for All Nursing Exams</Text>
+          <Text style={styles.tagline}>{tagline}</Text>
         </View>
 
         <View style={styles.form}>

@@ -3,7 +3,7 @@ import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator, Alert }
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
-import { fetchQuestionsBySubcategory, fetchCategoryQuestionStats } from '@/src/lib/queries';
+import { fetchQuestionsBySubcategory, fetchCategoryQuestionStats, fetchSubcategories } from '@/src/lib/queries';
 import { CATEGORY_CONFIG } from '@/src/types';
 import NativeAdBanner from '@/components/NativeAdBanner';
 
@@ -16,10 +16,14 @@ export default function CategoryScreen() {
 
   const catName = id as string;
   const cfg = CATEGORY_CONFIG[catName];
-  const chapters = cfg?.chapters ?? [];
+  const [chapters, setChapters] = useState<string[]>(cfg?.chapters ?? []);
 
   useEffect(() => {
     fetchCategoryQuestionStats().then(setStats).catch(() => setStats({}));
+    // Load the real chapter/subcategory names that actually have questions.
+    fetchSubcategories(catName).then((real) => {
+      if (real.length > 0) setChapters(real); // data-driven chapters
+    }).catch(() => {});
   }, [catName]);
 
   const handleChapterPress = (chapterName: string) => {
