@@ -28,7 +28,9 @@ export default function NativeAdBanner() {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const gma = require('react-native-google-mobile-ads');
         if (!cachedNativeAd) {
-          cachedNativeAd = await gma.NativeAd.createForAdRequest(unitId);
+          const created = await gma.NativeAd.createForAdRequest(unitId);
+          if (!mounted) return;
+          cachedNativeAd = created;
         }
         if (mounted) {
           setUi({ NativeAdView: gma.NativeAdView, NativeAsset: gma.NativeAsset, NativeAssetType: gma.NativeAssetType });

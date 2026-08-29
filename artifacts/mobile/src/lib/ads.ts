@@ -5,7 +5,7 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 export const ADS_ENABLED = true;
 
 /** When true, uses Google test ads (no revenue). Set false for your real IDs. */
-export const USE_TEST_ADS = true;
+export const USE_TEST_ADS = false;
 
 /**
  * When true, if a real ad fails to load (e.g. before the app is live/approved),
@@ -23,7 +23,7 @@ export const REAL_ADS = {
   practiceBanner: { android: 'ca-app-pub-7383364741984927/2786844778', ios: 'ca-app-pub-7383364741984927/2786844778' },
   mockBanner: { android: 'ca-app-pub-7383364741984927/2786844778', ios: 'ca-app-pub-7383364741984927/2786844778' },
   interstitial: 'ca-app-pub-7383364741984927/5436224695',
-  rewarded: 'ca-app-pub-7383364741984927/5553333333', // REPLACE with your rewarded ad unit id
+  rewarded: 'ca-app-pub-7383364741984927/8230537288',
 };
 
 export type AdPlacement = 'home' | 'result' | 'practice' | 'mock';
@@ -100,14 +100,20 @@ export async function showInterstitial(): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const gma = require('react-native-google-mobile-ads') as any;
     const AdEventType = gma.AdEventType;
-    const interstitial = gma.InterstitialAd.createForAdRequest(getInterstitialUnitId());
-    const done = new Promise<void>((resolve) => {
-      const unload = interstitial.addAdEventListener(AdEventType.LOADED, () => { try { interstitial.show(); } catch { /* ignore */ } resolve(); });
-      const unerr = interstitial.addAdEventListener(AdEventType.ERROR, () => resolve());
-      interstitial.load();
-      setTimeout(() => { try { unload(); } catch {} try { unerr(); } catch {} resolve(); }, 6000);
-    });
-    await done;
+    // Try the real ad first; on failure fall back to a test ad (if allowed).
+    const candidates = ALLOW_TEST_FALLBACK && !USE_TEST_ADS
+      ? [REAL_ADS.interstitial, getTestAdUnit('interstitial')]
+      : [getInterstitialUnitId()];
+    for (const unitId of candidates) {
+      const interstitial = gma.InterstitialAd.createForAdRequest(unitId);
+      const ok = await new Promise<boolean>((resolve) => {
+        const onLoad = interstitial.addAdEventListener(AdEventType.LOADED, () => { try { interstitial.show(); } catch { /* ignore */ } resolve(true); });
+        const onErr = interstitial.addAdEventListener(AdEventType.ERROR, () => resolve(false));
+        interstitial.load();
+        setTimeout(() => { try { onLoad(); } catch {} try { onErr(); } catch {} resolve(false); }, 6000);
+      });
+      if (ok) return;
+    }
   } catch { /* ignore — never block the user */ }
 }
 
@@ -128,28 +134,42 @@ function getTestRewardedId(): string {
  * Never blocks the user — it resolves within ~30s max.
  */
 export function showRewardedAd(): Promise<boolean> {
-  return new Promise<boolean>((resolve) => {
-    if (!shouldShowAds()) return resolve(false);
+  return new Promise<boolean>((resolveOuter) => {
+    if (!shouldShowAds()) return resolveOuter(false);
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const gma = require('react-native-google-mobile-ads') as any;
       const { RewardedAd, RewardedAdEventType, AdEventType } = gma;
-      const ad = RewardedAd.createForAdRequest(getRewardedAdUnitId());
-      let rewarded = false;
-      let settled = false;
-      const finish = (v: boolean) => {
-        if (!settled) { settled = true; clearTimeout(timer); try { ad.removeAllAdEventListeners?.(); } catch {} resolve(v); }
+      const candidates = ALLOW_TEST_FALLBACK && !USE_TEST_ADS
+        ? [REAL_ADS.rewarded, getTestRewardedId()]
+        : [getRewardedAdUnitId()];
+
+      let idx = 0;
+      const attempt = (unitId: string) => {
+        const ad = RewardedAd.createForAdRequest(unitId);
+        let rewarded = false;
+        let settled = false;
+        const finish = (v: boolean) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          try { ad.removeAllAdEventListeners?.(); } catch { /* ignore */ }
+          resolveOuter(v);
+        };
+        // Rewarded event fires when the user fully watches (earns the reward).
+        const onReward = ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => { rewarded = true; });
+        const onLoaded = ad.addAdEventListener(AdEventType.LOADED, () => { try { ad.show(); } catch { finish(false); } });
+        const onError = ad.addAdEventListener(AdEventType.ERROR, () => {
+          // Real ad failed -> try next candidate (test ad) if available.
+          if (idx + 1 < candidates.length) { idx += 1; attempt(candidates[idx]); }
+          else finish(rewarded);
+        });
+        const onClosed = ad.addAdEventListener(AdEventType.CLOSED, () => finish(rewarded));
+        // If the ad can't load in 30s, give up.
+        const timer = setTimeout(() => finish(false), 30000);
+        ad.load();
       };
-      // Rewarded event fires when the user fully watches (earns the reward).
-      const onReward = ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => { rewarded = true; });
-      const onLoaded = ad.addAdEventListener(AdEventType.LOADED, () => {
-        try { ad.show(); } catch { finish(false); }
-      });
-      const onError = ad.addAdEventListener(AdEventType.ERROR, () => finish(rewarded));
-      const onClosed = ad.addAdEventListener(AdEventType.CLOSED, () => finish(rewarded));
-      // If the ad can't load in 30s, give up.
-      const timer = setTimeout(() => finish(false), 30000);
-      ad.load();
-    } catch { return resolve(false); }
+      attempt(candidates[0]);
+    } catch { return resolveOuter(false); }
   });
 }
