@@ -1,26 +1,27 @@
-# Release Notes — v1.8.0
+# Release Notes â€” v1.8.0
 
 ## What's New
-- 🎯 Predicted Exam Readiness gauge on Home & Analytics
-- 🏆 XP, levels & badges with category leaderboards
-- 🔥 Daily streak reminders — “take your 20 questions”
-- ✅ Weak Topics auto-clear on mastery
-- 🏅 Badge celebrations on results
-- 📣 Production AdMob ads enabled
+- ðŸŽ¯ Predicted Exam Readiness gauge on Home & Analytics
+- ðŸ† XP, levels & badges with category leaderboards
+- ðŸ”¥ Daily streak reminders â€” â€œtake your 20 questionsâ€
+- âœ… Weak Topics auto-clear on mastery
+- ðŸ… Badge celebrations on results
+- ðŸ“£ Production AdMob ads enabled
 
 ## Technical
-- Version 1.8.0 · version code 9 · build number 9
+- Version 1.8.0 Â· version code 10 Â· build number 10
 
 ---
 
-# Release Notes — v1.7.0
+# Release Notes â€” v1.7.0
 
 ## What's New
-- 🎯 **Rewarded Ads** — watch a short ad to unlock a **hint** in practice mode (earns more than banners/interstitials)
-- 📉 **Weak Topics (wrong-answer bank)** — missed questions are auto-collected; re-quiz them until you master them
-- 🃏 **Flashcards mode** — turn your bookmarked questions into swipe-style flashcards
-- 🔥 **Daily Streak / Best Streak / Today's Quiz** — now refresh live on your Profile (fixed)
-- 🐛 Fixed category MCQs loading (real Supabase chapters + accurate totals)
+- ðŸŽ¯ **Rewarded Ads** â€” watch a short ad to unlock a **hint** in practice mode (earns more than banners/interstitials)
+- ðŸ“‰ **Weak Topics (wrong-answer bank)** â€” missed questions are auto-collected; re-quiz them until you master them
+- ðŸƒ **Flashcards mode** â€” turn your bookmarked questions into swipe-style flashcards
+- ðŸ”¥ **Daily Streak / Best Streak / Today's Quiz** â€” now refresh live on your Profile (fixed)
+- ðŸ› Fixed category MCQs loading (real Supabase chapters + accurate totals)
 
 ## Technical
-- Version 1.7.0 · version code 8 · build number 8
+- Version 1.7.0 Â· version code 8 Â· build number 8
+
