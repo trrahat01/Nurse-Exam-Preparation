@@ -39,3 +39,9 @@ yarn-error.*
 .vercel
 
 .env
+# Release artifacts & signing credentials (never commit)
+release/
+release-keystores/
+*.keystore
+credentials.json
+_*.log
