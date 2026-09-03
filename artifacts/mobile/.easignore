@@ -31,3 +31,8 @@ research-nursing.json
 procedures-nursing.json
 leadership-nursing.json
 hospital-management-nursing.json
+# Local release artifacts & signing keys (NOT part of the build)
+release/
+release-keystores/
+*.keystore
+*.jks
