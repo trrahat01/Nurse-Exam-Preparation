@@ -1,3 +1,14 @@
+# Release Notes — v1.9.0
+
+## What's New
+- 📣 Stable release update — performance & reliability improvements
+- 🎯 Improved exam flow, readiness gauge & gamification polish
+
+## Technical
+- Version 1.9.0 · version code 11 · build number 11
+
+---
+
 # Release Notes â€” v1.8.0
 
 ## What's New
