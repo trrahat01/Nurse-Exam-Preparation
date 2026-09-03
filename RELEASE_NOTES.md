@@ -1,3 +1,14 @@
+# Release Notes — v1.9.1
+
+## What's New
+- 🔧 Enables R8/ProGuard minification for smaller, safer release builds
+- 🧩 Deobfuscation (mapping) file now generated for Play Console crash analysis
+
+## Technical
+- Version 1.9.1 · version code 12 · build number 12
+
+---
+
 # Release Notes — v1.9.0
 
 ## What's New
