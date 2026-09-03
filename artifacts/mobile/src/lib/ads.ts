@@ -12,7 +12,7 @@ export const USE_TEST_ADS = false;
  * we automatically fall back to a Google test ad so something is visible.
  * Set to false for production release so real users never see "Test ad".
  */
-export const ALLOW_TEST_FALLBACK = true;
+export const ALLOW_TEST_FALLBACK = false;
 
 /** Your real AdMob IDs — used when USE_TEST_ADS = false. */
 export const REAL_ADS = {

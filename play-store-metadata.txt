@@ -16,6 +16,11 @@ FEATURES:
 - 60+ Subcategories covering nursing specialties
 - Full Mock Tests with timers & auto-submit
 - Instant Results & Answer Review with explanations
+- 🔥 Daily Study Streak with daily reminders
+- 📉 Weak Topics re-quiz until you master missed questions
+- 🃏 Bookmarks-as-Flashcards review mode
+- 🎯 NCLEX-style predicted readiness score
+- 🏆 XP levels, badges & category leaderboards
 - Performance Analytics & Progress Tracking
 - Bookmark Questions for review
 - Works Offline & Guest Mode

@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ExamSession, ExamResult, ExamType, Question, AnswerOption } from '@/src/types';
 import { markStudied } from '@/src/lib/streak';
-import { addWrongAnswer } from '@/src/lib/wrongAnswers';
+import { addWrongAnswer, removeWrongAnswer } from '@/src/lib/wrongAnswers';
+import { awardGamification, type BadgeDef } from '@/src/lib/gamification';
 
 const EXAM_TIME: Record<ExamType, number> = {
   mock: 3600,
@@ -17,6 +18,7 @@ interface ExamState {
   session: ExamSession | null;
   result: ExamResult | null;
   savedResults: ExamResult[];
+  lastEarnedBadges: BadgeDef[];
   isLoading: boolean;
   startExam: (questions: Question[], type: ExamType, timeLimit?: number) => void;
   setAnswer: (questionId: string, answer: AnswerOption) => void;
@@ -34,6 +36,7 @@ export const useExamStore = create<ExamState>((set, get) => ({
   session: null,
   result: null,
   savedResults: [],
+  lastEarnedBadges: [],
   isLoading: false,
 
   startExam: (questions, type, timeLimit) => {
@@ -50,6 +53,7 @@ export const useExamStore = create<ExamState>((set, get) => ({
         startTime: Date.now(),
       },
       result: null,
+      lastEarnedBadges: [],
     });
   },
 
@@ -94,14 +98,36 @@ export const useExamStore = create<ExamState>((set, get) => ({
     const result: ExamResult = { score: correct, correct, wrong, skipped, percentage, timeTaken, passed, examType, answers, questions, categoryBreakdown };
     set({ session: { ...session, isRunning: false }, result });
     get().saveResult(result);
-    // Advance the daily study streak.
-    markStudied();
+    const allResults = [result, ...get().savedResults].slice(0, 50);
+    // Advance the daily study streak and award XP/badges (background).
+    void (async () => {
+      const st = await markStudied();
+      const award = await awardGamification({
+        correct,
+        examCompleted: true,
+        isMockPassed: examType === 'mock' && passed,
+        streakCurrent: st.current,
+        savedResults: allResults,
+      });
+      if (award.newlyEarned.length) {
+        set({ lastEarnedBadges: award.newlyEarned });
+      }
+    })();
     // Auto-collect wrong answers into the Weak Topics / wrong-answer bank.
     questions.forEach(q => {
       if (answers[q.id] && answers[q.id] !== q.correct_answer) {
         addWrongAnswer(q);
       }
     });
+    // Mastery: correctly answering a practice (weak-topic) question removes it
+    // from the wrong-answer bank so you only re-quiz what you still miss.
+    if (examType === 'practice') {
+      questions.forEach(q => {
+        if (answers[q.id] && answers[q.id] === q.correct_answer) {
+          void removeWrongAnswer(q.id);
+        }
+      });
+    }
     return result;
   },
 

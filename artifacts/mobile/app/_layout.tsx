@@ -74,6 +74,7 @@ export default function RootLayout() {
               <Stack.Screen name="edit-profile" />
               <Stack.Screen name="reset-password" />
               <Stack.Screen name="analytics" />
+              <Stack.Screen name="level" />
             </Stack>
           </ErrorBoundary>
         </QueryClientProvider>

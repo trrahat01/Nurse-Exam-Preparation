@@ -144,8 +144,8 @@ export async function scheduleStreakReminder(streak: number): Promise<void> {
     await Notifications.scheduleNotificationAsync({
       identifier: STREAK_REMINDER_ID,
       content: {
-        title: streak > 0 ? `🔥 Day ${streak} — don't lose your streak!` : '📚 Ready for today\u2019s practice?',
-        body: 'Open Nurse Exam Preparation and keep your study streak going. Consistency beats intensity!',
+        title: streak > 0 ? `🔥 Day ${streak} — take your 20 questions` : '📚 Ready for today\u2019s practice?',
+        body: `Day ${streak}: open the app and answer your 20 daily questions to keep the streak alive!`,
         sound: true,
       },
       trigger: { channelId: 'daily', hour: 20, minute: 0, repeats: true } as any,

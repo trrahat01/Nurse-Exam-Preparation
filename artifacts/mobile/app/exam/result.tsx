@@ -1,24 +1,36 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
 import { showInterstitial } from '@/src/lib/ads';
+import type { BadgeDef } from '@/src/lib/gamification';
 import AdBanner from '@/components/AdBanner';
 
 export default function ResultScreen() {
   const insets = useSafeAreaInsets();
-  const { result, clearExam } = useExamStore();
+  const { result, clearExam, lastEarnedBadges } = useExamStore();
   const shownAd = useRef(false);
+  const [badges, setBadges] = useState<BadgeDef[]>(lastEarnedBadges);
 
   useEffect(() => {
-    // Show one interstitial ad right before/at the result (once per result).
     if (result && !shownAd.current) {
       shownAd.current = true;
       showInterstitial();
     }
   }, [result]);
+
+  // Badges may still be arriving from the background XP award right after submit.
+  useEffect(() => {
+    if (lastEarnedBadges.length) setBadges(lastEarnedBadges);
+  }, [lastEarnedBadges]);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (lastEarnedBadges.length) setBadges(lastEarnedBadges);
+    }, 800);
+    return () => clearTimeout(t);
+  }, []);
 
   if (!result) return null;
 
@@ -40,6 +52,21 @@ export default function ResultScreen() {
           <Text style={[styles.passText, { color: passed ? '#059669' : '#DC2626' }]}>{passed ? 'PASS' : 'FAIL'}</Text>
         </View>
       </View>
+
+      {badges.length > 0 && (
+        <View style={styles.badgeBanner}>
+          <View style={styles.badgeIcon}>
+            <MaterialCommunityIcons name="trophy" size={24} color="#D97706" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.badgeTitle}>Badge{badges.length > 1 ? 's' : ''} unlocked!</Text>
+            <Text style={styles.badgeSub}>{badges.map(b => b.name).join(' · ')}</Text>
+          </View>
+          <Pressable onPress={() => router.push('/level' as any)} style={styles.badgeLink}>
+            <Text style={styles.badgeLinkText}>View</Text>
+          </Pressable>
+        </View>
+      )}
 
       <View style={styles.content}>
         <View style={styles.statsGrid}>
@@ -107,7 +134,13 @@ const styles = StyleSheet.create({
   verdictSub: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontFamily: 'Inter_400Regular' },
   passBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20 },
   passText: { fontSize: 13, fontFamily: 'Inter_700Bold', letterSpacing: 1 },
-  content: { padding: 16, gap: 14 },
+  badgeBanner: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginTop: -18, backgroundColor: '#FFFBEB', borderRadius: 16, borderWidth: 1, borderColor: '#FDE68A', padding: 14, elevation: 2 },
+  badgeIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center' },
+  badgeTitle: { fontSize: 14, fontFamily: 'Inter_700Bold', color: '#92400E' },
+  badgeSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#B45309', marginTop: 2 },
+  badgeLink: { backgroundColor: '#FDE68A', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 },
+  badgeLinkText: { color: '#92400E', fontSize: 13, fontFamily: 'Inter_700Bold' },
+  content: { padding: 16, gap: 14, marginTop: 6 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   statCard: { width: '47%', backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', padding: 14, gap: 6, alignItems: 'center' },
   statIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },

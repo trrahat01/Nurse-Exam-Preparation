@@ -7,6 +7,7 @@ import { useAuthStore } from '@/src/store/authStore';
 import { useExamStore } from '@/src/store/examStore';
 import { getStreak, type StreakData } from '@/src/lib/streak';
 import { getWrongAnswers } from '@/src/lib/wrongAnswers';
+import { getGamification, type GamificationState } from '@/src/lib/gamification';
 import { fetchTotalQuestionCount } from '@/src/lib/queries';
 import Constants from 'expo-constants';
 
@@ -16,6 +17,7 @@ export default function ProfileScreen() {
   const { savedResults } = useExamStore();
   const [streak, setStreak] = useState<StreakData>({ current: 0, best: 0, lastDate: null, studiedToday: false });
   const [wrongCount, setWrongCount] = useState(0);
+  const [gam, setGam] = useState<GamificationState>({ xp: 0, level: 1, xpIntoLevel: 0, xpForNextLevel: 250, progressPct: 0, earnedBadges: [] });
   const [totalMcqs, setTotalMcqs] = useState(0);
   const { startExam } = useExamStore();
 
@@ -24,6 +26,7 @@ export default function ProfileScreen() {
     React.useCallback(() => {
       getStreak().then(setStreak);
       getWrongAnswers().then(w => setWrongCount(w.length));
+      getGamification().then(setGam);
       fetchTotalQuestionCount().then(setTotalMcqs).catch(() => setTotalMcqs(0));
     }, [])
   );
@@ -153,6 +156,15 @@ export default function ProfileScreen() {
             <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
           </Pressable>
         </View>
+
+          <View style={styles.divider} />
+          <Pressable style={styles.menuItem} onPress={() => router.push('/level' as any)}>
+            <View style={styles.menuLeft}>
+              <MaterialCommunityIcons name="trophy-outline" size={20} color="#0891B2" />
+              <Text style={styles.menuLabel}>Level & Badges</Text>
+            </View>
+            <Text style={styles.menuValue}>Lv {gam.level} - {gam.xp} XP</Text>
+          </Pressable>
 
         <Text style={styles.sectionTitle}>ABOUT</Text>
         <View style={styles.section}>

@@ -8,6 +8,8 @@ import { useExamStore } from '@/src/store/examStore';
 import { fetchMockQuestions, fetchCategoryQuestionStats, fetchTotalQuestionCount } from '@/src/lib/queries';
 import { CATEGORY_CONFIG } from '@/src/types';
 import AdBanner from '@/components/AdBanner';
+import ReadyMeter from '@/components/ReadyMeter';
+import { computeReadiness } from '@/src/lib/readiness';
 
 const CATEGORIES = Object.values(CATEGORY_CONFIG);
 
@@ -48,6 +50,7 @@ export default function HomeScreen() {
   const bestScore = savedResults.length
     ? Math.max(...savedResults.map(r => r.percentage))
     : 0;
+  const readiness = computeReadiness(savedResults);
 
   const handleStartMock = async () => {
     setLoading(true);
@@ -113,6 +116,7 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.content}>
+        <ReadyMeter readiness={readiness} />
         <Text style={styles.sectionTitle}>Quick Start</Text>
         <View style={styles.actionRow}>
           <ActionButton icon="clipboard-text-outline" label="Full Mock" sublabel="100 Questions" color="#0891B2" bg="#E0F2FE" onPress={handleStartMock} loading={loading} />
