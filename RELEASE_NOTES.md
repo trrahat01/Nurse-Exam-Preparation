@@ -1,3 +1,13 @@
+# Release Notes — v1.9.2
+
+## What's New
+- 🔧 New version code for the Play Store release (R8 build with deobfuscation support)
+
+## Technical
+- Version 1.9.2 · version code 13 · build number 13
+
+---
+
 # Release Notes — v1.9.1
 
 ## What's New
