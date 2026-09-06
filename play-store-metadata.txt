@@ -1,4 +1,4 @@
-﻿App Title:
+App Title:
 Nurse Exam Preparation
 
 Short Description (80 characters max):
@@ -35,17 +35,17 @@ EXAMS PREPARED FOR:
 
 OFFICIAL PUBLIC SOURCES (public curricula & syllabi referenced only to structure practice topics):
 - DGNM Bangladesh (Directorate General of Nursing & Midwifery): https://dgnm.gov.bd
-- Bangladesh Public Service Commission: http://www.bpsc.gov.bd
+- Bangladesh Public Service Commission: https://bpsc.gov.bd
 - Ministry of Health & Family Welfare, Bangladesh: https://mohfw.gov.bd
 
 DISCLAIMER:
 This app is an independent study tool and is NOT affiliated with, endorsed by, or a representative of any government entity, commission, or examination board. All question content is independently curated for practice based on publicly available syllabi. Practice questions are for self-study only and do not guarantee exam results. Exam/board names belong to their respective owners.
 
 Privacy Policy URL:
-https://trrahat01.github.io/Nurse-Exam-Preparation/privacy-policy.html
+https://trrahat01.github.io/nurse-prep-pages/privacy-policy.html
 
 Data Deletion URL:
-https://trrahat01.github.io/Nurse-Exam-Preparation/deletion.html
+https://trrahat01.github.io/nurse-prep-pages/deletion.html
 
 Contact Email:
 trdevworks@gmail.com
