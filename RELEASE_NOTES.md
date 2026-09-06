@@ -1,3 +1,13 @@
+# Release Notes — v1.9.4
+
+## What's New
+- 🔧 New build version for the Play Store release (R8-optimized, includes AD_ID permission + deobfuscation)
+
+## Technical
+- Version 1.9.4 · version code 15 · build number 15
+
+---
+
 # Release Notes — v1.9.2
 
 ## What's New
