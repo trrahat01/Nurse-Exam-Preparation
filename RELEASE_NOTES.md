@@ -1,3 +1,14 @@
+# Release Notes — v2.0.0
+
+## What's New
+- 🚀 Major release update (fresh version code 20 for Play Store)
+- All prior features retained: readiness gauge, XP/levels/badges, daily streak reminders, Weak Topics, flashcards, AdMob ads, R8 optimization
+
+## Technical
+- Version 2.0.0 · version code 20 · build number 20
+
+---
+
 # Release Notes — v1.9.4
 
 ## What's New
