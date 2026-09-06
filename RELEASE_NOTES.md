@@ -1,3 +1,13 @@
+# Release Notes — v2.1.0
+
+## What's New
+- 🚀 Fresh release build (version code 30)
+
+## Technical
+- Version 2.1.0 · version code 30 · build number 30
+
+---
+
 # Release Notes — v2.0.0
 
 ## What's New
