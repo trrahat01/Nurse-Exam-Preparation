@@ -1,16 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
-import { showInterstitial } from '@/src/lib/ads';
+import { showInterstitial, showRewardedAd } from '@/src/lib/ads';
 import type { BadgeDef } from '@/src/lib/gamification';
 import AdBanner from '@/components/AdBanner';
 
 export default function ResultScreen() {
   const insets = useSafeAreaInsets();
-  const { result, clearExam, lastEarnedBadges } = useExamStore();
+  const { result, clearExam, lastEarnedBadges, startExam } = useExamStore();
   const shownAd = useRef(false);
   const [badges, setBadges] = useState<BadgeDef[]>(lastEarnedBadges);
 
@@ -37,6 +37,32 @@ export default function ResultScreen() {
   const { correct, wrong, skipped, percentage, timeTaken, passed, questions } = result;
   const mm = Math.floor(timeTaken / 60);
   const ss = timeTaken % 60;
+
+  const missed = questions.filter((q) => result.answers[q.id] && result.answers[q.id] !== q.correct_answer).slice(0, 10);
+  const requizCount = missed.length;
+
+  const handleReopenMissed = async () => {
+    if (!requizCount) return;
+    Alert.alert(
+      'Re-quiz missed',
+      `Watch a short ad to re-quiz your ${requizCount} missed question${requizCount > 1 ? 's' : ''} now.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Watch Ad',
+          onPress: async () => {
+            const rewarded = await showRewardedAd();
+            if (rewarded) {
+              startExam(missed, 'practice');
+              router.push('/exam');
+            } else {
+              Alert.alert('Ad Not Available', 'Please try again when a network/ad is available.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }} showsVerticalScrollIndicator={false}>
@@ -94,6 +120,21 @@ export default function ResultScreen() {
             </React.Fragment>
           ))}
         </View>
+
+        {requizCount > 0 && (
+          <View style={styles.rewardCard}>
+            <View style={styles.rewardIcon}>
+              <MaterialCommunityIcons name="play-circle" size={24} color="#D97706" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rewardTitle}>Master your mistakes</Text>
+              <Text style={styles.rewardSub}>Watch a short ad to re-quiz up to 10 missed questions now</Text>
+            </View>
+            <Pressable style={styles.rewardBtn} onPress={handleReopenMissed}>
+              <Text style={styles.rewardBtnText}>{requizCount} missed</Text>
+            </Pressable>
+          </View>
+        )}
 
         <Pressable style={styles.btn} onPress={() => router.push('/exam/review')}>
           <MaterialCommunityIcons name="file-document-outline" size={20} color="#fff" />
@@ -156,4 +197,10 @@ const styles = StyleSheet.create({
   btnText: { color: '#fff', fontSize: 16, fontFamily: 'Inter_700Bold' },
   btnOutline: { borderRadius: 14, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#E2E8F0', backgroundColor: '#fff' },
   btnOutlineText: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: '#0C1A2E' },
+  rewardCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#FFF7ED', borderRadius: 16, borderWidth: 1, borderColor: '#FDE68A', padding: 14 },
+  rewardIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center' },
+  rewardTitle: { fontSize: 14, fontFamily: 'Inter_700Bold', color: '#92400E' },
+  rewardSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#B45309', marginTop: 2 },
+  rewardBtn: { backgroundColor: '#F59E0B', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14 },
+  rewardBtnText: { color: '#fff', fontSize: 13, fontFamily: 'Inter_700Bold' },
 });
