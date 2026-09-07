@@ -2,7 +2,7 @@
   "expo": {
     "name": "Nurse Exam Preparation",
     "slug": "nurse-exam-preparation",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "nurse-exam-prep",
@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.nurseexampreparation.nursing",
-      "buildNumber": "40"
+      "buildNumber": "50"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
       },
       "package": "com.nurseexampreparation.nursing",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 40,
+      "versionCode": 50,
       "permissions": [
         "com.google.android.gms.permission.AD_ID"
       ],

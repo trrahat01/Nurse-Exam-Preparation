@@ -1,3 +1,14 @@
+# Release Notes — v2.3.0
+
+## What's New
+- 🎱 Rewarded ads: watch an ad to re-quiz the questions you missed right after an exam
+- 🚀 Fresh production build
+
+## Technical
+- Version 2.3.0 · version code 50 · build number 50
+
+---
+
 # Release Notes — v2.2.0
 
 ## What's New
