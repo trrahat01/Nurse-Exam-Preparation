@@ -1,3 +1,13 @@
+# Release Notes — v2.2.0
+
+## What's New
+- 🚀 Fresh production build (version code 40)
+
+## Technical
+- Version 2.2.0 · version code 40 · build number 40
+
+---
+
 # Release Notes — v2.1.0
 
 ## What's New
