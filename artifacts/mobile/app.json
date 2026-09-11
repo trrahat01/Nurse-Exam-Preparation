@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.nurseexampreparation.nursing",
-      "buildNumber": "50"
+      "buildNumber": "53"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
       },
       "package": "com.nurseexampreparation.nursing",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 50,
+      "versionCode": 53,
       "permissions": [
         "com.google.android.gms.permission.AD_ID"
       ],

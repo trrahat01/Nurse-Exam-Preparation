@@ -17,7 +17,7 @@ const SOURCES: { name: string; desc: string; url: string; color: string; bg: str
   {
     name: 'Bangladesh Public Service Commission',
     desc: 'BPSC — official recruitment & syllabus',
-    url: 'http://www.bpsc.gov.bd',
+    url: 'https://bpsc.gov.bd',
     color: '#0891B2',
     bg: '#E0F2FE',
   },

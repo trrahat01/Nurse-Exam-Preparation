@@ -1,3 +1,28 @@
+# Release Notes — v2.3.2
+
+## What's New
+- 🔧 Compliance + AD_ID hotfix build — fresh version code **52** (code 50/51 already used in Play Store)
+- ✅ All official source links use direct HTTPS (DGNM `https://dgnm.gov.bd`, BPSC `https://bpsc.gov.bd`, MOHFW `https://mohfw.gov.bd`)
+- ✅ `com.google.android.gms.permission.AD_ID` permission present in manifest (verified in AAB)
+- ✅ Non-government disclaimer in-app (About → Important Disclaimer) and in Play listing
+
+## Technical
+- Version 2.3.0 (build 52) · version code 52 · build number 52 · compliance hotfix build
+
+---
+
+# Release Notes — v2.3.1
+
+## What's New
+- 🔧 Compliance hotfix: fixed the Bangladesh Public Service Commission source link (now `https://bpsc.gov.bd` — valid HTTPS, loads directly) to resolve the Play Store "Misleading Claims · Broken or Inaccessible Source Link" rejection
+- ✅ All official source links in-app now use direct HTTPS URLs (DGNM `https://dgnm.gov.bd`, BPSC `https://bpsc.gov.bd`, MOHFW `https://mohfw.gov.bd`)
+- ✅ Non-government disclaimer already shown in-app (About → Important Disclaimer) and in the Play listing
+
+## Technical
+- Version 2.3.0 (build 51) · version code 51 · build number 51 · compliance hotfix build
+
+---
+
 # Release Notes — v2.3.0
 
 ## What's New
