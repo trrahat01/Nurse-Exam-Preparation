@@ -176,7 +176,7 @@ export default function ProfileScreen() {
             <Text style={styles.menuValue}>{Constants.expoConfig?.version ?? '1.6.0'}</Text>
           </View>
           <View style={styles.divider} />
-          <Pressable style={styles.menuItem} onPress={() => Alert.alert('About Us', `Nurse Exam Preparation\n\n${totalMcqs > 0 ? totalMcqs.toLocaleString() : 'Thousands of'} MCQs for all nursing exams\n\nFor any questions, issues, or suggestions, contact us at:\ntrdevworks@gmail.com`)}>
+          <Pressable style={styles.menuItem} onPress={() => Alert.alert('About Us', `Nurse Exam Preparation\n\n${totalMcqs > 0 ? totalMcqs.toLocaleString() : 'Thousands of'} MCQs for all nursing exams\n\nFor any questions, issues, or suggestions, contact us at:\nmtcorestudio@gmail.com`)}>
             <View style={styles.menuLeft}>
               <MaterialCommunityIcons name="help-circle-outline" size={20} color="#0891B2" />
               <Text style={styles.menuLabel}>About Us</Text>
@@ -184,7 +184,7 @@ export default function ProfileScreen() {
             <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
           </Pressable>
           <View style={styles.divider} />
-          <Pressable style={styles.menuItem} onPress={() => Alert.alert('Contact Us', 'For any questions, issues, or suggestions, please email us at:\n\ntrdevworks@gmail.com\n\nWe typically respond within 24-48 hours.')}>
+          <Pressable style={styles.menuItem} onPress={() => Alert.alert('Contact Us', 'For any questions, issues, or suggestions, please email us at:\n\nmtcorestudio@gmail.com\n\nWe typically respond within 24-48 hours.')}>
             <View style={styles.menuLeft}>
               <MaterialCommunityIcons name="email-outline" size={20} color="#0891B2" />
               <Text style={styles.menuLabel}>Contact Us</Text>

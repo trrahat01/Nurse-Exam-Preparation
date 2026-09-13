@@ -141,7 +141,7 @@ The app uses email + password authentication through Supabase Auth.
 
 ### Data retention:
 - Data is kept until user deletes their account
-- Users can request deletion by emailing trdevworks@gmail.com
+- Users can request deletion by emailing mtcorestudio@gmail.com
 
 ---
 
@@ -188,7 +188,7 @@ The app supports **Guest Mode** - users can use all features without creating an
 
 ### Account Deletion
 Users can delete their account by:
-1. Emailing trdevworks@gmail.com with their account email
+1. Emailing mtcorestudio@gmail.com with their account email
 2. Data will be permanently deleted within 30 days
 
 ### Security
@@ -231,4 +231,4 @@ A:
 - Account management
 
 **Q: Do you allow users to request data deletion?**
-A: Yes - via email to trdevworks@gmail.com
+A: Yes - via email to mtcorestudio@gmail.com

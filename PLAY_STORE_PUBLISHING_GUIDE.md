@@ -4,7 +4,7 @@
 - **App Name:** Nurse Exam Preparation
 - **Package Name:** `com.nurseexampreparation.nursing`
 - **Version:** 1.0.0
-- **Support Email:** trdevworks@gmail.com
+- **Support Email:** mtcorestudio@gmail.com
 
 ---
 
@@ -17,7 +17,7 @@
 4. Pay the one-time registration fee of **$25 USD**
 5. Complete your developer profile:
    - Developer name
-   - Contact email: `trdevworks@gmail.com`
+   - Contact email: `mtcorestudio@gmail.com`
    - Website (optional)
    - Phone number
 
@@ -118,7 +118,7 @@ Take 8 screenshots at **1080×1920px**:
 
 ### 3.5 Privacy Policy
 1. Go to [App Privacy Policy Generator](https://app-privacy-policy-generator.nisrulz.com/)
-2. Enter your app name and email: `trdevworks@gmail.com`
+2. Enter your app name and email: `mtcorestudio@gmail.com`
 3. Generate and host the policy (GitHub Pages or any free hosting)
 4. Add the URL in Play Console
 
@@ -165,7 +165,7 @@ Complete the Data Safety section:
   - App usage data (for analytics)
 - **Data shared:** No data shared with third parties
 - **Security:** Data encrypted in transit (HTTPS)
-- **Deletion:** Users can delete account by contacting trdevworks@gmail.com
+- **Deletion:** Users can delete account by contacting mtcorestudio@gmail.com
 
 ---
 
@@ -206,7 +206,7 @@ Complete the content rating questionnaire:
 
 ### 8.3 Support
 - Respond to user reviews
-- Check `trdevworks@gmail.com` for user emails
+- Check `mtcorestudio@gmail.com` for user emails
 - Address issues within 24-48 hours
 
 ---
@@ -249,7 +249,7 @@ Project config: Slug for project identified by "extra.eas.projectId" (workspace)
 1. **Never share your Supabase service key** - only use the anon/publishable key
 2. **Keep the package name consistent** - changing it later requires a new app listing
 3. **Test thoroughly before publishing** - use the APK build for testing
-4. **Keep the support email active** - `trdevworks@gmail.com`
+4. **Keep the support email active** - `mtcorestudio@gmail.com`
 5. **Update the app regularly** - Google favors active apps
 
 ---
@@ -281,4 +281,4 @@ npx expo start
 
 ## Contact
 For any questions about this guide or the app:
-- **Email:** trdevworks@gmail.com
+- **Email:** mtcorestudio@gmail.com

@@ -129,8 +129,8 @@ export default function SettingsScreen() {
           <Pressable style={styles.row} onPress={() => router.push('/about')}>
             <MaterialCommunityIcons name="information-outline" size={22} color="#64748B" />
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>About & Sources</Text>
-              <Text style={styles.rowSub}>Disclaimer, official sources & support</Text>
+              <Text style={styles.rowLabel}>Disclaimer & Sources</Text>
+              <Text style={styles.rowSub}>Independent app disclaimer, official sources & support</Text>
             </View>
             <Text style={styles.rowValue}>v{Constants.expoConfig?.version ?? '1.6.0'}</Text>
           </Pressable>

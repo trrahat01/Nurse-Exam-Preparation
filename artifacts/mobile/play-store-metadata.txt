@@ -15,7 +15,7 @@ SHORT DESCRIPTION (80 chars max):
 Master nursing exams with 40,000+ MCQs, mock tests & detailed analytics for nurses.
 
 FULL DESCRIPTION:
-⚠️ IMPORTANT LEGAL DISCLAIMER — This app is an INDEPENDENT, UNOFFICIAL study tool. It is NOT a government entity and is NOT affiliated with, endorsed by, sponsored by, or a representative of any government, commission, board, or examination authority (including any of the sources listed below). All practice content is independently curated for self-study only and does not guarantee any examination result.
+⚠️ IMPORTANT LEGAL DISCLAIMER — Nurse Exam Preparation is an INDEPENDENT, UNOFFICIAL, non-government educational application. It is NOT affiliated with, endorsed by, sponsored by, or a representative of any government, commission, board, or examination authority (including any of the sources listed below). All practice content is independently curated for self-study only and does not guarantee any examination result. Government-related information is provided for reference only and may change — always verify current information through the relevant official sources.
 The ultimate nursing exam preparation app with 40,000+ carefully curated multiple-choice questions covering all major nursing subjects and exams. Whether you're preparing for government recruitment, university exams, or international nursing certifications, this app has everything you need to succeed.
 
 COMPREHENSIVE QUESTION BANK:
@@ -146,7 +146,7 @@ All screenshots are 1080×1920px PNG format, ready for direct upload to Play Con
 
 OFFICIAL PUBLIC SOURCES (public curricula & syllabi referenced only to structure practice topics):
 - DGNM Bangladesh (Directorate General of Nursing & Midwifery): https://dgnm.gov.bd
-- Bangladesh Public Service Commission (BPSC): http://www.bpsc.gov.bd
+- Bangladesh Public Service Commission (BPSC): https://bpsc.gov.bd
 - Ministry of Health & Family Welfare, Bangladesh: https://mohfw.gov.bd
 
 DISCLAIMER:
@@ -155,13 +155,13 @@ This app is an independent study tool and is NOT affiliated with, endorsed by, o
 CATEGORY: Education
 TAGS: nursing exam, nurse mcq, nursing preparation, staff nurse, nursing questions, medical exam prep, nurse test, bpsc nurse, nursing mcq
 
-PRIVACY POLICY URL: (Create at https://app-privacy-policy-generator.nisrulz.com/)
+PRIVACY POLICY URL: https://mtcorestudio.github.io/nurse-prep-pages/privacy-policy.html
 
 SUPPORT EMAIL:
-trdevworks@gmail.com
+mtcorestudio@gmail.com
 
 CONTACT:
-For any questions, issues, or suggestions: trdevworks@gmail.com
+For any questions, issues, or suggestions: mtcorestudio@gmail.com
 
 ========================================
 BUILD INSTRUCTIONS
@@ -206,7 +206,7 @@ Data collected:
 
 Data shared: No data shared with third parties
 Security: Data encrypted in transit (HTTPS)
-Deletion: Users can delete account by contacting trdevworks@gmail.com
+Deletion: Users can delete account by contacting mtcorestudio@gmail.com
 
 ========================================
 CONTENT RATING

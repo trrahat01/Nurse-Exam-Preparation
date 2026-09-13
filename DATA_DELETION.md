@@ -23,7 +23,7 @@ This permanently removes your:
 **This action is permanent and cannot be undone.**
 
 ### Option 2 — Submit a Request by Email
-If you cannot use the in-app option, email us at **trdevworks@gmail.com** with the subject **"Data Deletion Request"** and include the email address registered to your account. We will process your request and confirm deletion — typically within 30 days.
+If you cannot use the in-app option, email us at **mtcorestudio@gmail.com** with the subject **"Data Deletion Request"** and include the email address registered to your account. We will process your request and confirm deletion — typically within 30 days.
 
 ## What Gets Deleted
 All records tied to your user ID across the following backend tables are removed:
@@ -49,7 +49,7 @@ No server-side deletion is needed because guest data never leaves your device.
 
 ## Contact
 For any questions or deletion requests:
-- **Email:** trdevworks@gmail.com
+- **Email:** mtcorestudio@gmail.com
 - **Response time:** typically within 30 days
 
 &copy; 2026 Nurse Exam Preparation. All rights reserved.

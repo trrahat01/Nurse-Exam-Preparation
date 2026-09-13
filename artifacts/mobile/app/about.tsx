@@ -47,7 +47,7 @@ export default function AboutScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#0C1A2E" />
         </Pressable>
-        <Text style={styles.title}>About & Sources</Text>
+        <Text style={styles.title}>Disclaimer & Sources</Text>
       </View>
 
       {/* Disclaimer — shown prominently so it is always easy to see */}
@@ -57,18 +57,41 @@ export default function AboutScreen() {
           <Text style={styles.disclaimerTitle}>Important Disclaimer</Text>
         </View>
         <Text style={styles.disclaimerText}>
-          Nurse Exam Preparation is an INDEPENDENT, UNOFFICIAL study tool. It is NOT a government
-          entity and is NOT affiliated with, endorsed by, sponsored by, or a representative of any
-          government, commission, board, or examination authority (including the sources listed
-          below). All practice content is independently curated for self-study only and does not
-          guarantee any examination result.
+          Nurse Exam Preparation is an independent, unofficial educational application. It is not
+          affiliated with, endorsed by, sponsored by, or officially connected with any government
+          organization, government examination authority, nursing council, ministry, or public
+          institution (including the sources listed below). The app is provided for educational and
+          exam-preparation purposes only. Practice content is independently curated for self-study
+          and does not guarantee any examination result.
         </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Government Information Notice</Text>
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <View style={[styles.iconBg, { backgroundColor: '#FEF3C7' }]}>
+              <MaterialCommunityIcons name="information-outline" size={20} color="#D97706" />
+            </View>
+            <View style={styles.rowContent}>
+              <Text style={styles.rowLabel}>Reference only — always verify</Text>
+              <Text style={styles.rowSub}>
+                This app may mention government exams, curricula, and syllabi for practice and
+                study reference only. That information can change. Nurse Exam Preparation is an
+                independent app and is NOT a source of official government notices, circulars,
+                results, or recruitment information. Always verify important details directly
+                through the relevant official government sources listed below.
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Official Sources</Text>
         <Text style={styles.sectionSub}>
-          Public curriculum & syllabus references used only to shape practice topics. Tap to visit.
+          Public curricula & syllabi used only to shape practice topics. We are an independent app
+          — these organizations are not affiliated with us. Tap to visit an official source.
         </Text>
         <View style={styles.card}>
           {SOURCES.map((s, i) => (
@@ -102,13 +125,24 @@ export default function AboutScreen() {
             </View>
           </View>
           <View style={styles.divider} />
-          <Pressable style={styles.row} onPress={() => openSource('mailto:trdevworks@gmail.com')}>
+          <Pressable style={styles.row} onPress={() => openSource('https://mtcorestudio.github.io/nurse-prep-pages/privacy-policy.html')}>
+            <View style={[styles.iconBg, { backgroundColor: '#E0F2FE' }]}>
+              <MaterialCommunityIcons name="shield-lock-outline" size={20} color="#0891B2" />
+            </View>
+            <View style={styles.rowContent}>
+              <Text style={styles.rowLabel}>Privacy Policy</Text>
+              <Text style={styles.rowSub}>How your data is collected & used</Text>
+            </View>
+            <MaterialCommunityIcons name="open-in-new" size={18} color="#94A3B8" />
+          </Pressable>
+          <View style={styles.divider} />
+          <Pressable style={styles.row} onPress={() => openSource('mailto:mtcorestudio@gmail.com')}>
             <View style={[styles.iconBg, { backgroundColor: '#FEF3C7' }]}>
               <MaterialCommunityIcons name="email-outline" size={20} color="#D97706" />
             </View>
             <View style={styles.rowContent}>
               <Text style={styles.rowLabel}>Contact Support</Text>
-              <Text style={styles.rowSub}>trdevworks@gmail.com</Text>
+              <Text style={styles.rowSub}>mtcorestudio@gmail.com</Text>
             </View>
             <MaterialCommunityIcons name="open-in-new" size={18} color="#94A3B8" />
           </Pressable>
