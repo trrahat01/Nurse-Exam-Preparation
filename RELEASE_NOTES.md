@@ -23,6 +23,18 @@
 
 ---
 
+# Release Notes — v2.3.1
+
+## What's New
+- 🛡️ Compliance update: new in-app Disclaimer & Sources page (independent-app disclaimer, government information notice, verified official sources, privacy policy link)
+- ✉️ Support/contact email updated to mtcorestudio@gmail.com
+- 🔗 Updated privacy & data-deletion links to the live developer site
+
+## Technical
+- Version 2.3.1 · version code 54 · build number 54
+
+---
+
 # Release Notes — v2.3.0
 
 ## What's New
