@@ -5,6 +5,12 @@ NURSE EXAM PREPARATION - PLAY STORE INFO
 APP NAME:
 Nurse Exam Preparation
 
+PUBLISHER NAME (Play Console developer account):
+MT Core Studio
+
+SUPPORT / DEVELOPER EMAIL:
+mtcorestudio@gmail.com
+
 PACKAGE NAME (already set):
 com.nurseexampreparation.nursing
 

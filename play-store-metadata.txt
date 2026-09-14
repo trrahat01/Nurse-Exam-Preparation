@@ -1,6 +1,12 @@
 App Title:
 Nurse Exam Preparation
 
+Publisher Name (set in Play Console developer account):
+MT Core Studio
+
+Developer / Support Email:
+mtcorestudio@gmail.com
+
 Short Description (80 characters max):
 Independent practice app for nursing exam prep. Not affiliated with any govt body.
 
