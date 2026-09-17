@@ -64,7 +64,8 @@
           "iosAppId": "ca-app-pub-7383364741984927~3313458389",
           "userTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
         }
-      ]
+      ],
+      "./plugins/withStartioAdmob"
     ],
     "experiments": {
       "typedRoutes": true
