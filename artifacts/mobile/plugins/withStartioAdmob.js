@@ -9,20 +9,26 @@ const { withAppBuildGradle } = require('expo/config-plugins');
  *
  * EAS runs `expo prebuild --clean`, so this dependency must be injected through a
  * config plugin (a direct android/ edit would be wiped).
+ *
+ * NOTE: We pin `com.startapp:inapp-sdk:5.2.6` (Kotlin 2.0.0). The latest 5.3.2
+ * depends on kotlin-stdlib 2.4.0, which fails the RN 0.81/Expo 54 Gradle build.
  */
 const STARTIO_ADAPTER_DEP = "implementation 'io.start:admob-mediation:3.1.1'";
+const STARTIO_INAPP_PIN = "implementation 'com.startapp:inapp-sdk:5.2.6'";
 
 function addStartioDependency(buildGradle) {
-  if (buildGradle.includes('io.start:admob-mediation')) {
+  const hasAdapter = buildGradle.includes('io.start:admob-mediation');
+  const hasPin = buildGradle.includes('com.startapp:inapp-sdk:5.2.6');
+  if (hasAdapter && hasPin) {
     return buildGradle;
   }
-  // Insert at the top of the last `dependencies { ... }` block of app/build.gradle.
+  const insert = `\n    ${STARTIO_ADAPTER_DEP}\n    ${STARTIO_INAPP_PIN}`;
   const idx = buildGradle.lastIndexOf('dependencies {');
   if (idx === -1) {
     throw new Error('withStartioAdmob: could not locate dependencies block in app build.gradle');
   }
   const open = buildGradle.indexOf('{', idx) + 1;
-  return buildGradle.slice(0, open) + `\n    ${STARTIO_ADAPTER_DEP}` + buildGradle.slice(open);
+  return buildGradle.slice(0, open) + insert + buildGradle.slice(open);
 }
 
 module.exports = function withStartioAdmob(config) {
