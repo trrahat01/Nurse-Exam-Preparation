@@ -1,3 +1,14 @@
+# Release Notes — v2.3.3
+
+## What's New
+- 🎯 **Start.io AdMob mediation fallback** — when AdMob has no fill, Start.io ads automatically show (banner, interstitial & rewarded)
+- 📄 app-ads.txt updated with Start.io DIRECT + reseller entries
+
+## Technical
+- Version 2.3.3 · version code 56 · build number 56
+- Native: `io.start:admob-mediation:3.1.1` via config plugin `plugins/withStartioAdmob.js`
+
+---
 # Release Notes — v2.3.2
 
 ## What's New
