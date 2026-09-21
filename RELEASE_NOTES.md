@@ -1,3 +1,14 @@
+# Release Notes — v2.3.7
+
+## What's New
+- 📱 **Removed the portrait-only orientation lock** — the app now supports large screens, foldables & tablets (Android 16 ready). Layouts remain responsive in both orientations.
+
+## Technical
+- Version 2.3.7 · version code 60 · build number 60
+- `app.json`: removed `"orientation": "portrait"` (clears the Play Console "resizability/orientation restrictions" recommendation)
+
+---
+
 # Release Notes — v2.3.6
 
 ## What's New
