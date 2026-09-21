@@ -149,6 +149,34 @@ export default function AboutScreen() {
         </View>
       </View>
 
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Community & Developer</Text>
+        <Text style={styles.sectionSub}>Follow the app's official page and explore other apps from MT Core Studio.</Text>
+        <View style={styles.card}>
+          <Pressable style={styles.row} onPress={() => openSource('https://www.facebook.com/profile.php?id=61594250881')}>
+            <View style={[styles.iconBg, { backgroundColor: '#1877F2' }]}>
+              <MaterialCommunityIcons name="facebook" size={20} color="#fff" />
+            </View>
+            <View style={styles.rowContent}>
+              <Text style={styles.rowLabel}>Facebook Page</Text>
+              <Text style={styles.rowSub}>News, updates & exam tips</Text>
+            </View>
+            <MaterialCommunityIcons name="open-in-new" size={18} color="#94A3B8" />
+          </Pressable>
+          <View style={styles.divider} />
+          <Pressable style={styles.row} onPress={() => openSource('https://play.google.com/store/apps/developer?id=MT+Core+Studio')}>
+            <View style={[styles.iconBg, { backgroundColor: '#0891B2' }]}>
+              <MaterialCommunityIcons name="google-play" size={20} color="#fff" />
+            </View>
+            <View style={styles.rowContent}>
+              <Text style={styles.rowLabel}>MT Core Studio on Google Play</Text>
+              <Text style={styles.rowSub}>Other apps from this developer</Text>
+            </View>
+            <MaterialCommunityIcons name="open-in-new" size={18} color="#94A3B8" />
+          </Pressable>
+        </View>
+      </View>
+
       <Text style={styles.footer}>
         Exam and board names belong to their respective owners. Practice questions are for
         self-study only and do not guarantee exam results.

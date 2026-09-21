@@ -1,3 +1,13 @@
+# Release Notes — v2.3.4
+
+## What's New
+- 🌐 New "Community & Developer" section in the app — tap to open the app's Facebook page and the MT Core Studio developer page on Google Play
+
+## Technical
+- Version 2.3.4 · version code 57 · build number 57
+
+---
+
 # Release Notes — v2.3.3
 
 ## What's New
