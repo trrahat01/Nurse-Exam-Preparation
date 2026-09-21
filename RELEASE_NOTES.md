@@ -1,3 +1,15 @@
+# Release Notes — v2.3.6
+
+## What's New
+- 🔒 **Privacy Policy rewritten for the guest-only app** — the policy now accurately states there are no accounts, all study data stays on-device, and advertising (AdMob/Start.io) is disclosed. Live at `https://mtcorestudio.github.io/nurse-prep-pages/privacy-policy.html`
+- 📋 Data Deletion page updated to match (local data only — no server-side account deletion needed)
+
+## Technical
+- Version 2.3.6 · version code 59 · build number 59
+- App bundle is code 58 (guest-only removal) + updated privacy link pages (no app code change needed for the policy, but shipped together in this release)
+
+---
+
 # Release Notes — v2.3.5
 
 ## What's New
