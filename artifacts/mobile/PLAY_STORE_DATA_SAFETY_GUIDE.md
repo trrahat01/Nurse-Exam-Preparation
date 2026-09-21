@@ -122,7 +122,14 @@ The app uses email + password authentication through Supabase Auth.
 ### Device or Other IDs
 | Data Type | Collected? | Shared? |
 |---|---|---|
-| Device or other IDs | NO | NO |
+| Device or other IDs | **YES** | **YES** |
+
+**IMPORTANT (advertising SDKs):** The app uses advertising SDKs that transmit device/advertising IDs to ad servers off-device:
+
+- **Google Mobile Ads SDK (AdMob)** – `react-native-google-mobile-ads` – sends the Google **Advertising ID (AD_ID)** and device identifiers to Google's ad servers to deliver ads. The manifest requires `com.google.android.gms.permission.AD_ID`.
+- **Start.io (StartApp) mediation adapter** – `io.start:admob-mediation:3.1.1` + `com.startapp:inapp-sdk:5.2.6` – reads/sends device identifiers for ad serving and frequency capping (used as the AdMob fallback network).
+
+Therefore **"Device or other IDs" MUST be declared as Collected = YES and Shared = YES (with third-party ad networks)**, and its purpose includes **"Advertising or marketing"**.
 
 ---
 
@@ -164,9 +171,11 @@ The app uses email + password authentication through Supabase Auth.
    - User IDs (Personal Info)
    - App interactions (App Activity)
    - User-generated content (App Activity)
+   - **Device or other IDs (Device or other IDs)** — advertising/device identifier via AdMob + Start.io
 
 5. **Data shared with third parties:**
-   → **NO** - No data is shared
+   - **YES for "Device or other IDs"** — advertising/device identifiers are transmitted to ad networks (Google ad servers for AdMob; Start.io's network via mediation) for ad delivery
+   - NO for all other data types
 
 6. **Data usage:**
    - App functionality
@@ -194,9 +203,8 @@ Users can delete their account by:
 ### Security
 - All data encrypted in transit (HTTPS/TLS)
 - Passwords stored securely using Supabase Auth (bcrypt hashing)
-- No data shared with third parties
-- No advertising SDKs
-- No analytics SDKs
+- **Advertising SDKs:** Google Mobile Ads (AdMob) + Start.io mediation adapter are present and transmit **Device or other IDs** (advertising/device identifiers) off-device to ad networks for ad serving — declared in the Data safety form.
+- No other analytics SDKs
 
 ---
 
@@ -220,6 +228,7 @@ A:
 - User IDs (Personal Info) - Collected, Not Shared
 - App interactions (App Activity) - Collected, Not Shared
 - User-generated content (App Activity) - Collected, Not Shared
+- **Device or other IDs (advertising/device identifier via AdMob + Start.io) - Collected, Shared (with ad networks)**
 
 **Q: Is this data processed ephemerally?**
 A: No
@@ -229,6 +238,7 @@ A:
 - App functionality
 - Personalization
 - Account management
+- **Advertising or marketing** (Device or other IDs)
 
 **Q: Do you allow users to request data deletion?**
 A: Yes - via email to mtcorestudio@gmail.com
