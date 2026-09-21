@@ -1,3 +1,20 @@
+# Release Notes — v2.3.5
+
+## What's New
+- 🚫 **Removed all login & sign-up** — the app is now fully guest-only
+  - No Sign In / Create Account screens (login, register, forgot-password, reset-password & edit-profile screens removed)
+  - Profile & Settings no longer show sign-in prompts or Sign Out buttons
+  - All progress (streaks, results, bookmarks, XP/badges, settings) is stored locally on the device
+- 🔒 Removed Firebase Auth config/code paths (no account data collected or transmitted)
+
+## Technical
+- Version 2.3.5 · version code 58 · build number 58
+- Removed `app/auth/*`, `app/edit-profile.tsx`, `app/reset-password.tsx`, `src/lib/recovery.ts`, `src/lib/firebase.ts`
+- `authStore` now guest-only (`isGuest: true`, `user: null`); SDK Firebase Auth code removed
+- Supabase question/content + local progress storage untouched
+
+---
+
 # Release Notes — v2.3.4
 
 ## What's New

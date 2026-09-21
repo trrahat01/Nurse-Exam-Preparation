@@ -3,7 +3,6 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Alert, Switch } from 're
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useAuthStore } from '@/src/store/authStore';
 import { useThemeStore } from '@/src/store/themeStore';
 import { clearQuestionHistory } from '@/src/lib/queries';
 import { getNotificationPref, setNotificationPref, scheduleDailyReminder, scheduleStreakReminder, cancelDailyReminder } from '@/src/lib/notifications';
@@ -12,7 +11,6 @@ import Constants from 'expo-constants';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
-  const { user, isGuest, signOut } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
   const [notifOn, setNotifOn] = React.useState<boolean>(true);
 
@@ -60,13 +58,13 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
+        <Text style={styles.sectionTitle}>Device</Text>
         <View style={styles.card}>
           <View style={styles.row}>
-            <MaterialCommunityIcons name="account-outline" size={22} color="#0891B2" />
+            <MaterialCommunityIcons name="cellphone-check" size={22} color="#0891B2" />
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>{isGuest ? 'Guest User' : user?.email || 'Not signed in'}</Text>
-              <Text style={styles.rowSub}>{isGuest ? 'Using app as guest' : 'Signed in'}</Text>
+              <Text style={styles.rowLabel}>Progress saved on this device</Text>
+              <Text style={styles.rowSub}>No account needed — your streaks, results, bookmarks and settings stay on your device.</Text>
             </View>
           </View>
         </View>
@@ -136,13 +134,6 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
       </View>
-
-      {!isGuest && (
-        <Pressable style={styles.logoutBtn} onPress={() => { signOut(); router.replace('/'); }}>
-          <MaterialCommunityIcons name="logout" size={20} color="#DC2626" />
-          <Text style={styles.logoutText}>Sign Out</Text>
-        </Pressable>
-      )}
     </ScrollView>
   );
 }
@@ -161,6 +152,4 @@ const styles = StyleSheet.create({
   rowSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2 },
   rowValue: { fontSize: 14, fontFamily: 'Inter_400Regular', color: '#64748B' },
   divider: { height: 1, backgroundColor: '#F1F5F9', marginLeft: 54 },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginHorizontal: 16, padding: 16, borderRadius: 14, borderWidth: 1, borderColor: '#FEE2E2', backgroundColor: '#fff' },
-  logoutText: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#DC2626' },
 });

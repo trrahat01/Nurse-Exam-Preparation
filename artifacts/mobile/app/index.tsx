@@ -34,17 +34,15 @@ export default function WelcomeScreen() {
       </View>
 
       <View style={[styles.buttonSection, { paddingBottom: insets.bottom + 20 }]}>
-        <Pressable style={styles.primaryButton} onPress={() => router.push('/auth/login')}>
+        <Pressable
+          style={styles.primaryButton}
+          onPress={() => {
+            useAuthStore.getState().continueAsGuest();
+            router.replace('/(tabs)');
+          }}
+        >
           <Text style={styles.primaryButtonText}>Get Started</Text>
           <MaterialCommunityIcons name="arrow-right" size={20} color="#fff" />
-        </Pressable>
-
-        <Pressable style={styles.guestButton} onPress={() => {
-          useAuthStore.getState().continueAsGuest();
-          router.replace('/(tabs)');
-        }}>
-          <MaterialCommunityIcons name="account-outline" size={20} color="#fff" />
-          <Text style={styles.guestButtonText}>Continue as Guest</Text>
         </Pressable>
       </View>
     </View>
@@ -81,9 +79,4 @@ const styles = StyleSheet.create({
     padding: 18, alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   primaryButtonText: { color: '#0C4A6E', fontSize: 17, fontFamily: 'Inter_700Bold' },
-  guestButton: {
-    flexDirection: 'row', borderRadius: 16, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)',
-    padding: 16, alignItems: 'center', justifyContent: 'center', gap: 8,
-  },
-  guestButtonText: { color: '#fff', fontSize: 15, fontFamily: 'Inter_600SemiBold' },
 });

@@ -3,7 +3,6 @@ import { View, Text, Pressable, ScrollView, StyleSheet, Alert } from 'react-nati
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
-import { useAuthStore } from '@/src/store/authStore';
 import { useExamStore } from '@/src/store/examStore';
 import { getStreak, type StreakData } from '@/src/lib/streak';
 import { getWrongAnswers } from '@/src/lib/wrongAnswers';
@@ -13,7 +12,6 @@ import Constants from 'expo-constants';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const { user, isGuest, signOut } = useAuthStore();
   const { savedResults } = useExamStore();
   const [streak, setStreak] = useState<StreakData>({ current: 0, best: 0, lastDate: null, studiedToday: false });
   const [wrongCount, setWrongCount] = useState(0);
@@ -43,22 +41,13 @@ export default function ProfileScreen() {
     router.push('/exam');
   };
 
-  const name = user?.name ?? (isGuest ? 'Guest User' : 'Student');
-  const email = user?.email ?? '';
-  const initials = name.split(' ').map((part: string) => part[0]).join('').toUpperCase().slice(0, 2);
+  const name = 'Guest User';
+  const email = 'Progress is saved on this device';
+  const initials = 'G';
 
   const totalExams = savedResults.length;
   const avgScore = totalExams > 0 ? Math.round(savedResults.reduce((s, r) => s + r.percentage, 0) / totalExams) : 0;
   const bestScore = totalExams > 0 ? Math.max(...savedResults.map(r => r.percentage)) : 0;
-
-  const handleEditProfile = () => {
-    if (isGuest) {
-      Alert.alert('Sign In Required', 'Please sign in to edit your profile.');
-      router.push('/auth/login');
-      return;
-    }
-    router.push('/edit-profile');
-  };
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
@@ -68,15 +57,9 @@ export default function ProfileScreen() {
         </View>
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.email}>{email}</Text>
-        {isGuest && (
-          <Pressable style={styles.loginBtn} onPress={() => router.push('/auth/login')}>
-            <Text style={styles.loginBtnText}>Sign in to save progress</Text>
-          </Pressable>
-        )}
       </View>
 
-      {!isGuest && (
-        <View style={styles.statsRow}>
+      <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text style={styles.statVal}>{totalExams}</Text>
             <Text style={styles.statLbl}>Tests Taken</Text>
@@ -91,8 +74,7 @@ export default function ProfileScreen() {
             <Text style={styles.statVal}>{bestScore}%</Text>
             <Text style={styles.statLbl}>Best Score</Text>
           </View>
-        </View>
-      )}
+      </View>
 
       {/* Daily streak — motivating, works for guests too */}
       <View style={styles.streakCard}>
@@ -132,22 +114,6 @@ export default function ProfileScreen() {
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>ACCOUNT</Text>
         <View style={styles.section}>
-          <Pressable style={styles.menuItem} onPress={handleEditProfile}>
-            <View style={styles.menuLeft}>
-              <MaterialCommunityIcons name="account-circle-outline" size={20} color="#0891B2" />
-              <Text style={styles.menuLabel}>Edit Profile</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
-          </Pressable>
-          <View style={styles.divider} />
-          <Pressable style={styles.menuItem} onPress={() => router.push('/auth/forgot-password')}>
-            <View style={styles.menuLeft}>
-              <MaterialCommunityIcons name="lock-outline" size={20} color="#0891B2" />
-              <Text style={styles.menuLabel}>Change Password</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
-          </Pressable>
-          <View style={styles.divider} />
           <Pressable style={styles.menuItem} onPress={() => router.push('/bookmarks')}>
             <View style={styles.menuLeft}>
               <MaterialCommunityIcons name="bookmark-outline" size={20} color="#0891B2" />
@@ -155,8 +121,6 @@ export default function ProfileScreen() {
             </View>
             <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
           </Pressable>
-        </View>
-
           <View style={styles.divider} />
           <Pressable style={styles.menuItem} onPress={() => router.push('/level' as any)}>
             <View style={styles.menuLeft}>
@@ -165,6 +129,7 @@ export default function ProfileScreen() {
             </View>
             <Text style={styles.menuValue}>Lv {gam.level} - {gam.xp} XP</Text>
           </Pressable>
+        </View>
 
         <Text style={styles.sectionTitle}>ABOUT</Text>
         <View style={styles.section}>
@@ -193,23 +158,14 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
-        {!isGuest && (
-          <Pressable style={styles.signOutBtn} onPress={() => { signOut(); router.replace('/'); }}>
-            <MaterialCommunityIcons name="logout" size={20} color="#EF4444" />
-            <Text style={styles.signOutText}>Sign Out</Text>
-          </Pressable>
-        )}
-
-        {isGuest && (
-          <View style={styles.authButtons}>
-            <Pressable style={styles.authBtn} onPress={() => router.push('/auth/login')}>
-              <Text style={styles.authBtnText}>Sign In</Text>
-            </Pressable>
-            <Pressable style={[styles.authBtn, { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#E2E8F0' }]} onPress={() => router.push('/auth/register')}>
-              <Text style={[styles.authBtnText, { color: '#0C1A2E' }]}>Create Account</Text>
-            </Pressable>
+        <View style={[styles.authButtons, { marginTop: 16 }]}>
+          <View style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <MaterialCommunityIcons name="shield-lock-outline" size={18} color="#64748B" />
+              <Text style={[styles.menuLabel, { color: '#64748B' }]}>No account needed — all progress is saved on this device with Google Play Games sign-in removed.</Text>
+            </View>
           </View>
-        )}
+        </View>
       </View>
     </ScrollView>
   );
@@ -222,8 +178,8 @@ const styles = StyleSheet.create({
   avatarText: { color: '#fff', fontSize: 28, fontFamily: 'Inter_700Bold' },
   name: { color: '#fff', fontSize: 20, fontFamily: 'Inter_700Bold', marginTop: 4 },
   email: { color: '#BAE6FD', fontSize: 13, fontFamily: 'Inter_400Regular' },
-  loginBtn: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, marginTop: 6 },
-  loginBtnText: { color: '#fff', fontSize: 13, fontFamily: 'Inter_600SemiBold' },
+  
+  
   statsRow: { flexDirection: 'row', margin: 16, backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', elevation: 2 },
   streakCard: { flexDirection: 'row', marginHorizontal: 16, marginTop: 4, marginBottom: 8, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#FDE68A', paddingVertical: 16, overflow: 'hidden' },
   streakItem: { flex: 1, alignItems: 'center', gap: 2 },
@@ -246,9 +202,9 @@ const styles = StyleSheet.create({
   menuLabel: { fontSize: 15, fontFamily: 'Inter_400Regular', color: '#0C1A2E' },
   menuValue: { fontSize: 14, fontFamily: 'Inter_400Regular', color: '#64748B' },
   divider: { height: 1, backgroundColor: '#F1F5F9', marginLeft: 48 },
-  signOutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 14, padding: 16, marginTop: 8, borderWidth: 1, borderColor: '#FEE2E2', backgroundColor: '#FEF2F2' },
-  signOutText: { color: '#EF4444', fontSize: 15, fontFamily: 'Inter_600SemiBold' },
+  
+  
   authButtons: { gap: 10, marginTop: 8 },
-  authBtn: { borderRadius: 14, padding: 16, alignItems: 'center', backgroundColor: '#0891B2' },
-  authBtnText: { color: '#fff', fontSize: 15, fontFamily: 'Inter_600SemiBold' },
+  
+  
 });

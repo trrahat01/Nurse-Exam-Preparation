@@ -1,14 +1,4 @@
-// Backend config — Firebase Auth + Supabase DB.
-
-// ---- Firebase Authentication (from google-services.json) ----
-export const FIREBASE_CONFIG = {
-  apiKey: 'AIzaSyB0EWGoV38hdPgKdovCsR2ZebYXzOmTbk4',
-  authDomain: 'nurse-exam-cb96d.firebaseapp.com',
-  projectId: 'nurse-exam-cb96d',
-  storageBucket: 'nurse-exam-cb96d.firebasestorage.app',
-  messagingSenderId: '1053263809544',
-  appId: '1:1053263809544:android:b8b2144a291b2e515295bd',
-};
+// Backend config — Supabase database (local-first app; no accounts, no login).
 
 // ---- Supabase Database ----
 export const SUPABASE_URL = 'https://kdlqsxxzozjjaflwoylp.supabase.co';

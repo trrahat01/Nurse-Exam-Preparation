@@ -56,9 +56,6 @@ export default function RootLayout() {
           >
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" />
-              <Stack.Screen name="auth/login" />
-              <Stack.Screen name="auth/register" />
-              <Stack.Screen name="auth/forgot-password" />
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="exam/index" options={{ animation: 'slide_from_right' }} />
               <Stack.Screen name="exam/result" options={{ animation: 'slide_from_bottom' }} />
@@ -71,8 +68,6 @@ export default function RootLayout() {
               <Stack.Screen name="settings" />
               <Stack.Screen name="about" />
               <Stack.Screen name="reading" />
-              <Stack.Screen name="edit-profile" />
-              <Stack.Screen name="reset-password" />
               <Stack.Screen name="analytics" />
               <Stack.Screen name="level" />
             </Stack>
