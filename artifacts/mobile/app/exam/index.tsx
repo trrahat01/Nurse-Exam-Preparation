@@ -27,14 +27,20 @@ export default function ExamScreen() {
     loadBookmarks();
   }, []);
 
-  // Handle opening a specific question from bookmarks
+  // Handle opening a specific question from bookmarks. Loading from AsyncStorage
+  // is async, so we must wait for loadBookmarks() to finish before look-ups —
+  // otherwise opening a bookmark right after tapping it finds nothing yet.
   useEffect(() => {
-    if (questionId) {
+    if (!questionId) return;
+    let cancelled = false;
+    void loadBookmarks().then(() => {
+      if (cancelled) return;
       const bookmark = findBookmark(questionId);
       if (bookmark?.question) {
         startExam([bookmark.question], 'practice');
       }
-    }
+    });
+    return () => { cancelled = true; };
   }, [questionId]);
 
   // Auto-navigate to results when exam is auto-submitted (time up) or manually submitted
@@ -115,16 +121,21 @@ export default function ExamScreen() {
   };
 
   const handleBookmark = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Haptics first but NEVER allowed to block the bookmark action (it can throw
+    // on unsupported devices / Expo Go / emulators, which would silently break
+    // bookmarking since this is the first thing that runs).
+    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch { /* ignore */ }
+
     // Always keep a local copy so bookmarks work offline / for guests, and the
     // Bookmarks screen shows them even if the server sync fails.
-    if (isBookmarked) {
+    const wasBookmarked = checkBookmarked(question.id); // fresh value at tap time
+    if (wasBookmarked) {
       await removeBookmark(question.id);
     } else {
       await addBookmark(question);
     }
     if (user?.$id) {
-      try { await toggleBookmark(user.$id, question.id, isBookmarked); } catch { /* server sync is best-effort */ }
+      try { await toggleBookmark(user.$id, question.id, wasBookmarked); } catch { /* server sync is best-effort */ }
     }
   };
 

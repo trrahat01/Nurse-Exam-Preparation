@@ -10,7 +10,7 @@ import { fetchBookmarks } from '@/src/lib/queries';
 export default function FlashcardsScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
-  const { bookmarks: localBookmarks, loadServerBookmarks } = useBookmarkStore();
+  const { bookmarks: localBookmarks, loadBookmarks, loadServerBookmarks } = useBookmarkStore();
   const [cards, setCards] = useState<BookmarkItem[]>([]);
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
@@ -19,6 +19,9 @@ export default function FlashcardsScreen() {
   useEffect(() => {
     (async () => {
       try {
+        // Local bookmarks live in AsyncStorage — always (re)load them first so
+        // the flashcards are fresh even if the user just bookmarked something.
+        await loadBookmarks();
         let items: BookmarkItem[] = localBookmarks;
         if (user?.$id) {
           const server = await fetchBookmarks(user.$id);

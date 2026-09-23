@@ -18,12 +18,15 @@ export default function BookmarksScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadBookmarks();
-    if (user?.$id) {
-      refreshServerBookmarks();
-    } else {
-      setLoading(false);
-    }
+    // Await the async load before clearing the spinner so the list is never
+    // shown empty while AsyncStorage is still being read.
+    loadBookmarks().finally(() => {
+      if (user?.$id) {
+        refreshServerBookmarks();
+      } else {
+        setLoading(false);
+      }
+    });
   }, [user?.$id]);
 
   const refreshServerBookmarks = async () => {
