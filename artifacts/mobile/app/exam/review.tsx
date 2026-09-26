@@ -5,11 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
 import type { AnswerOption } from '@/src/types';
+import { useColors } from '@/hooks/useColors';
 
 type Filter = 'all' | 'correct' | 'wrong' | 'skipped';
 
 export default function ReviewScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { result, clearExam } = useExamStore();
   const [filter, setFilter] = useState<Filter>('all');
 
@@ -39,7 +42,7 @@ export default function ReviewScreen() {
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.filterBar, { paddingTop: insets.top + 8 }]}>
         {FILTERS.map(f => (
           <Pressable key={f.key} style={[styles.filterBtn, filter === f.key ? { backgroundColor: f.color + '18', borderColor: f.color } : { backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }]} onPress={() => setFilter(f.key)}>

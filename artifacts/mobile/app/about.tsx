@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
+import { useColors } from '@/hooks/useColors';
 
 const SOURCES: { name: string; desc: string; url: string; color: string; bg: string }[] = [
   {
@@ -32,6 +33,8 @@ const SOURCES: { name: string; desc: string; url: string; color: string; bg: str
 
 export default function AboutScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
 
   const openSource = (url: string) => {
     Linking.openURL(url).catch(() => {});
@@ -39,15 +42,15 @@ export default function AboutScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 32 }}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#0C1A2E" />
+        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Disclaimer & Sources</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Disclaimer & Sources</Text>
       </View>
 
       {/* Disclaimer — shown prominently so it is always easy to see */}
@@ -67,15 +70,15 @@ export default function AboutScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Government Information Notice</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Government Information Notice</Text>
+        <View style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           <View style={styles.row}>
             <View style={[styles.iconBg, { backgroundColor: '#FEF3C7' }]}>
               <MaterialCommunityIcons name="information-outline" size={20} color="#D97706" />
             </View>
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Reference only — always verify</Text>
-              <Text style={styles.rowSub}>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Reference only — always verify</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>
                 This app may mention government exams, curricula, and syllabi for practice and
                 study reference only. That information can change. Nurse Exam Preparation is an
                 independent app and is NOT a source of official government notices, circulars,
@@ -88,12 +91,12 @@ export default function AboutScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Official Sources</Text>
-        <Text style={styles.sectionSub}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Official Sources</Text>
+        <Text style={[styles.sectionSub, { color: colors.mutedForeground }]}>
           Public curricula & syllabi used only to shape practice topics. We are an independent app
           — these organizations are not affiliated with us. Tap to visit an official source.
         </Text>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           {SOURCES.map((s, i) => (
             <React.Fragment key={s.name}>
               {i > 0 && <View style={styles.divider} />}
@@ -102,10 +105,10 @@ export default function AboutScreen() {
                   <MaterialCommunityIcons name="link-variant" size={20} color={s.color} />
                 </View>
                 <View style={styles.rowContent}>
-                  <Text style={styles.rowLabel}>{s.name}</Text>
-                  <Text style={styles.rowSub} numberOfLines={1}>{s.desc}</Text>
+                  <Text style={[styles.rowLabel, { color: colors.text }]}>{s.name}</Text>
+                  <Text style={[styles.rowSub, { color: colors.mutedForeground }]} numberOfLines={1}>{s.desc}</Text>
                 </View>
-                <MaterialCommunityIcons name="open-in-new" size={18} color="#94A3B8" />
+                <MaterialCommunityIcons name="open-in-new" size={18} color={colors.mutedForeground} />
               </Pressable>
             </React.Fragment>
           ))}
@@ -113,15 +116,15 @@ export default function AboutScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>App</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>App</Text>
+        <View style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           <View style={styles.row}>
             <View style={[styles.iconBg, { backgroundColor: '#E0F2FE' }]}>
               <MaterialCommunityIcons name="clipboard-text-outline" size={20} color="#0891B2" />
             </View>
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Nurse Exam Preparation</Text>
-              <Text style={styles.rowSub}>Version {Constants.expoConfig?.version ?? '1.0.0'}  (build {Constants.expoConfig?.android?.versionCode ?? '-'})</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Nurse Exam Preparation</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>Version {Constants.expoConfig?.version ?? '1.0.0'}  (build {Constants.expoConfig?.android?.versionCode ?? '-'})</Text>
             </View>
           </View>
           <View style={styles.divider} />
@@ -130,10 +133,10 @@ export default function AboutScreen() {
               <MaterialCommunityIcons name="shield-lock-outline" size={20} color="#0891B2" />
             </View>
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Privacy Policy</Text>
-              <Text style={styles.rowSub}>How your data is collected & used</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Privacy Policy</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>How your data is collected & used</Text>
             </View>
-            <MaterialCommunityIcons name="open-in-new" size={18} color="#94A3B8" />
+            <MaterialCommunityIcons name="open-in-new" size={18} color={colors.mutedForeground} />
           </Pressable>
           <View style={styles.divider} />
           <Pressable style={styles.row} onPress={() => openSource('mailto:mtcorestudio@gmail.com')}>
@@ -141,27 +144,27 @@ export default function AboutScreen() {
               <MaterialCommunityIcons name="email-outline" size={20} color="#D97706" />
             </View>
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Contact Support</Text>
-              <Text style={styles.rowSub}>mtcorestudio@gmail.com</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Contact Support</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>mtcorestudio@gmail.com</Text>
             </View>
-            <MaterialCommunityIcons name="open-in-new" size={18} color="#94A3B8" />
+            <MaterialCommunityIcons name="open-in-new" size={18} color={colors.mutedForeground} />
           </Pressable>
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Community & Developer</Text>
-        <Text style={styles.sectionSub}>Follow the app's official page and explore other apps from MT Core Studio.</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Community & Developer</Text>
+        <Text style={[styles.sectionSub, { color: colors.mutedForeground }]}>Follow the app's official page and explore other apps from MT Core Studio.</Text>
+        <View style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           <Pressable style={styles.row} onPress={() => openSource('https://www.facebook.com/profile.php?id=61594250881')}>
             <View style={[styles.iconBg, { backgroundColor: '#1877F2' }]}>
               <MaterialCommunityIcons name="facebook" size={20} color="#fff" />
             </View>
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Facebook Page</Text>
-              <Text style={styles.rowSub}>News, updates & exam tips</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Facebook Page</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>News, updates & exam tips</Text>
             </View>
-            <MaterialCommunityIcons name="open-in-new" size={18} color="#94A3B8" />
+            <MaterialCommunityIcons name="open-in-new" size={18} color={colors.mutedForeground} />
           </Pressable>
           <View style={styles.divider} />
           <Pressable style={styles.row} onPress={() => openSource('https://play.google.com/store/apps/developer?id=MT+Core+Studio')}>
@@ -169,10 +172,10 @@ export default function AboutScreen() {
               <MaterialCommunityIcons name="google-play" size={20} color="#fff" />
             </View>
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>MT Core Studio on Google Play</Text>
-              <Text style={styles.rowSub}>Other apps from this developer</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>MT Core Studio on Google Play</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>Other apps from this developer</Text>
             </View>
-            <MaterialCommunityIcons name="open-in-new" size={18} color="#94A3B8" />
+            <MaterialCommunityIcons name="open-in-new" size={18} color={colors.mutedForeground} />
           </Pressable>
         </View>
       </View>

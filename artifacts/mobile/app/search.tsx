@@ -6,9 +6,12 @@ import { router } from 'expo-router';
 import { searchQuestions } from '@/src/lib/queries';
 import { useExamStore } from '@/src/store/examStore';
 import type { Question } from '@/src/types';
+import { useColors } from '@/hooks/useColors';
 
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { startExam } = useExamStore();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Question[]>([]);
@@ -58,8 +61,8 @@ export default function SearchScreen() {
             </View>
           }
           renderItem={({ item }) => (
-            <Pressable style={styles.card} onPress={() => handleOpenQuestion(item)}>
-              <Text style={styles.cardTitle}>{item.question}</Text>
+            <Pressable style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={() => handleOpenQuestion(item)}>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>{item.question}</Text>
               <View style={styles.cardMeta}>
                 <Text style={styles.cardCat}>{item.category}</Text>
                 <Text style={styles.cardDiff}>{item.difficulty}</Text>

@@ -4,9 +4,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
+import { useColors } from '@/hooks/useColors';
 
 export default function AnalyticsScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { savedResults } = useExamStore();
 
   const totalExams = savedResults.length;
@@ -20,19 +23,19 @@ export default function AnalyticsScreen() {
   const overallAccuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#0C1A2E" />
+        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Performance Analytics</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Performance Analytics</Text>
       </View>
 
       {totalExams === 0 ? (
         <View style={styles.empty}>
-          <MaterialCommunityIcons name="chart-bar" size={48} color="#CBD5E1" />
+          <MaterialCommunityIcons name="chart-bar" size={48} color={colors.mutedForeground} />
           <Text style={styles.emptyTitle}>No Data Yet</Text>
-          <Text style={styles.emptySub}>Complete a mock exam to see your performance analytics here.</Text>
+          <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>Complete a mock exam to see your performance analytics here.</Text>
         </View>
       ) : (
         <>
@@ -58,7 +61,7 @@ export default function AnalyticsScreen() {
           </View>
 
           <View style={styles.breakdownCard}>
-            <Text style={styles.cardTitle}>Question Breakdown</Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Question Breakdown</Text>
             <View style={styles.breakdownRow}>
               <View style={[styles.breakdownBar, { backgroundColor: '#D1FAE5', flex: totalCorrect }]} />
               <View style={[styles.breakdownBar, { backgroundColor: '#FEE2E2', flex: totalWrong || 0.1 }]} />
@@ -80,7 +83,7 @@ export default function AnalyticsScreen() {
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>All Results</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>All Results</Text>
           {savedResults.map((r, i) => (
             <View key={i} style={styles.resultCard}>
               <View style={styles.resultLeft}>

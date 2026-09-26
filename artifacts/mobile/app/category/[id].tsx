@@ -6,6 +6,7 @@ import { useExamStore } from '@/src/store/examStore';
 import { fetchQuestionsBySubcategory, fetchCategoryQuestionStats, fetchSubcategories } from '@/src/lib/queries';
 import { CATEGORY_CONFIG } from '@/src/types';
 import NativeAdBanner from '@/components/NativeAdBanner';
+import { useColors } from '@/hooks/useColors';
 
 export default function CategoryScreen() {
   const { id, chapter } = useLocalSearchParams<{ id: string; chapter?: string }>();
@@ -93,7 +94,7 @@ export default function CategoryScreen() {
             <Text style={styles.chapterName}>{item}</Text>
             <Text style={styles.chapterSub}>Tap to practice</Text>
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={colors.mutedForeground} />
         </Pressable>
       )}
       ListEmptyComponent={

@@ -5,9 +5,12 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/src/store/authStore';
 import { fetchTotalQuestionCount } from '@/src/lib/queries';
+import { useColors } from '@/hooks/useColors';
 
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const [total, setTotal] = useState<number | null>(null);
 
   useEffect(() => {
@@ -22,7 +25,7 @@ export default function WelcomeScreen() {
         <View style={styles.logoContainer}>
           <Image source={require('../assets/images/icon.png')} style={styles.logoImage} resizeMode="contain" />
         </View>
-        <Text style={styles.title}>Nurse Exam Preparation</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Nurse Exam Preparation</Text>
         <Text style={styles.subtitle}>{totalText} for All Nursing Exams</Text>
       </View>
 
