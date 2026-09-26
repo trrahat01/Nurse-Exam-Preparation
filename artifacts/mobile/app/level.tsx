@@ -6,6 +6,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
 import { getGamification, BADGES, computeCategoryStats, XP_PER_LEVEL, type GamificationState } from '@/src/lib/gamification';
 import { getStreak } from '@/src/lib/streak';
+import { useColors } from '@/hooks/useColors';
 
 interface LevelScreenData {
   gam: GamificationState;
@@ -14,6 +15,8 @@ interface LevelScreenData {
 
 export default function LevelScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { savedResults } = useExamStore();
   const [data, setData] = useState<LevelScreenData>({ gam: { xp: 0, level: 1, xpIntoLevel: 0, xpForNextLevel: XP_PER_LEVEL, progressPct: 0, earnedBadges: [] }, streakCurrent: 0 });
 
@@ -36,13 +39,13 @@ export default function LevelScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }} showsVerticalScrollIndicator={false}>
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#0C1A2E" />
+        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Level & Badges</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Level & Badges</Text>
       </View>
 
-      <View style={styles.levelCard}>
+      <View style={[styles.levelCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
         <View style={styles.levelRow}>
           <View style={styles.levelCircle}>
             <Text style={styles.levelNum}>{gam.level}</Text>
@@ -56,14 +59,14 @@ export default function LevelScreen() {
             </View>
           </View>
         </View>
-        <View style={styles.streakHint}>
+        <View style={[styles.streakHint, { backgroundColor: isDark ? colors.secondary : '#FFF7ED' }]}>
           <MaterialCommunityIcons name="fire" size={16} color="#F97316" />
-          <Text style={styles.streakHintText}>Current streak: {streakCurrent} day(s). Reach 7 to unlock the On Fire badge!</Text>
+          <Text style={[styles.streakHintText, { color: isDark ? colors.secondaryForeground : '#B45309' }]}>Current streak: {streakCurrent} day(s). Reach 7 to unlock the On Fire badge!</Text>
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>EARNED BADGES ({earned.length}/{BADGES.length})</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>EARNED BADGES ({earned.length}/{BADGES.length})</Text>
         <View style={styles.badgeGrid}>
           {earned.map(b => (
             <View key={b.id} style={[styles.badge, { borderColor: b.color + '55', backgroundColor: b.color + '14' }]}>
@@ -80,10 +83,10 @@ export default function LevelScreen() {
 
       {locked.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>LOCKED BADGES</Text>
+          <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>LOCKED BADGES</Text>
           <View style={styles.badgeGrid}>
             {locked.map(b => (
-              <View key={b.id} style={[styles.badge, { borderColor: '#E2E8F0', backgroundColor: '#F8FAFC', opacity: 0.7 }]}>
+              <View key={b.id} style={[styles.badge, { borderColor: colors.border, backgroundColor: isDark ? colors.muted : '#F8FAFC', opacity: 0.7 }]}>
                 <MaterialCommunityIcons name={(b.icon + '-outline') as any} size={26} color="#94A3B8" />
                 <Text style={[styles.badgeName, { color: '#94A3B8' }]}>{b.name}</Text>
                 <Text style={[styles.badgeDesc, { color: '#94A3B8' }]}>{b.desc}</Text>
@@ -94,18 +97,18 @@ export default function LevelScreen() {
       )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>CATEGORY LEADERBOARD</Text>
-        <View style={styles.leaderCard}>
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>CATEGORY LEADERBOARD</Text>
+        <View style={[styles.leaderCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           {leaderboard.length === 0 ? (
-            <Text style={styles.emptyText}>Complete exams to build your category leaderboard.</Text>
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Complete exams to build your category leaderboard.</Text>
           ) : leaderboard.map((row, i) => (
-            <View key={row.category} style={styles.leaderRow}>
-              <Text style={styles.leaderRank}>{i + 1}</Text>
+            <View key={row.category} style={[styles.leaderRow, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.leaderRank, { backgroundColor: isDark ? colors.secondary : '#E0F2FE', color: '#0891B2' }]}>{i + 1}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={styles.leaderCat}>{row.category}</Text>
-                <Text style={styles.leaderSub}>{row.correct} correct · {row.accuracy}% accuracy</Text>
+                <Text style={[styles.leaderCat, { color: colors.text }]}>{row.category}</Text>
+                <Text style={[styles.leaderSub, { color: colors.mutedForeground }]}>{row.correct} correct · {row.accuracy}% accuracy</Text>
               </View>
-              <View style={styles.leaderBar}>
+              <View style={[styles.leaderBar, { backgroundColor: isDark ? colors.border : '#F1F5F9' }]}>
                 <View style={[styles.leaderFill, { width: (row.accuracy + '%') as any }]} />
               </View>
             </View>
