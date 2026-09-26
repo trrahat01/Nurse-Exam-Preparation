@@ -11,9 +11,12 @@ import { toggleBookmark } from '@/src/lib/queries';
 import { showRewardedAd } from '@/src/lib/ads';
 import type { AnswerOption } from '@/src/types';
 import AdBanner from '@/components/AdBanner';
+import { useColors } from '@/hooks/useColors';
 
 export default function ExamScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { questionId } = useLocalSearchParams<{ questionId?: string }>();
   const { session, result, submitExam, setAnswer, toggleMark, goToQuestion, clearExam, tickTimer, startExam } = useExamStore();
   const { user } = useAuthStore();
@@ -143,34 +146,34 @@ export default function ExamScreen() {
   const optTexts: Record<AnswerOption, string> = { a: question.option_a, b: question.option_b, c: question.option_c, d: question.option_d };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Top Bar */}
-      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+      <View style={[styles.topBar, { paddingTop: insets.top + 8, backgroundColor: isDark ? colors.card : '#F8FAFC', borderBottomColor: colors.border }]}>
         <View style={styles.topRow}>
           <Pressable onPress={() => Alert.alert('Exit Exam', 'Exit without submitting? Progress will be lost.', [
             { text: 'Stay', style: 'cancel' },
             { text: 'Exit', style: 'destructive', onPress: () => { clearExam(); router.replace('/(tabs)/mock'); } },
           ])}>
-            <MaterialCommunityIcons name="close" size={24} color="#0C1A2E" />
+            <MaterialCommunityIcons name="close" size={24} color={colors.text} />
           </Pressable>
           <View style={styles.examInfo}>
-            <Text style={styles.examType}>{examType === 'mock' ? 'Mock Test' : isPractice ? 'Practice' : 'Daily Practice'}</Text>
-            <Text style={styles.qNum}>{currentIndex + 1} / {questions.length}</Text>
+            <Text style={[styles.examType, { color: colors.text }]}>{examType === 'mock' ? 'Mock Test' : isPractice ? 'Practice' : 'Daily Practice'}</Text>
+            <Text style={[styles.qNum, { color: colors.mutedForeground }]}>{currentIndex + 1} / {questions.length}</Text>
           </View>
           <View style={styles.topActions}>
             <Pressable onPress={handleBookmark} style={styles.bookmarkBtn}>
-              <MaterialCommunityIcons name={isBookmarked ? 'bookmark' : 'bookmark-outline'} size={24} color={isBookmarked ? '#7C3AED' : '#0C1A2E'} />
+              <MaterialCommunityIcons name={isBookmarked ? 'bookmark' : 'bookmark-outline'} size={24} color={isBookmarked ? '#7C3AED' : colors.text} />
             </Pressable>
             <Pressable onPress={() => setShowGrid(g => !g)}>
-              <MaterialCommunityIcons name="view-grid-outline" size={24} color={showGrid ? '#0891B2' : '#0C1A2E'} />
+              <MaterialCommunityIcons name="view-grid-outline" size={24} color={showGrid ? '#0891B2' : colors.text} />
             </Pressable>
           </View>
         </View>
 
         {!isPractice && (
           <View style={styles.timerRow}>
-            <MaterialCommunityIcons name="clock-outline" size={16} color={timeLeft < 300 ? '#EF4444' : '#64748B'} />
-            <Text style={[styles.timerText, { color: timeLeft < 300 ? '#EF4444' : '#0C1A2E' }]}>
+            <MaterialCommunityIcons name="clock-outline" size={16} color={timeLeft < 300 ? '#EF4444' : colors.mutedForeground} />
+            <Text style={[styles.timerText, { color: timeLeft < 300 ? '#EF4444' : colors.text }]}>
               {mm}:{ss.toString().padStart(2, '0')}
             </Text>
             <View style={styles.progressBar}>
@@ -208,21 +211,21 @@ export default function ExamScreen() {
       )}
 
       {/* Question */}
-      <ScrollView style={styles.body} contentContainerStyle={[styles.bodyContent, { paddingBottom: insets.bottom + 100 }]} showsVerticalScrollIndicator={false}>
-        <View style={styles.questionCard}>
+      <ScrollView style={[styles.body, { backgroundColor: 'transparent' }]} contentContainerStyle={[styles.bodyContent, { paddingBottom: insets.bottom + 100 }]} showsVerticalScrollIndicator={false}>
+        <View style={[styles.questionCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           <View style={styles.qHeader}>
-            <Text style={styles.qCategory}>{question.subcategory}</Text>
+            <Text style={[styles.qCategory, { color: isDark ? colors.secondaryForeground : '#0891B2' }]}>{question.subcategory}</Text>
             <View style={[styles.diffBadge, { backgroundColor: question.difficulty === 'easy' ? '#D1FAE5' : question.difficulty === 'medium' ? '#FEF3C7' : '#FEE2E2' }]}>
               <Text style={[styles.diffText, { color: question.difficulty === 'easy' ? '#059669' : question.difficulty === 'medium' ? '#D97706' : '#DC2626' }]}>
                 {question.difficulty}
               </Text>
             </View>
           </View>
-          <Text style={styles.qText}>{currentIndex + 1}. {question.question}</Text>
+          <Text style={[styles.qText, { color: colors.text }]}>{currentIndex + 1}. {question.question}</Text>
           {hintsUsed[question.id] ? (
-            <View style={styles.hintBox}>
+            <View style={[styles.hintBox, { backgroundColor: isDark ? colors.secondary : '#FEF3C7' }]}>
               <MaterialCommunityIcons name="lightbulb-on-outline" size={16} color="#B45309" />
-              <Text style={styles.hintText}>Hint: option {hintsUsed[question.id].toUpperCase()} is incorrect.</Text>
+              <Text style={[styles.hintText, { color: isDark ? colors.secondaryForeground : '#B45309' }]}>Hint: option {hintsUsed[question.id].toUpperCase()} is incorrect.</Text>
             </View>
           ) : (
             <Pressable style={styles.hintBtn} onPress={handleHint}>
@@ -236,22 +239,22 @@ export default function ExamScreen() {
           {opts.map(opt => (
             <Pressable
               key={opt}
-              style={[styles.optionBtn, selectedAnswer === opt && styles.optionSelected, hintsUsed[question.id] === opt && { opacity: 0.35 }, isPractice && selectedAnswer && opt === question.correct_answer && { borderColor: '#059669', backgroundColor: '#D1FAE5' }, isPractice && selectedAnswer && opt === selectedAnswer && opt !== question.correct_answer && { borderColor: '#DC2626', backgroundColor: '#FEE2E2' }]}
+              style={[styles.optionBtn, selectedAnswer === opt && styles.optionSelected, hintsUsed[question.id] === opt && { opacity: 0.35 }, isPractice && selectedAnswer && opt === question.correct_answer && { borderColor: '#059669', backgroundColor: isDark ? '#13452F' : '#D1FAE5' }, isPractice && selectedAnswer && opt === selectedAnswer && opt !== question.correct_answer && { borderColor: '#DC2626', backgroundColor: isDark ? '#3B1214' : '#FEE2E2' }]}
               onPress={() => handleAnswer(opt)}
               disabled={isPractice && !!selectedAnswer}
             >
               <View style={[styles.optionCircle, selectedAnswer === opt && { backgroundColor: '#0891B2' }, isPractice && selectedAnswer && opt === question.correct_answer && { backgroundColor: '#059669' }, isPractice && selectedAnswer && opt === selectedAnswer && opt !== question.correct_answer && { backgroundColor: '#DC2626' }]}>
                 <Text style={[styles.optionLetter, selectedAnswer === opt && { color: '#fff' }]}>{opt.toUpperCase()}</Text>
               </View>
-              <Text style={[styles.optionText, selectedAnswer === opt && { color: '#0891B2', fontFamily: 'Inter_600SemiBold' }]}>{optTexts[opt]}</Text>
+              <Text style={[styles.optionText, { color: colors.text }, selectedAnswer === opt && { color: '#0891B2', fontFamily: 'Inter_600SemiBold' }]}>{optTexts[opt]}</Text>
             </Pressable>
           ))}
         </View>
 
         {isPractice && selectedAnswer && question.explanation && (
-          <View style={styles.explanation}>
-            <Text style={styles.explainTitle}>Explanation</Text>
-            <Text style={styles.explainText}>{question.explanation}</Text>
+          <View style={[styles.explanation, { backgroundColor: isDark ? colors.secondary : '#E0F2FE' }]}>
+            <Text style={[styles.explainTitle, { color: isDark ? colors.secondaryForeground : '#0891B2' }]}>Explanation</Text>
+            <Text style={[styles.explainText, { color: isDark ? colors.secondaryForeground : '#0C4A6E' }]}>{question.explanation}</Text>
           </View>
         )}
 
@@ -259,18 +262,18 @@ export default function ExamScreen() {
       </ScrollView>
 
       {/* Bottom Nav */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 8 }]}>
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 8, backgroundColor: isDark ? colors.card : '#fff' }]}>
         <Pressable style={[styles.navBtn, currentIndex === 0 && { opacity: 0.4 }]} onPress={() => currentIndex > 0 && goToQuestion(currentIndex - 1)} disabled={currentIndex === 0}>
-          <MaterialCommunityIcons name="chevron-left" size={20} color="#0C1A2E" />
-          <Text style={styles.navBtnText}>Prev</Text>
+          <MaterialCommunityIcons name="chevron-left" size={20} color={colors.text} />
+          <Text style={[styles.navBtnText, { color: colors.text }]}>Prev</Text>
         </Pressable>
-        <Pressable style={[styles.markBtn, isMarked && { backgroundColor: '#FEF3C7', borderColor: '#D97706' }]} onPress={() => { toggleMark(question.id); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }}>
-          <MaterialCommunityIcons name={isMarked ? 'flag' : 'flag-outline'} size={18} color={isMarked ? '#D97706' : '#64748B'} />
+        <Pressable style={[styles.markBtn, isMarked && { backgroundColor: isDark ? colors.secondary : '#FEF3C7', borderColor: '#D97706' }]} onPress={() => { toggleMark(question.id); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }}>
+          <MaterialCommunityIcons name={isMarked ? 'flag' : 'flag-outline'} size={18} color={isMarked ? '#D97706' : colors.mutedForeground} />
         </Pressable>
         {currentIndex < questions.length - 1 ? (
           <Pressable style={styles.navBtn} onPress={() => goToQuestion(currentIndex + 1)}>
-            <Text style={styles.navBtnText}>Next</Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#0C1A2E" />
+            <Text style={[styles.navBtnText, { color: colors.text }]}>Next</Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.text} />
           </Pressable>
         ) : (
           <Pressable style={styles.submitBtn} onPress={handleSubmit}>

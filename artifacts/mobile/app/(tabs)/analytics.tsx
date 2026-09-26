@@ -6,9 +6,12 @@ import { useExamStore } from '@/src/store/examStore';
 import { computeReadiness } from '@/src/lib/readiness';
 import { computeCategoryStats } from '@/src/lib/gamification';
 import ReadyMeter from '@/components/ReadyMeter';
+import { useColors } from '@/hooks/useColors';
 
 export default function AnalyticsTabScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { savedResults } = useExamStore();
 
   const totalExams = savedResults.length;
@@ -21,8 +24,8 @@ export default function AnalyticsTabScreen() {
   const leaderboard = computeCategoryStats(savedResults).slice(0, 8);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 100 }}>
-      <Text style={styles.pageTitle}>Analytics</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 100 }}>
+      <Text style={[styles.pageTitle, { color: colors.text }]}>Analytics</Text>
 
       <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
         <ReadyMeter readiness={readiness} />
@@ -30,35 +33,35 @@ export default function AnalyticsTabScreen() {
 
       {totalExams === 0 ? (
         <View style={styles.empty}>
-          <MaterialCommunityIcons name="chart-bar" size={48} color="#CBD5E1" />
-          <Text style={styles.emptyTitle}>No Data Yet</Text>
-          <Text style={styles.emptySub}>Complete a mock exam to see your analytics.</Text>
+          <MaterialCommunityIcons name="chart-bar" size={48} color={isDark ? colors.mutedForeground : '#CBD5E1'} />
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>No Data Yet</Text>
+          <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>Complete a mock exam to see your analytics.</Text>
         </View>
       ) : (
         <>
-          <View style={styles.scoreCard}>
-            <Text style={styles.bigScore}>{overallAccuracy}%</Text>
-            <Text style={styles.scoreLabel}>Overall Accuracy</Text>
-            <Text style={styles.scoreSub}>{totalExams} exams completed</Text>
+          <View style={[styles.scoreCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
+            <Text style={[styles.bigScore, { color: isDark ? colors.primary : '#0891B2' }]}>{overallAccuracy}%</Text>
+            <Text style={[styles.scoreLabel, { color: colors.mutedForeground }]}>Overall Accuracy</Text>
+            <Text style={[styles.scoreSub, { color: colors.mutedForeground }]}>{totalExams} exams completed</Text>
           </View>
           <View style={styles.statsGrid}>
-            <View style={styles.statBox}><Text style={[styles.statNum, { color: '#10B981' }]}>{avgScore}%</Text><Text style={styles.statLabel}>Average</Text></View>
-            <View style={styles.statBox}><Text style={[styles.statNum, { color: '#0891B2' }]}>{bestScore}%</Text><Text style={styles.statLabel}>Best</Text></View>
+            <View style={[styles.statBox, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}><Text style={[styles.statNum, { color: '#10B981' }]}>{avgScore}%</Text><Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Average</Text></View>
+            <View style={[styles.statBox, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}><Text style={[styles.statNum, { color: '#0891B2' }]}>{bestScore}%</Text><Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Best</Text></View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>CATEGORY LEADERBOARD</Text>
-            <View style={styles.leaderCard}>
+            <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>CATEGORY LEADERBOARD</Text>
+            <View style={[styles.leaderCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
               {leaderboard.length === 0 ? (
-                <Text style={styles.leaderEmpty}>Complete exams to build your category leaderboard.</Text>
+                <Text style={[styles.leaderEmpty, { color: colors.mutedForeground }]}>Complete exams to build your category leaderboard.</Text>
               ) : leaderboard.map((row, i) => (
-                <View key={row.category} style={styles.leaderRow}>
-                  <Text style={styles.leaderRank}>{i + 1}</Text>
+                <View key={row.category} style={[styles.leaderRow, { borderBottomColor: colors.border }]}>
+                  <Text style={[styles.leaderRank, { backgroundColor: isDark ? colors.secondary : '#E0F2FE', color: '#0891B2' }]}>{i + 1}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.leaderCat}>{row.category}</Text>
-                    <Text style={styles.leaderSub}>{row.correct} correct / {row.total} attempted</Text>
+                    <Text style={[styles.leaderCat, { color: colors.text }]}>{row.category}</Text>
+                    <Text style={[styles.leaderSub, { color: colors.mutedForeground }]}>{row.correct} correct / {row.total} attempted</Text>
                   </View>
-                  <Text style={styles.leaderPct}>{row.accuracy}%</Text>
+                  <Text style={[styles.leaderPct, { color: isDark ? colors.primary : '#0891B2' }]}>{row.accuracy}%</Text>
                 </View>
               ))}
             </View>

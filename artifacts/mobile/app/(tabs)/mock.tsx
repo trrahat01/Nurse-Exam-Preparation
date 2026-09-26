@@ -7,9 +7,12 @@ import { useExamStore } from '@/src/store/examStore';
 import { fetchMockQuestions, fetchDailyQuestions } from '@/src/lib/queries';
 import { MOCK_DISTRIBUTION } from '@/src/types';
 import AdBanner from '@/components/AdBanner';
+import { useColors } from '@/hooks/useColors';
 
 export default function MockScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { startExam, savedResults } = useExamStore();
   const [mockLoading, setMockLoading] = useState(false);
   const [dailyLoading, setDailyLoading] = useState<'20' | '50' | '100' | null>(null);
@@ -54,7 +57,7 @@ export default function MockScreen() {
   };
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.scroll, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
       <View style={{ paddingTop: insets.top + 16 }} />
 
       <View style={styles.mainCard}>
@@ -77,17 +80,17 @@ export default function MockScreen() {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.sectionTitle}>Daily Practice</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Daily Practice</Text>
         <View style={styles.dailyRow}>
           {([{ count: 20, label: '20 Qs', time: '20 min' }, { count: 50, label: '50 Qs', time: '50 min' }, { count: 100, label: '100 Qs', time: '100 min' }]).map(item => (
-            <Pressable key={item.count} style={styles.dailyBtn} onPress={() => startDaily(item.count as any)} disabled={dailyLoading === String(item.count)}>
-              {dailyLoading === String(item.count) ? <ActivityIndicator color="#0891B2" /> : <><Text style={styles.dailyLabel}>{item.label}</Text><Text style={styles.dailyTime}>{item.time}</Text></>}
+            <Pressable key={item.count} style={[styles.dailyBtn, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={() => startDaily(item.count as any)} disabled={dailyLoading === String(item.count)}>
+              {dailyLoading === String(item.count) ? <ActivityIndicator color="#0891B2" /> : <><Text style={[styles.dailyLabel, { color: colors.text }]}>{item.label}</Text><Text style={[styles.dailyTime, { color: colors.mutedForeground }]}>{item.time}</Text></>}
             </Pressable>
           ))}
         </View>
 
-        <View style={styles.rulesCard}>
-          <Text style={styles.rulesTitle}>Exam Rules</Text>
+        <View style={[styles.rulesCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
+          <Text style={[styles.rulesTitle, { color: colors.text }]}>Exam Rules</Text>
           {[
             ['check-circle-outline', 'Exactly 100 questions from all 4 subjects', '#10B981'],
             ['timer', '60 minutes time limit — cannot pause', '#D97706'],
@@ -97,22 +100,22 @@ export default function MockScreen() {
           ].map(([icon, text, color]) => (
             <View key={text} style={styles.ruleRow}>
               <MaterialCommunityIcons name={icon as any} size={16} color={color} />
-              <Text style={styles.ruleText}>{text}</Text>
+              <Text style={[styles.ruleText, { color: colors.mutedForeground }]}>{text}</Text>
             </View>
           ))}
         </View>
 
         {mockResults.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Recent Mock Tests</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Mock Tests</Text>
             {mockResults.slice(0, 5).map((r, i) => (
-              <View key={i} style={styles.histRow}>
-                <View style={[styles.histBadge, { backgroundColor: r.percentage >= 50 ? '#D1FAE5' : '#FEE2E2' }]}>
+              <View key={i} style={[styles.histRow, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
+                <View style={[styles.histBadge, { backgroundColor: r.percentage >= 50 ? (isDark ? '#13452F' : '#D1FAE5') : (isDark ? '#3B1214' : '#FEE2E2') }]}>
                   <Text style={[styles.histPct, { color: r.percentage >= 50 ? '#059669' : '#EF4444' }]}>{r.percentage}%</Text>
                 </View>
                 <View style={styles.histInfo}>
-                  <Text style={styles.histScore}>{r.correct}/{r.questions.length} Correct</Text>
-                  <Text style={styles.histDate}>{Math.floor(r.timeTaken / 60)}m {r.timeTaken % 60}s</Text>
+                  <Text style={[styles.histScore, { color: colors.text }]}>{r.correct}/{r.questions.length} Correct</Text>
+                  <Text style={[styles.histDate, { color: colors.mutedForeground }]}>{Math.floor(r.timeTaken / 60)}m {r.timeTaken % 60}s</Text>
                 </View>
                 <Text style={[styles.histStatus, { color: r.percentage >= 50 ? '#059669' : '#EF4444' }]}>{r.percentage >= 50 ? 'Pass' : 'Fail'}</Text>
               </View>

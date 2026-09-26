@@ -6,9 +6,21 @@ export type ThemePreference = 'light' | 'dark' | 'system';
 
 const KEY = 'theme_pref';
 
+/** Resolve the actual active scheme ('light' | 'dark') from a preference. */
+export function resolveScheme(pref: ThemePreference): 'light' | 'dark' {
+  if (pref === 'light') return 'light';
+  if (pref === 'dark') return 'dark';
+  // 'system' → follow the OS setting (platform read-only helper).
+  try {
+    return Appearance.getColorScheme() ?? 'light';
+  } catch {
+    return 'light';
+  }
+}
+
 function applyTheme(t: ThemePreference) {
   // null = follow system
-  Appearance.setColorScheme(t === 'system' ? null : t);
+  try { Appearance.setColorScheme(t === 'system' ? null : t); } catch { /* ignore */ }
 }
 
 interface ThemeState {
@@ -38,7 +50,9 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   },
   toggle: async () => {
     const { theme } = get();
-    const next = theme === 'dark' ? 'light' : 'dark';
+    // Toggle the RESOLVED scheme so "system" users get a concrete choice.
+    const active = resolveScheme(theme);
+    const next = active === 'dark' ? 'light' : 'dark';
     await get().setTheme(next);
   },
 }));

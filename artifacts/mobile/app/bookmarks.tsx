@@ -8,11 +8,14 @@ import { useBookmarkStore } from '@/src/store/bookmarkStore';
 import { fetchBookmarks, toggleBookmark } from '@/src/lib/queries';
 import type { Bookmark } from '@/src/types';
 import type { BookmarkItem } from '@/src/store/bookmarkStore';
+import { useColors } from '@/hooks/useColors';
 
 type CombinedBookmark = Bookmark | BookmarkItem;
 
 export default function BookmarksScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { user } = useAuthStore();
   const { bookmarks: localBookmarks, serverBookmarks, loadServerBookmarks, loadBookmarks, removeBookmark } = useBookmarkStore();
   const [loading, setLoading] = useState(true);
@@ -69,13 +72,13 @@ export default function BookmarksScreen() {
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#0C1A2E" />
+        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Bookmarks</Text>
-        <Pressable onPress={() => router.push('/flashcards')} style={styles.fcBtn}>
+        <Text style={[styles.title, { color: colors.text }]}>Bookmarks</Text>
+        <Pressable onPress={() => router.push('/flashcards')} style={[styles.fcBtn, { backgroundColor: isDark ? colors.secondary : '#E0F2FE' }]}>
           <MaterialCommunityIcons name="cards-outline" size={20} color="#0891B2" />
           <Text style={styles.fcText}>Flashcards</Text>
         </Pressable>
@@ -87,9 +90,9 @@ export default function BookmarksScreen() {
         </View>
       ) : allBookmarks.length === 0 ? (
         <View style={styles.empty}>
-          <MaterialCommunityIcons name="bookmark-outline" size={48} color="#CBD5E1" />
-          <Text style={styles.emptyTitle}>No Bookmarks Yet</Text>
-          <Text style={styles.emptySub}>Bookmark questions during practice to review them later.</Text>
+          <MaterialCommunityIcons name="bookmark-outline" size={48} color={isDark ? colors.mutedForeground : '#CBD5E1'} />
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>No Bookmarks Yet</Text>
+          <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>Bookmark questions during practice to review them later.</Text>
         </View>
       ) : (
         <FlatList
@@ -97,15 +100,15 @@ export default function BookmarksScreen() {
           keyExtractor={item => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: 100, gap: 10 }}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
               <Pressable
                 style={styles.cardContent}
                 onPress={() => handleOpenQuestion(item.question_id)}
               >
-                <Text style={styles.cardTitle} numberOfLines={3}>{item.question?.question ?? 'Question'}</Text>
+                <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={3}>{item.question?.question ?? 'Question'}</Text>
                 <Text style={styles.cardCat}>{item.question?.category ?? ''}</Text>
               </Pressable>
-              <Pressable style={styles.removeBtn} onPress={() => handleRemove(item)}>
+              <Pressable style={[styles.removeBtn, { backgroundColor: isDark ? colors.destructive + '22' : '#FEF2F2' }]} onPress={() => handleRemove(item)}>
                 <MaterialCommunityIcons name="bookmark-remove" size={20} color="#EF4444" />
               </Pressable>
             </View>

@@ -10,11 +10,14 @@ import { CATEGORY_CONFIG } from '@/src/types';
 import AdBanner from '@/components/AdBanner';
 import ReadyMeter from '@/components/ReadyMeter';
 import { computeReadiness } from '@/src/lib/readiness';
+import { useColors } from '@/hooks/useColors';
 
 const CATEGORIES = Object.values(CATEGORY_CONFIG);
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { user, isGuest } = useAuthStore();
   const { savedResults, loadSavedResults, startExam, viewResult } = useExamStore();
   const [loading, setLoading] = useState(false);
@@ -74,67 +77,67 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-      style={styles.scroll}
+      style={[styles.scroll, { backgroundColor: colors.background }]}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 100 }}
     >
-      <View style={[styles.header, { paddingTop: insets.top + 16, backgroundColor: '#0891B2' }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 16, backgroundColor: isDark ? colors.card : '#0891B2' }]}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.greeting}>Hello, {firstName}</Text>
-            <Text style={styles.subtitle}>Nurse Exam Preparation</Text>
+            <Text style={[styles.greeting, { color: isDark ? colors.foreground : '#fff' }]}>Hello, {firstName}</Text>
+            <Text style={[styles.subtitle, { color: isDark ? colors.mutedForeground : '#BAE6FD' }]}>Nurse Exam Preparation</Text>
           </View>
           <Pressable style={styles.settingsBtn} onPress={() => router.push('/settings')}>
-            <MaterialCommunityIcons name="cog-outline" size={24} color="#fff" />
+            <MaterialCommunityIcons name="cog-outline" size={24} color={isDark ? colors.text : '#fff'} />
           </Pressable>
         </View>
 
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text style={styles.statNum}>{totalExams}</Text>
-            <Text style={styles.statLbl}>Exams</Text>
+            <Text style={[styles.statNum, { color: isDark ? colors.foreground : '#fff' }]}>{totalExams}</Text>
+            <Text style={[styles.statLbl, { color: isDark ? colors.mutedForeground : '#BAE6FD' }]}>Exams</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNum}>{avgScore}%</Text>
-            <Text style={styles.statLbl}>Avg Score</Text>
+            <Text style={[styles.statNum, { color: isDark ? colors.foreground : '#fff' }]}>{avgScore}%</Text>
+            <Text style={[styles.statLbl, { color: isDark ? colors.mutedForeground : '#BAE6FD' }]}>Avg Score</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNum}>{bestScore}%</Text>
-            <Text style={styles.statLbl}>Best</Text>
+            <Text style={[styles.statNum, { color: isDark ? colors.foreground : '#fff' }]}>{bestScore}%</Text>
+            <Text style={[styles.statLbl, { color: isDark ? colors.mutedForeground : '#BAE6FD' }]}>Best</Text>
           </View>
         </View>
 
         {/* Total Questions Badge */}
         {totalQuestions > 0 && (
-          <View style={styles.totalBadge}>
-            <MaterialCommunityIcons name="book-open-variant" size={16} color="#fff" />
-            <Text style={styles.totalBadgeText}>{totalQuestions.toLocaleString()} Questions Available</Text>
+          <View style={[styles.totalBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.12)' }]}>
+            <MaterialCommunityIcons name="book-open-variant" size={16} color={isDark ? colors.mutedForeground : '#fff'} />
+            <Text style={[styles.totalBadgeText, { color: isDark ? colors.mutedForeground : '#fff' }]}>{totalQuestions.toLocaleString()} Questions Available</Text>
           </View>
         )}
       </View>
 
       <View style={styles.content}>
         <ReadyMeter readiness={readiness} />
-        <Text style={styles.sectionTitle}>Quick Start</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Start</Text>
         <View style={styles.actionRow}>
-          <ActionButton icon="clipboard-text-outline" label="Full Mock" sublabel="100 Questions" color="#0891B2" bg="#E0F2FE" onPress={handleStartMock} loading={loading} />
-          <ActionButton icon="calendar-star" label="Daily" sublabel="Practice" color="#059669" bg="#D1FAE5" onPress={() => router.push('/daily')} />
-          <ActionButton icon="bookmark-outline" label="Bookmarks" sublabel="Saved" color="#7C3AED" bg="#EDE9FE" onPress={() => router.push('/bookmarks')} />
-          <ActionButton icon="magnify" label="Search" sublabel="Questions" color="#D97706" bg="#FEF3C7" onPress={() => router.push('/search')} />
+          <ActionButton icon="clipboard-text-outline" label="Full Mock" sublabel="100 Questions" color="#0891B2" bg={isDark ? colors.secondary : '#E0F2FE'} onPress={handleStartMock} loading={loading} colors={colors} />
+          <ActionButton icon="calendar-star" label="Daily" sublabel="Practice" color="#059669" bg={isDark ? colors.secondary : '#D1FAE5'} onPress={() => router.push('/daily')} colors={colors} />
+          <ActionButton icon="bookmark-outline" label="Bookmarks" sublabel="Saved" color="#7C3AED" bg={isDark ? colors.secondary : '#EDE9FE'} onPress={() => router.push('/bookmarks')} colors={colors} />
+          <ActionButton icon="magnify" label="Search" sublabel="Questions" color="#D97706" bg={isDark ? colors.secondary : '#FEF3C7'} onPress={() => router.push('/search')} colors={colors} />
         </View>
 
-        <Pressable style={styles.readingBanner} onPress={() => router.push('/reading')}>
+        <Pressable style={[styles.readingBanner, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={() => router.push('/reading')}>
           <MaterialCommunityIcons name="book-open-page-variant" size={24} color="#059669" />
           <View style={{ flex: 1 }}>
-            <Text style={styles.readingTitle}>Reading Mode</Text>
-            <Text style={styles.readingSub}>Study notes with adjustable text size</Text>
+            <Text style={[styles.readingTitle, { color: colors.text }]}>Reading Mode</Text>
+            <Text style={[styles.readingSub, { color: colors.mutedForeground }]}>Study notes with adjustable text size</Text>
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#94A3B8" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={colors.mutedForeground} />
         </Pressable>
 
-        <Text style={styles.sectionTitle}>Categories</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Categories</Text>
         <View style={styles.catGrid}>
           {CATEGORIES.map((cat) => {
             const stat = categoryStats[cat.name] || { total: 0, seen: 0, unseen: 0 };
@@ -162,23 +165,23 @@ export default function HomeScreen() {
 
         {savedResults.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Recent Results</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Results</Text>
             {savedResults.slice(0, 3).map((r, i) => (
               <Pressable
                 key={i}
-                style={styles.resultRow}
+                style={[styles.resultRow, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}
                 onPress={() => handleViewResult(r)}
               >
-                <View style={[styles.resultIcon, { backgroundColor: r.passed ? '#D1FAE5' : '#FEE2E2' }]}>
+                <View style={[styles.resultIcon, { backgroundColor: isDark ? colors.secondary : (r.passed ? '#D1FAE5' : '#FEE2E2') }]}>
                   <MaterialCommunityIcons name={r.passed ? 'check' : 'close'} size={16} color={r.passed ? '#059669' : '#EF4444'} />
                 </View>
                 <View style={styles.resultInfo}>
-                  <Text style={styles.resultType}>{r.examType.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())} Test</Text>
-                  <Text style={styles.resultDate}>{new Date().toLocaleDateString()}</Text>
+                  <Text style={[styles.resultType, { color: colors.text }]}>{r.examType.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())} Test</Text>
+                  <Text style={[styles.resultDate, { color: colors.mutedForeground }]}>{new Date().toLocaleDateString()}</Text>
                 </View>
                 <View style={styles.resultScore}>
                   <Text style={[styles.scorePct, { color: r.passed ? '#059669' : '#EF4444' }]}>{r.percentage}%</Text>
-                  <Text style={styles.scoreDetail}>{r.correct}/{r.questions.length}</Text>
+                  <Text style={[styles.scoreDetail, { color: colors.mutedForeground }]}>{r.correct}/{r.questions.length}</Text>
                 </View>
               </Pressable>
             ))}
@@ -191,14 +194,15 @@ export default function HomeScreen() {
   );
 }
 
-function ActionButton({ icon, label, sublabel, color, bg, onPress, loading }: any) {
+function ActionButton({ icon, label, sublabel, color, bg, onPress, loading, colors }: any) {
+  const dark = colors ? colors.scheme === 'dark' : false;
   return (
-    <Pressable style={[styles.actionBtn, { backgroundColor: '#fff', borderColor: '#E2E8F0' }]} onPress={onPress} disabled={loading}>
+    <Pressable style={[styles.actionBtn, { backgroundColor: dark ? colors.card : '#fff', borderColor: dark ? colors.border : '#E2E8F0' }]} onPress={onPress} disabled={loading}>
       <View style={[styles.actionIcon, { backgroundColor: bg }]}>
         <MaterialCommunityIcons name={icon} size={22} color={color} />
       </View>
-      <Text style={styles.actionLabel}>{label}</Text>
-      <Text style={styles.actionSub}>{sublabel}</Text>
+      <Text style={[styles.actionLabel, { color: dark ? colors.text : '#0C1A2E' }]}>{label}</Text>
+      <Text style={[styles.actionSub, { color: dark ? colors.mutedForeground : '#64748B' }]}>{sublabel}</Text>
     </Pressable>
   );
 }

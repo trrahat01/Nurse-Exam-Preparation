@@ -7,9 +7,12 @@ import { useExamStore } from '@/src/store/examStore';
 import { showInterstitial, showRewardedAd } from '@/src/lib/ads';
 import type { BadgeDef } from '@/src/lib/gamification';
 import AdBanner from '@/components/AdBanner';
+import { useColors } from '@/hooks/useColors';
 
 export default function ResultScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { result, clearExam, lastEarnedBadges, startExam } = useExamStore();
   const shownAd = useRef(false);
   const [badges, setBadges] = useState<BadgeDef[]>(lastEarnedBadges);
@@ -65,8 +68,8 @@ export default function ResultScreen() {
   };
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }} showsVerticalScrollIndicator={false}>
-      <View style={[styles.header, { paddingTop: insets.top + 20, backgroundColor: passed ? '#0891B2' : '#DC2626' }]}>
+    <ScrollView style={[styles.scroll, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }} showsVerticalScrollIndicator={false}>
+      <View style={[styles.header, { paddingTop: insets.top + 20, backgroundColor: passed ? (isDark ? colors.primary : '#0891B2') : '#DC2626' }]}>
         <View style={styles.scoreCircle}>
           <Text style={styles.scoreNum}>{percentage}</Text>
           <Text style={styles.scorePct}>%</Text>
@@ -96,25 +99,25 @@ export default function ResultScreen() {
 
       <View style={styles.content}>
         <View style={styles.statsGrid}>
-          <StatCard icon="check-circle-outline" iconColor="#059669" iconBg="#D1FAE5" label="Correct" value={correct} subtitle={`${questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0}%`} />
-          <StatCard icon="close-circle-outline" iconColor="#DC2626" iconBg="#FEE2E2" label="Wrong" value={wrong} />
-          <StatCard icon="minus-circle-outline" iconColor="#D97706" iconBg="#FEF3C7" label="Skipped" value={skipped} />
-          <StatCard icon="timer-outline" iconColor="#0891B2" iconBg="#E0F2FE" label="Time" value={`${mm}m ${ss}s`} />
+          <StatCard icon="check-circle-outline" iconColor="#059669" iconBg={isDark ? '#13452F' : '#D1FAE5'} label="Correct" value={correct} subtitle={`${questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0}%`} colors={colors} isDark={isDark} />
+          <StatCard icon="close-circle-outline" iconColor="#DC2626" iconBg={isDark ? '#3B1214' : '#FEE2E2'} label="Wrong" value={wrong} colors={colors} isDark={isDark} />
+          <StatCard icon="minus-circle-outline" iconColor="#D97706" iconBg={isDark ? '#3B2416' : '#FEF3C7'} label="Skipped" value={skipped} colors={colors} isDark={isDark} />
+          <StatCard icon="timer-outline" iconColor="#0891B2" iconBg={isDark ? '#1E3A5F' : '#E0F2FE'} label="Time" value={`${mm}m ${ss}s`} colors={colors} isDark={isDark} />
         </View>
 
-        <View style={styles.detailCard}>
+        <View style={[styles.detailCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           {[
-            ['Total Questions', questions.length, '#0C1A2E'],
-            ['Attempted', correct + wrong, '#0C1A2E'],
+            ['Total Questions', questions.length, isDark ? colors.text : '#0C1A2E'],
+            ['Attempted', correct + wrong, isDark ? colors.text : '#0C1A2E'],
             ['Score', `${correct} / ${questions.length}`, '#0891B2'],
             ['Percentage', `${percentage}%`, passed ? '#059669' : '#DC2626'],
-            ['Time Taken', `${mm} min ${ss} sec`, '#0C1A2E'],
+            ['Time Taken', `${mm} min ${ss} sec`, isDark ? colors.text : '#0C1A2E'],
             ['Result', passed ? 'PASS' : 'FAIL', passed ? '#059669' : '#DC2626'],
           ].map(([label, value, color], i) => (
             <React.Fragment key={String(label)}>
-              {i > 0 && <View style={styles.divider} />}
+              {i > 0 && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>{label}</Text>
+                <Text style={[styles.detailLabel, { color: colors.mutedForeground }]}>{label}</Text>
                 <Text style={[styles.detailValue, { color: color as string }]}>{value}</Text>
               </View>
             </React.Fragment>
@@ -152,15 +155,15 @@ export default function ResultScreen() {
   );
 }
 
-function StatCard({ icon, iconColor, iconBg, label, value, subtitle }: any) {
+function StatCard({ icon, iconColor, iconBg, label, value, subtitle, colors, isDark }: any) {
   return (
-    <View style={styles.statCard}>
+    <View style={[styles.statCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
       <View style={[styles.statIcon, { backgroundColor: iconBg }]}>
         <MaterialCommunityIcons name={icon} size={22} color={iconColor} />
       </View>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{label}</Text>
       <Text style={[styles.statValue, { color: iconColor }]}>{value}</Text>
-      {subtitle && <Text style={styles.statSub}>{subtitle}</Text>}
+      {subtitle && <Text style={[styles.statSub, { color: colors.mutedForeground }]}>{subtitle}</Text>}
     </View>
   );
 }

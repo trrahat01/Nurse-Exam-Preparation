@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useThemeStore } from '@/src/store/themeStore';
+import { useColors } from '@/hooks/useColors';
 import { clearQuestionHistory } from '@/src/lib/queries';
 import { getNotificationPref, setNotificationPref, scheduleDailyReminder, scheduleStreakReminder, cancelDailyReminder } from '@/src/lib/notifications';
 import { getStreak } from '@/src/lib/streak';
@@ -11,6 +12,8 @@ import Constants from 'expo-constants';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { theme, setTheme } = useThemeStore();
   const [notifOn, setNotifOn] = React.useState<boolean>(true);
 
@@ -49,88 +52,88 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#0C1A2E" />
+        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Settings</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Device</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>Device</Text>
+        <View style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           <View style={styles.row}>
             <MaterialCommunityIcons name="cellphone-check" size={22} color="#0891B2" />
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Progress saved on this device</Text>
-              <Text style={styles.rowSub}>No account needed — your streaks, results, bookmarks and settings stay on your device.</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Progress saved on this device</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>No account needed — your streaks, results, bookmarks and settings stay on your device.</Text>
             </View>
           </View>
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Study Tools</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>Study Tools</Text>
+        <View style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           <Pressable style={styles.row} onPress={handleResetSeen}>
             <MaterialCommunityIcons name="refresh" size={22} color="#D97706" />
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Reset Seen Questions</Text>
-              <Text style={styles.rowSub}>Allow old questions to appear again</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Reset Seen Questions</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>Allow old questions to appear again</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.mutedForeground} />
           </Pressable>
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Preferences</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>Preferences</Text>
+        <View style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           <View style={styles.row}>
             <MaterialCommunityIcons name="bell-outline" size={22} color="#64748B" />
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Daily Reminder</Text>
-              <Text style={styles.rowSub}>Get a nudge at 8 PM to keep your streak</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Daily Reminder</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>Get a nudge at 8 PM to keep your streak</Text>
             </View>
             <Switch
               value={notifOn}
               onValueChange={handleToggleNotifications}
-              trackColor={{ false: '#CBD5E1', true: '#0891B2' }}
+              trackColor={{ false: isDark ? '#334155' : '#CBD5E1', true: '#0891B2' }}
               thumbColor="#fff"
             />
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: isDark ? colors.border : '#F1F5F9' }]} />
           <View style={styles.row}>
             <MaterialCommunityIcons name="theme-light-dark" size={22} color="#64748B" />
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Dark Mode</Text>
-              <Text style={styles.rowSub}>{theme === 'dark' ? 'Dark theme enabled' : 'Light theme'}</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Dark Mode</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>{isDark ? 'Dark theme enabled' : 'Light theme'}</Text>
             </View>
             <Switch
-              value={theme === 'dark'}
+              value={isDark}
               onValueChange={(val) => setTheme(val ? 'dark' : 'light')}
-              trackColor={{ false: '#CBD5E1', true: '#0891B2' }}
+              trackColor={{ false: isDark ? '#334155' : '#CBD5E1', true: '#0891B2' }}
               thumbColor="#fff"
             />
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: isDark ? colors.border : '#F1F5F9' }]} />
           <Pressable style={styles.row} onPress={() => router.push('/reading')}>
             <MaterialCommunityIcons name="book-open-variant" size={22} color="#059669" />
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Reading Mode</Text>
-              <Text style={styles.rowSub}>Study notes with adjustable text size</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Reading Mode</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>Study notes with adjustable text size</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.mutedForeground} />
           </Pressable>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: isDark ? colors.border : '#F1F5F9' }]} />
           <Pressable style={styles.row} onPress={() => router.push('/about')}>
             <MaterialCommunityIcons name="information-outline" size={22} color="#64748B" />
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Disclaimer & Sources</Text>
-              <Text style={styles.rowSub}>Independent app disclaimer, official sources & support</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Disclaimer & Sources</Text>
+              <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>Independent app disclaimer, official sources & support</Text>
             </View>
-            <Text style={styles.rowValue}>v{Constants.expoConfig?.version ?? '1.6.0'}</Text>
+            <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>v{Constants.expoConfig?.version ?? '1.6.0'}</Text>
           </Pressable>
         </View>
       </View>

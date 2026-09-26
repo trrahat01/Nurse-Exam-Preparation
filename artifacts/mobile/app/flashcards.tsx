@@ -6,9 +6,12 @@ import { router } from 'expo-router';
 import { useBookmarkStore, type BookmarkItem } from '@/src/store/bookmarkStore';
 import { useAuthStore } from '@/src/store/authStore';
 import { fetchBookmarks } from '@/src/lib/queries';
+import { useColors } from '@/hooks/useColors';
 
 export default function FlashcardsScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { user } = useAuthStore();
   const { bookmarks: localBookmarks, loadBookmarks, loadServerBookmarks } = useBookmarkStore();
   const [cards, setCards] = useState<BookmarkItem[]>([]);
@@ -49,10 +52,10 @@ export default function FlashcardsScreen() {
   }
   if (!cards.length) {
     return (
-      <View style={styles.center}>
-        <MaterialCommunityIcons name="cards-outline" size={48} color="#CBD5E1" />
-        <Text style={styles.emptyTitle}>No Flashcards</Text>
-        <Text style={styles.emptySub}>Bookmark questions to turn them into flashcards.</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <MaterialCommunityIcons name="cards-outline" size={48} color={isDark ? colors.mutedForeground : '#CBD5E1'} />
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>No Flashcards</Text>
+        <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>Bookmark questions to turn them into flashcards.</Text>
         <Pressable style={styles.btn} onPress={() => router.back()}><Text style={styles.btnText}>Go Back</Text></Pressable>
       </View>
     );
@@ -60,22 +63,22 @@ export default function FlashcardsScreen() {
 
   const q = card!.question!;
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}><MaterialCommunityIcons name="arrow-left" size={24} color="#0C1A2E" /></Pressable>
-        <Text style={styles.title}>Flashcards</Text>
-        <Text style={styles.count}>{index + 1} / {cards.length}</Text>
+        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}><MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} /></Pressable>
+        <Text style={[styles.title, { color: colors.text }]}>Flashcards</Text>
+        <Text style={[styles.count, { color: colors.mutedForeground }]}>{index + 1} / {cards.length}</Text>
       </View>
 
-      <View style={styles.cardOuter}>
+      <View style={[styles.cardOuter, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
         <ScrollView style={styles.card} contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
-          <Text style={styles.q}>{q.category}</Text>
-          <Text style={styles.question}>{q.question}</Text>
+          <Text style={[styles.q, { color: isDark ? colors.primary : '#0891B2' }]}>{q.category}</Text>
+          <Text style={[styles.question, { color: colors.text }]}>{q.question}</Text>
           {revealed ? (
-            <View style={styles.answerBox}>
-              <Text style={styles.answerLabel}>Answer</Text>
-              <Text style={styles.answerText}>{optionAnswer(q)}</Text>
-              {q.explanation ? <Text style={styles.explanation}>{q.explanation}</Text> : null}
+            <View style={[styles.answerBox, { backgroundColor: isDark ? colors.secondary : '#E0F2FE' }]}>
+              <Text style={[styles.answerLabel, { color: isDark ? colors.secondaryForeground : '#0891B2' }]}>Answer</Text>
+              <Text style={[styles.answerText, { color: isDark ? colors.secondaryForeground : '#0C4A6E' }]}>{optionAnswer(q)}</Text>
+              {q.explanation ? <Text style={[styles.explanation, { color: isDark ? colors.secondaryForeground : '#0C4A6E' }]}>{q.explanation}</Text> : null}
             </View>
           ) : null}
         </ScrollView>

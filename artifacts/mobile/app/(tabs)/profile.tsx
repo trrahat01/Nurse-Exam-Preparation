@@ -9,9 +9,13 @@ import { getWrongAnswers } from '@/src/lib/wrongAnswers';
 import { getGamification, type GamificationState } from '@/src/lib/gamification';
 import { fetchTotalQuestionCount } from '@/src/lib/queries';
 import Constants from 'expo-constants';
+import { useColors } from '@/hooks/useColors';
+import * as Linking from 'expo-linking';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { savedResults } = useExamStore();
   const [streak, setStreak] = useState<StreakData>({ current: 0, best: 0, lastDate: null, studiedToday: false });
   const [wrongCount, setWrongCount] = useState(0);
@@ -50,119 +54,149 @@ export default function ProfileScreen() {
   const bestScore = totalExams > 0 ? Math.max(...savedResults.map(r => r.percentage)) : 0;
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-      <View style={[styles.header, { paddingTop: insets.top + 20, backgroundColor: '#0891B2' }]}>
+    <ScrollView style={[styles.scroll, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+      <View style={[styles.header, { paddingTop: insets.top + 20, backgroundColor: isDark ? colors.secondary : '#0891B2' }]}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initials || 'ST'}</Text>
+          <Text style={[styles.avatarText, { color: isDark ? colors.foreground : '#fff' }]}>{initials || 'ST'}</Text>
         </View>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.email}>{email}</Text>
+        <Text style={[styles.name, { color: isDark ? colors.foreground : '#fff' }]}>{name}</Text>
+        <Text style={[styles.email, { color: isDark ? colors.mutedForeground : '#BAE6FD' }]}>{email}</Text>
       </View>
 
-      <View style={styles.statsRow}>
+      <View style={[styles.statsRow, { backgroundColor: isDark ? colors.card : '#fff' }]}>
           <View style={styles.statItem}>
-            <Text style={styles.statVal}>{totalExams}</Text>
-            <Text style={styles.statLbl}>Tests Taken</Text>
+            <Text style={[styles.statVal, { color: colors.text }]}>{totalExams}</Text>
+            <Text style={[styles.statLbl, { color: colors.mutedForeground }]}>Tests Taken</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statVal}>{avgScore}%</Text>
-            <Text style={styles.statLbl}>Avg Score</Text>
+            <Text style={[styles.statVal, { color: colors.text }]}>{avgScore}%</Text>
+            <Text style={[styles.statLbl, { color: colors.mutedForeground }]}>Avg Score</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statVal}>{bestScore}%</Text>
-            <Text style={styles.statLbl}>Best Score</Text>
+            <Text style={[styles.statVal, { color: colors.text }]}>{bestScore}%</Text>
+            <Text style={[styles.statLbl, { color: colors.mutedForeground }]}>Best Score</Text>
           </View>
       </View>
 
       {/* Daily streak — motivating, works for guests too */}
-      <View style={styles.streakCard}>
+      <View style={[styles.streakCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: isDark ? colors.border : '#FDE68A' }]}>
         <View style={styles.streakItem}>
           <MaterialCommunityIcons name={streak.studiedToday ? 'fire' : 'fire-alert'} size={26} color="#F97316" />
-          <Text style={styles.streakVal}>{streak.current}</Text>
-          <Text style={styles.streakLbl}>Day Streak</Text>
+          <Text style={[styles.streakVal, { color: colors.text }]}>{streak.current}</Text>
+          <Text style={[styles.streakLbl, { color: colors.mutedForeground }]}>Day Streak</Text>
         </View>
         <View style={styles.streakDivider} />
         <View style={styles.streakItem}>
           <MaterialCommunityIcons name="trophy-outline" size={26} color="#D97706" />
-          <Text style={styles.streakVal}>{streak.best}</Text>
-          <Text style={styles.streakLbl}>Best Streak</Text>
+          <Text style={[styles.streakVal, { color: colors.text }]}>{streak.best}</Text>
+          <Text style={[styles.streakLbl, { color: colors.mutedForeground }]}>Best Streak</Text>
         </View>
         <View style={styles.streakDivider} />
         <View style={styles.streakItem}>
           <MaterialCommunityIcons name={streak.studiedToday ? 'check-circle' : 'calendar-today'} size={26} color={streak.studiedToday ? '#059669' : '#64748B'} />
-          <Text style={styles.streakVal}>{streak.studiedToday ? 'Done' : '-'}</Text>
-          <Text style={styles.streakLbl}>Today's Quiz</Text>
+          <Text style={[styles.streakVal, { color: colors.text }]}>{streak.studiedToday ? 'Done' : '-'}</Text>
+          <Text style={[styles.streakLbl, { color: colors.mutedForeground }]}>Today's Quiz</Text>
         </View>
       </View>
 
       {/* Weak Topics / wrong-answer bank + Flashcards */}
       <View style={styles.quickRow}>
-        <Pressable style={styles.quickCard} onPress={handleWeakQuiz}>
+        <Pressable style={[styles.quickCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={handleWeakQuiz}>
           <MaterialCommunityIcons name="rewind-outline" size={24} color="#DC2626" />
-          <Text style={styles.quickLabel}>Weak Topics</Text>
-          <Text style={styles.quickSub}>{wrongCount} to review</Text>
+          <Text style={[styles.quickLabel, { color: colors.text }]}>Weak Topics</Text>
+          <Text style={[styles.quickSub, { color: colors.mutedForeground }]}>{wrongCount} to review</Text>
         </Pressable>
-        <Pressable style={styles.quickCard} onPress={() => router.push('/flashcards')}>
+        <Pressable style={[styles.quickCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={() => router.push('/flashcards')}>
           <MaterialCommunityIcons name="cards-outline" size={24} color="#0891B2" />
-          <Text style={styles.quickLabel}>Flashcards</Text>
-          <Text style={styles.quickSub}>Review bookmarks</Text>
+          <Text style={[styles.quickLabel, { color: colors.text }]}>Flashcards</Text>
+          <Text style={[styles.quickSub, { color: colors.mutedForeground }]}>Review bookmarks</Text>
         </Pressable>
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.sectionTitle}>ACCOUNT</Text>
-        <View style={styles.section}>
+      <View style={[styles.content, { gap: 8 }]}>
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>ACCOUNT</Text>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           <Pressable style={styles.menuItem} onPress={() => router.push('/bookmarks')}>
             <View style={styles.menuLeft}>
               <MaterialCommunityIcons name="bookmark-outline" size={20} color="#0891B2" />
-              <Text style={styles.menuLabel}>Bookmarked Questions</Text>
+              <Text style={[styles.menuLabel, { color: colors.text }]}>Bookmarked Questions</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.mutedForeground} />
           </Pressable>
           <View style={styles.divider} />
           <Pressable style={styles.menuItem} onPress={() => router.push('/level' as any)}>
             <View style={styles.menuLeft}>
               <MaterialCommunityIcons name="trophy-outline" size={20} color="#0891B2" />
-              <Text style={styles.menuLabel}>Level & Badges</Text>
+              <Text style={[styles.menuLabel, { color: colors.text }]}>Level & Badges</Text>
             </View>
-            <Text style={styles.menuValue}>Lv {gam.level} - {gam.xp} XP</Text>
+            <Text style={[styles.menuValue, { color: colors.mutedForeground }]}>Lv {gam.level} - {gam.xp} XP</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.sectionTitle}>ABOUT</Text>
-        <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>COMMUNITY & LINKS</Text>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
+          <Pressable style={styles.menuItem} onPress={() => Linking.openURL('https://play.google.com/store/apps/details?id=com.nurseexampreparation.nursing')}>
+            <View style={styles.menuLeft}>
+              <MaterialCommunityIcons name="google-play" size={20} color="#0891B2" />
+              <Text style={[styles.menuLabel, { color: colors.text }]}>Rate on Google Play</Text>
+              <Text style={[styles.menuValue, { color: colors.mutedForeground }]}>Review the app</Text>
+            </View>
+            <MaterialCommunityIcons name="open-in-new" size={20} color={colors.mutedForeground} />
+          </Pressable>
+          <View style={styles.divider} />
+          <Pressable style={styles.menuItem} onPress={() => Linking.openURL('https://www.facebook.com/profile.php?id=61594250881')}>
+            <View style={styles.menuLeft}>
+              <MaterialCommunityIcons name="facebook" size={20} color="#1877F2" />
+              <Text style={[styles.menuLabel, { color: colors.text }]}>Follow on Facebook</Text>
+              <Text style={[styles.menuValue, { color: colors.mutedForeground }]}>News, updates & tips</Text>
+            </View>
+            <MaterialCommunityIcons name="open-in-new" size={20} color={colors.mutedForeground} />
+          </Pressable>
+          <View style={styles.divider} />
+          <Pressable style={styles.menuItem} onPress={() => Linking.openURL('https://play.google.com/store/apps/developer?id=MT+Core+Studio')}>
+            <View style={styles.menuLeft}>
+              <MaterialCommunityIcons name="apps" size={20} color="#059669" />
+              <Text style={[styles.menuLabel, { color: colors.text }]}>MT Core Studio</Text>
+              <Text style={[styles.menuValue, { color: colors.mutedForeground }]}>Other apps</Text>
+            </View>
+            <MaterialCommunityIcons name="open-in-new" size={20} color={colors.mutedForeground} />
+          </Pressable>
+        </View>
+
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>ABOUT</Text>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
           <View style={styles.menuItem}>
             <View style={styles.menuLeft}>
               <MaterialCommunityIcons name="information-outline" size={20} color="#0891B2" />
-              <Text style={styles.menuLabel}>App Version</Text>
+              <Text style={[styles.menuLabel, { color: colors.text }]}>App Version</Text>
             </View>
-            <Text style={styles.menuValue}>{Constants.expoConfig?.version ?? '1.6.0'}</Text>
+            <Text style={[styles.menuValue, { color: colors.mutedForeground }]}>{Constants.expoConfig?.version ?? '1.6.0'}</Text>
           </View>
           <View style={styles.divider} />
           <Pressable style={styles.menuItem} onPress={() => Alert.alert('About Us', `Nurse Exam Preparation\n\n${totalMcqs > 0 ? totalMcqs.toLocaleString() : 'Thousands of'} MCQs for all nursing exams\n\nFor any questions, issues, or suggestions, contact us at:\nmtcorestudio@gmail.com`)}>
             <View style={styles.menuLeft}>
               <MaterialCommunityIcons name="help-circle-outline" size={20} color="#0891B2" />
-              <Text style={styles.menuLabel}>About Us</Text>
+              <Text style={[styles.menuLabel, { color: colors.text }]}>About Us</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.mutedForeground} />
           </Pressable>
           <View style={styles.divider} />
           <Pressable style={styles.menuItem} onPress={() => Alert.alert('Contact Us', 'For any questions, issues, or suggestions, please email us at:\n\nmtcorestudio@gmail.com\n\nWe typically respond within 24-48 hours.')}>
             <View style={styles.menuLeft}>
               <MaterialCommunityIcons name="email-outline" size={20} color="#0891B2" />
-              <Text style={styles.menuLabel}>Contact Us</Text>
+              <Text style={[styles.menuLabel, { color: colors.text }]}>Contact Us</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.mutedForeground} />
           </Pressable>
         </View>
 
         <View style={[styles.authButtons, { marginTop: 16 }]}>
           <View style={styles.menuItem}>
             <View style={styles.menuLeft}>
-              <MaterialCommunityIcons name="shield-lock-outline" size={18} color="#64748B" />
-              <Text style={[styles.menuLabel, { color: '#64748B' }]}>No account needed — all progress is saved on this device with Google Play Games sign-in removed.</Text>
+              <MaterialCommunityIcons name="shield-lock-outline" size={18} color={colors.mutedForeground} />
+              <Text style={[styles.menuLabel, { color: colors.mutedForeground }]}>No account needed — all progress is saved on this device with Google Play Games sign-in removed.</Text>
             </View>
           </View>
         </View>

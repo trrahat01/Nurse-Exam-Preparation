@@ -5,9 +5,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
 import { fetchDailyQuestions } from '@/src/lib/queries';
+import { useColors } from '@/hooks/useColors';
 
 export default function DailyScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
   const { startExam } = useExamStore();
   const [loading, setLoading] = useState<20 | 50 | 100 | 'challenge' | null>(null);
 
@@ -47,29 +50,29 @@ export default function DailyScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#0C1A2E" />
+        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Daily Practice</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Daily Practice</Text>
       </View>
       <View style={styles.content}>
-        <Pressable style={styles.card} onPress={() => startDaily(20)} disabled={loading !== null}>
+        <Pressable style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={() => startDaily(20)} disabled={loading !== null}>
           {loading === 20 ? <ActivityIndicator color="#0891B2" /> : <MaterialCommunityIcons name="numeric-1-box-outline" size={32} color="#0891B2" />}
-          <View><Text style={styles.cardTitle}>Quick Practice</Text><Text style={styles.cardSub}>20 Random Questions</Text></View>
+          <View><Text style={[styles.cardTitle, { color: colors.text }]}>Quick Practice</Text><Text style={[styles.cardSub, { color: colors.mutedForeground }]}>20 Random Questions</Text></View>
         </Pressable>
-        <Pressable style={styles.card} onPress={() => startDaily(50)} disabled={loading !== null}>
+        <Pressable style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={() => startDaily(50)} disabled={loading !== null}>
           {loading === 50 ? <ActivityIndicator color="#059669" /> : <MaterialCommunityIcons name="numeric-2-box-outline" size={32} color="#059669" />}
-          <View><Text style={styles.cardTitle}>Medium Practice</Text><Text style={styles.cardSub}>50 Random Questions</Text></View>
+          <View><Text style={[styles.cardTitle, { color: colors.text }]}>Medium Practice</Text><Text style={[styles.cardSub, { color: colors.mutedForeground }]}>50 Random Questions</Text></View>
         </Pressable>
-        <Pressable style={styles.card} onPress={() => startDaily(100)} disabled={loading !== null}>
+        <Pressable style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={() => startDaily(100)} disabled={loading !== null}>
           {loading === 100 ? <ActivityIndicator color="#D97706" /> : <MaterialCommunityIcons name="numeric-3-box-outline" size={32} color="#D97706" />}
-          <View><Text style={styles.cardTitle}>Full Practice</Text><Text style={styles.cardSub}>100 Random Questions</Text></View>
+          <View><Text style={[styles.cardTitle, { color: colors.text }]}>Full Practice</Text><Text style={[styles.cardSub, { color: colors.mutedForeground }]}>100 Random Questions</Text></View>
         </Pressable>
-        <Pressable style={styles.card} onPress={startChallenge} disabled={loading !== null}>
+        <Pressable style={[styles.card, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={startChallenge} disabled={loading !== null}>
           {loading === 'challenge' ? <ActivityIndicator color="#7C3AED" /> : <MaterialCommunityIcons name="trophy-outline" size={32} color="#7C3AED" />}
-          <View><Text style={styles.cardTitle}>Daily Challenge</Text><Text style={styles.cardSub}>Complete today's challenge</Text></View>
+          <View><Text style={[styles.cardTitle, { color: colors.text }]}>Daily Challenge</Text><Text style={[styles.cardSub, { color: colors.mutedForeground }]}>Complete today's challenge</Text></View>
         </Pressable>
       </View>
     </View>
