@@ -4,13 +4,16 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { useExamStore } from '@/src/store/examStore';
-import { getStreak, type StreakData } from '@/src/lib/streak';
+import { getStreak, getStreakFreeze, consumeStreakFreeze, type StreakData, type StreakFreezeInfo } from '@/src/lib/streak';
 import { getWrongAnswers } from '@/src/lib/wrongAnswers';
+import { getSmartReviewCount, getSmartReviewQueue } from '@/src/lib/spacedRepetition';
 import { getGamification, type GamificationState } from '@/src/lib/gamification';
 import { fetchTotalQuestionCount } from '@/src/lib/queries';
 import Constants from 'expo-constants';
 import { useColors } from '@/hooks/useColors';
 import * as Linking from 'expo-linking';
+import * as Haptics from 'expo-haptics';
+import { showRewardedAd } from '@/src/lib/ads';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -18,7 +21,9 @@ export default function ProfileScreen() {
   const isDark = colors.scheme === 'dark';
   const { savedResults } = useExamStore();
   const [streak, setStreak] = useState<StreakData>({ current: 0, best: 0, lastDate: null, studiedToday: false });
+  const [freeze, setFreeze] = useState<StreakFreezeInfo | null>(null);
   const [wrongCount, setWrongCount] = useState(0);
+  const [reviewDue, setReviewDue] = useState(0);
   const [gam, setGam] = useState<GamificationState>({ xp: 0, level: 1, xpIntoLevel: 0, xpForNextLevel: 250, progressPct: 0, earnedBadges: [] });
   const [totalMcqs, setTotalMcqs] = useState(0);
   const { startExam } = useExamStore();
@@ -27,16 +32,55 @@ export default function ProfileScreen() {
   useFocusEffect(
     React.useCallback(() => {
       getStreak().then(setStreak);
+      getStreakFreeze().then(setFreeze);
       getWrongAnswers().then(w => setWrongCount(w.length));
+      getSmartReviewCount().then(setReviewDue);
       getGamification().then(setGam);
       fetchTotalQuestionCount().then(setTotalMcqs).catch(() => setTotalMcqs(0));
     }, [])
   );
 
+  const handleRestoreStreak = () => {
+    if (!freeze?.available) return;
+    Alert.alert(
+      'Restore your streak',
+      `You missed a day — watch a short ad to restore your ${freeze.frozenStreak}-day streak.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Watch Ad',
+          onPress: async () => {
+            const rewarded = await showRewardedAd();
+            if (rewarded) {
+              const restored = await consumeStreakFreeze();
+              setStreak(restored);
+              setFreeze(null);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+            } else {
+              Alert.alert('Ad Not Available', 'Please try again when a network/ad is available.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleWeakQuiz = async () => {
     const wrong = await getWrongAnswers();
     if (!wrong.length) { Alert.alert('No Weak Topics', 'Answer questions wrong in practice to build your Weak Topics list.'); return; }
     const questions: any[] = wrong.map(w => ({
+      id: w.id, category: w.category, question: w.question,
+      option_a: w.option_a, option_b: w.option_b, option_c: w.option_c, option_d: w.option_d,
+      correct_answer: w.correct_answer, explanation: w.explanation,
+    }));
+    startExam(questions, 'practice');
+    router.push('/exam');
+  };
+
+  const handleSmartReview = async () => {
+    const q = await getSmartReviewQueue();
+    if (!q.length) { Alert.alert('Nothing Due', 'No weak topics are due for review today. Keep practicing!'); return; }
+    const questions: any[] = q.map(w => ({
       id: w.id, category: w.category, question: w.question,
       option_a: w.option_a, option_b: w.option_b, option_c: w.option_c, option_d: w.option_d,
       correct_answer: w.correct_answer, explanation: w.explanation,
@@ -101,12 +145,35 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Weak Topics / wrong-answer bank + Flashcards */}
+      {/* Streak Restore — watch a rewarded ad to bring back a broken streak (max 3/month) */}
+      {freeze?.available && freeze.frozenStreak > 0 && (
+        <Pressable
+          style={[styles.restoreCard, { backgroundColor: isDark ? colors.card : '#FFF7ED', borderColor: '#FDBA74' }]}
+          onPress={handleRestoreStreak}
+        >
+          <MaterialCommunityIcons name="fire-off" size={22} color="#EA580C" />
+          <View style={styles.restoreTextWrap}>
+            <Text style={[styles.restoreTitle, { color: colors.text }]}>Restore your {freeze.frozenStreak}-day streak</Text>
+            <Text style={[styles.restoreSub, { color: colors.mutedForeground }]}>You missed a day. Watch a quick ad to keep it alive.</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#EA580C" />
+        </Pressable>
+      )}
+
+      {/* Weak Topics / wrong-answer bank + Smart Review + Flashcards */}
       <View style={styles.quickRow}>
         <Pressable style={[styles.quickCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={handleWeakQuiz}>
           <MaterialCommunityIcons name="rewind-outline" size={24} color="#DC2626" />
           <Text style={[styles.quickLabel, { color: colors.text }]}>Weak Topics</Text>
           <Text style={[styles.quickSub, { color: colors.mutedForeground }]}>{wrongCount} to review</Text>
+        </Pressable>
+        <Pressable style={[styles.quickCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={handleSmartReview}>
+          <View style={styles.reviewBadgeWrap}>
+            <MaterialCommunityIcons name="brain" size={24} color="#7C3AED" />
+            {reviewDue > 0 && <View style={styles.reviewBadge}><Text style={styles.reviewBadgeText}>{reviewDue}</Text></View>}
+          </View>
+          <Text style={[styles.quickLabel, { color: colors.text }]}>Smart Review</Text>
+          <Text style={[styles.quickSub, { color: colors.mutedForeground }]}>{reviewDue > 0 ? `${reviewDue} due today` : 'Nothing due'}</Text>
         </Pressable>
         <Pressable style={[styles.quickCard, { backgroundColor: isDark ? colors.card : '#fff', borderColor: colors.border }]} onPress={() => router.push('/flashcards')}>
           <MaterialCommunityIcons name="cards-outline" size={24} color="#0891B2" />
@@ -220,10 +287,17 @@ const styles = StyleSheet.create({
   streakVal: { fontSize: 20, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
   streakLbl: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2, textAlign: 'center' },
   streakDivider: { width: 1, backgroundColor: '#F1F5F9' },
+  restoreCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginBottom: 8, borderRadius: 16, borderWidth: 1, padding: 14 },
+  restoreTextWrap: { flex: 1 },
+  restoreTitle: { fontSize: 14, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
+  restoreSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2 },
   quickRow: { flexDirection: 'row', gap: 12, marginHorizontal: 16, marginTop: 4 },
   quickCard: { flex: 1, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', padding: 16, gap: 4 },
   quickLabel: { fontSize: 15, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
   quickSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#64748B' },
+  reviewBadgeWrap: { flexDirection: 'row', alignItems: 'center' },
+  reviewBadge: { marginLeft: 6, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: '#7C3AED', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  reviewBadgeText: { color: '#fff', fontSize: 10, fontFamily: 'Inter_700Bold' },
   statItem: { flex: 1, alignItems: 'center', paddingVertical: 16 },
   statVal: { fontSize: 20, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
   statLbl: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2 },

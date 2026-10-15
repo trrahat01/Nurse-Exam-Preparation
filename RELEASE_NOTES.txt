@@ -1,0 +1,9 @@
+Version: 2.5.0
+
+What's New:
+- 🚀 Huge update to our question bank! We've added over 1,200+ new MCQs.
+- 📚 Expanded coverage across key subjects: Nursing, General Knowledge, English, and Bangla.
+- 🎯 Improved content variety to better help you prepare for your exams.
+- ⚡ General performance improvements for a smoother study experience.
+
+Thank you for using Nurse Exam Preparation! Good luck with your studies.

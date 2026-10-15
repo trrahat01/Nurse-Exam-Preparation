@@ -1,3 +1,17 @@
+# Release Notes — v2.4.0
+
+## What's New
+- 🧠 **Smart Review** — a spaced-repetition study queue built on your Weak Topics. Missed questions are scheduled (1 day → 3 → 7 → 15), and Home shows a "Smart Review" card whenever questions are due today. Answer correctly to level up the interval; miss it and it resets. Turn forgetting into daily short reviews.
+- 🔥 **Streak Freeze (restore via rewarded ad)** — if you miss a study day, your streak is automatically snapshot. Watch a short rewarded ad on your Profile to bring back your streak (up to 3 freezes).
+- 🎯 **Rewarded ads reliability fix** — rewarded ads are now **preloaded in the background** at app launch and kept warm, so "Watch Ad" plays instantly instead of failing to load on the spot. Also auto-reloads a fresh ad after each watch.
+
+## Technical
+- Version 2.4.0 · version code 61 · build number 61
+- New `src/lib/spacedRepetition.ts` (SM-2-lite scheduler), `preloadRewardedAd()` in `src/lib/ads.ts`, streak freeze in `src/lib/streak.ts`
+- Smart Review integrated into `examStore.submitExam`, Home screen & Profile
+
+---
+
 # Release Notes — v2.3.7
 
 ## What's New

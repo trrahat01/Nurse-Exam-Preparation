@@ -20,6 +20,41 @@ if (!IS_EXPO_GO) {
 }
 
 const DAILY_REMINDER_ID = 'daily-reminder';
+const STREAK_REMINDER_ID = 'streak-reminder';
+const REMINDER_TIME_KEY = 'reminder_time';
+const NOTIF_PREF_KEY = 'notifications_enabled';
+
+/**
+ * Gets the stored reminder time (defaults to 20:00).
+ */
+export async function getReminderTime(): Promise<{ hour: number; minute: number }> {
+  try {
+    const raw = await AsyncStorage.getItem(REMINDER_TIME_KEY);
+    if (raw) {
+      const parts = raw.split(':');
+      if (parts.length === 2) {
+        const hour = parseInt(parts[0], 10);
+        const minute = parseInt(parts[1], 10);
+        if (!isNaN(hour) && !isNaN(minute) && hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+          return { hour, minute };
+        }
+      }
+    }
+  } catch { /* ignore */ }
+  return { hour: 20, minute: 0 };
+}
+
+/**
+ * Stores the reminder time and reschedules reminders if notifications are enabled.
+ */
+export async function setReminderTime(hour: number, minute: number): Promise<void> {
+  await AsyncStorage.setItem(REMINDER_TIME_KEY, `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+  const enabled = await getNotificationPref();
+  if (enabled) {
+    await scheduleDailyReminder();
+  }
+}
+
 
 /**
  * Creates Android notification channels (iOS ignores these).
@@ -48,14 +83,14 @@ export async function ensureNotificationsPermission(): Promise<boolean> {
 }
 
 /**
- * Schedules a repeating daily reminder (defaults to 8:00 PM) so the user gets
- * at least one notification every day for reading/practice.
+ * Schedules a repeating daily reminder using the stored time.
  */
-export async function scheduleDailyReminder(hour = 20, minute = 0): Promise<void> {
+export async function scheduleDailyReminder(): Promise<void> {
   try {
     await Notifications.cancelScheduledNotificationAsync(DAILY_REMINDER_ID);
   } catch {}
   try {
+    const { hour, minute } = await getReminderTime();
     await Notifications.scheduleNotificationAsync({
       identifier: DAILY_REMINDER_ID,
       content: {
@@ -132,6 +167,11 @@ export async function getNotificationPref(): Promise<boolean> {
 /** Store the user's notification preference. */
 export async function setNotificationPref(on: boolean): Promise<void> {
   await AsyncStorage.setItem(NOTIF_PREF_KEY, on ? 'true' : 'false');
+  if (on) {
+    await scheduleDailyReminder();
+  } else {
+    await cancelDailyReminder();
+  }
 }
 
 /**
@@ -141,6 +181,7 @@ export async function setNotificationPref(on: boolean): Promise<void> {
 export async function scheduleStreakReminder(streak: number): Promise<void> {
   try { await Notifications.cancelScheduledNotificationAsync(STREAK_REMINDER_ID); } catch {}
   try {
+    const { hour, minute } = await getReminderTime();
     await Notifications.scheduleNotificationAsync({
       identifier: STREAK_REMINDER_ID,
       content: {
@@ -148,7 +189,7 @@ export async function scheduleStreakReminder(streak: number): Promise<void> {
         body: `Day ${streak}: open the app and answer your 20 daily questions to keep the streak alive!`,
         sound: true,
       },
-      trigger: { channelId: 'daily', hour: 20, minute: 0, repeats: true } as any,
+      trigger: { channelId: 'daily', hour, minute, repeats: true } as any,
     });
   } catch (e) {
     console.warn('scheduleStreakReminder failed:', e);

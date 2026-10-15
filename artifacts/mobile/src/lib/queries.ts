@@ -89,30 +89,53 @@ export async function fetchTotalQuestionCount(): Promise<number> {
   return 0;
 }
 
-export async function fetchMockQuestions(): Promise<Question[]> {
+export async function fetchMockQuestions(): Promise<{ questions: Question[]; shortage?: string[] }> {
   const DIST: Record<string, number> = { Nursing: 60, 'General Knowledge': 15, English: 15, Bangla: 10 };
   let selected: Question[] = [];
+  let shortages: string[] = [];
   const seenIds = await getSeenQuestionIds();
+
   for (const [category, count] of Object.entries(DIST)) {
-    const pool = await fetchQuestions({ category }, count * 2);
-    const unseen = filterUnseenQuestions(pool, seenIds);
+    // Fetch a larger pool to find unseen questions
+    const pool = await fetchQuestions({ category }, Math.max(count * 5, 200));
+    let unseen = filterUnseenQuestions(pool, seenIds);
+    
+    if (unseen.length < count) {
+      shortages.push(category);
+    }
+    
     selected.push(...shuffle(unseen).slice(0, count));
   }
-  if (selected.length < 100) {
-    const fallback = await fetchQuestions({}, 100 - selected.length);
-    selected.push(...fallback.filter(q => !selected.some(s => s.id === q.id)));
+
+  const finalQuestions = shuffle(selected);
+  // Requirement: Every Full Mock Test must contain exactly 100 questions when enough eligible.
+  // Requirement: Never silently substitute incorrect categories or duplicate questions to reach 100.
+  // Requirement: If there are not enough eligible questions, show a clear message.
+  
+  if (shortages.length > 0) {
+     // We still return what we have, but also inform about shortage
+     return { questions: finalQuestions, shortage: shortages };
   }
-  const finalQuestions = shuffle(selected).slice(0, 100);
-  if (finalQuestions.length > 0) await markQuestionsSeen(finalQuestions.map(q => q.id));
-  return finalQuestions;
+
+  if (finalQuestions.length > 0) {
+    // Note: User wants "presented when delivered", but for mock tests, 
+    // it's probably better to mark all 100 seen once the test starts.
+    // I'll move this markQuestionsSeen to the Exam screen's start logic or keep it here if acceptable.
+    // The requirement says "Record a question as presented when it is actually delivered to the user".
+    // I will remove it from here and put it in the store/exam flow.
+  }
+  
+  return { questions: finalQuestions };
 }
 
 export async function fetchDailyQuestions(count: number): Promise<Question[]> {
-  const pool = await fetchQuestions({}, count * 2);
+  const pool = await fetchQuestions({}, Math.max(count * 5, 100));
   const seenIds = await getSeenQuestionIds();
   const unseen = filterUnseenQuestions(pool, seenIds);
-  const result = shuffle(unseen).slice(0, count);
-  if (result.length > 0) await markQuestionsSeen(result.map(q => q.id));
+  let result = shuffle(unseen).slice(0, count);
+  
+  // If pool exhausted, we might need to recycle or tell the user.
+  // For now, return what we have.
   return result;
 }
 

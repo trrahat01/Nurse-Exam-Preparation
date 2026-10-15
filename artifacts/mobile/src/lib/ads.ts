@@ -128,9 +128,69 @@ function getTestRewardedId(): string {
 }
 
 /**
+ * Preloaded rewarded ad (global singleton).
+ *
+ * Calling `ad.load()` right at the moment the user taps "Watch Ad" frequently
+ * fails (no fill at that instant / slow network), which is why rewarded ads
+ * often appear "not showing" while banners/interstitials render (`BannerAd`
+ * auto-loads; on-demand interstitials are lucky to have cached inventory).
+ * Google's recommended pattern — and the reliable one — is to PRELOAD the ad
+ * in the background and keep it warm. We do exactly that here.
+ */
+let preloadedRewarded: any = null;
+let preloadedRewardedReady = false;
+let preloadedRewardedUnitId: string | null = null;
+
+/** Destroy any existing preloaded rewarded ad (safe to call anytime). */
+function destroyPreloadedRewarded(): void {
+  try {
+    preloadedRewarded?.removeAllAdEventListeners?.();
+  } catch {
+    /* ignore */
+  }
+  preloadedRewarded = null;
+  preloadedRewardedReady = false;
+  preloadedRewardedUnitId = null;
+}
+
+/**
+ * Start (or restart) the background preload of a rewarded ad.
+ * Safe to call at app start and after each rewarded ad is closed.
+ */
+export function preloadRewardedAd(): void {
+  if (!shouldShowAds()) return;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const gma = require('react-native-google-mobile-ads') as any;
+  if (!gma?.RewardedAd) return;
+  try {
+    destroyPreloadedRewarded();
+    const unitId = getRewardedAdUnitId();
+    const ad = gma.RewardedAd.createForAdRequest(unitId);
+    ad.addAdEventListener(gma.AdEventType.LOADED, () => {
+      preloadedRewardedReady = true;
+    });
+    ad.addAdEventListener(gma.AdEventType.ERROR, () => {
+      preloadedRewardedReady = false;
+    });
+    ad.addAdEventListener(gma.RewardedAdEventType.CLOSED, () => {
+      // Auto-reload a fresh ad for the next use.
+      destroyPreloadedRewarded();
+      setTimeout(() => preloadRewardedAd(), 500);
+    });
+    preloadedRewarded = ad;
+    preloadedRewardedReady = false;
+    preloadedRewardedUnitId = unitId;
+    ad.load();
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
  * Shows a rewarded ad that grants a reward ONLY if the user watches it fully.
  * Resolves `true` when the reward is earned, `false` if the ad didn't load,
  * was skipped/closed early, or is unavailable (Expo Go / no network).
+ * Prefers the preloaded ad (instant); falls back to a fresh on-demand load.
  * Never blocks the user — it resolves within ~30s max.
  */
 export function showRewardedAd(): Promise<boolean> {
@@ -140,34 +200,48 @@ export function showRewardedAd(): Promise<boolean> {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const gma = require('react-native-google-mobile-ads') as any;
       const { RewardedAd, RewardedAdEventType, AdEventType } = gma;
+
       const candidates = ALLOW_TEST_FALLBACK && !USE_TEST_ADS
         ? [REAL_ADS.rewarded, getTestRewardedId()]
         : [getRewardedAdUnitId()];
 
       let idx = 0;
       const attempt = (unitId: string) => {
-        const ad = RewardedAd.createForAdRequest(unitId);
+        // Reuse the warm preloaded ad when it was loaded for this same unit.
+        const isWarm = preloadedRewarded && preloadedRewardedReady &&
+          preloadedRewardedUnitId === unitId;
+        const ad = isWarm ? preloadedRewarded : RewardedAd.createForAdRequest(unitId);
         let rewarded = false;
         let settled = false;
+        let timer: ReturnType<typeof setTimeout> | null = null;
         const finish = (v: boolean) => {
           if (settled) return;
           settled = true;
-          clearTimeout(timer);
+          if (timer) clearTimeout(timer);
           try { ad.removeAllAdEventListeners?.(); } catch { /* ignore */ }
+          destroyPreloadedRewarded();
           resolveOuter(v);
+          // Warm up a fresh rewarded ad for the next use.
+          setTimeout(() => preloadRewardedAd(), 700);
         };
         // Rewarded event fires when the user fully watches (earns the reward).
-        const onReward = ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => { rewarded = true; });
-        const onLoaded = ad.addAdEventListener(AdEventType.LOADED, () => { try { ad.show(); } catch { finish(false); } });
-        const onError = ad.addAdEventListener(AdEventType.ERROR, () => {
+        ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => { rewarded = true; });
+        ad.addAdEventListener(AdEventType.LOADED, () => { try { ad.show(); } catch { finish(false); } });
+        ad.addAdEventListener(AdEventType.ERROR, () => {
+          destroyPreloadedRewarded();
           // Real ad failed -> try next candidate (test ad) if available.
           if (idx + 1 < candidates.length) { idx += 1; attempt(candidates[idx]); }
           else finish(rewarded);
         });
-        const onClosed = ad.addAdEventListener(AdEventType.CLOSED, () => finish(rewarded));
+        ad.addAdEventListener(AdEventType.CLOSED, () => finish(rewarded));
         // If the ad can't load in 30s, give up.
-        const timer = setTimeout(() => finish(false), 30000);
-        ad.load();
+        timer = setTimeout(() => finish(false), 30000);
+        // Only load when we are NOT reusing the already-warm preloaded ad.
+        if (isWarm) {
+          try { ad.show(); } catch { finish(false); }
+        } else {
+          ad.load();
+        }
       };
       attempt(candidates[0]);
     } catch { return resolveOuter(false); }

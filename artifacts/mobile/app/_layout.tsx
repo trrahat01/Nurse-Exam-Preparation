@@ -10,6 +10,7 @@ import { useAuthStore } from '@/src/store/authStore';
 import { useBookmarkStore } from '@/src/store/bookmarkStore';
 import { useThemeStore } from '@/src/store/themeStore';
 import { setupNotifications } from '@/src/lib/notifications';
+import { preloadRewardedAd } from '@/src/lib/ads';
 import AppSplash from '@/components/AppSplash';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { logAppOpen } from '@/src/lib/analytics';
@@ -33,6 +34,8 @@ export default function RootLayout() {
     loadBookmarks();
     loadTheme();
     setupNotifications();
+    // Preload a rewarded ad in the background so "Watch Ad" actions show instantly.
+    preloadRewardedAd();
     // Track app open for daily active users (Firebase Analytics).
     logAppOpen('launch');
   }, []);

@@ -3,7 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ExamSession, ExamResult, ExamType, Question, AnswerOption } from '@/src/types';
 import { markStudied } from '@/src/lib/streak';
 import { addWrongAnswer, removeWrongAnswer } from '@/src/lib/wrongAnswers';
+import { recordReview, ensureSchedule, clearSchedule } from '@/src/lib/spacedRepetition';
 import { awardGamification, type BadgeDef } from '@/src/lib/gamification';
+import { markQuestionsSeen } from '@/src/lib/seenQuestions';
+
 
 const EXAM_TIME: Record<ExamType, number> = {
   mock: 3600,
@@ -41,6 +44,10 @@ export const useExamStore = create<ExamState>((set, get) => ({
 
   startExam: (questions, type, timeLimit) => {
     const limit = timeLimit ?? EXAM_TIME[type];
+    // Record questions as presented when delivered to the user.
+    if (questions.length > 0) {
+      void markQuestionsSeen(questions.map(q => q.id));
+    }
     set({
       session: {
         examType: type,
@@ -113,18 +120,26 @@ export const useExamStore = create<ExamState>((set, get) => ({
         set({ lastEarnedBadges: award.newlyEarned });
       }
     })();
-    // Auto-collect wrong answers into the Weak Topics / wrong-answer bank.
+    // Auto-collect wrong answers into the Weak Topics / wrong-answer bank,
+    // and (for smart-review sessions) record spaced-repetition outcomes.
     questions.forEach(q => {
       if (answers[q.id] && answers[q.id] !== q.correct_answer) {
         addWrongAnswer(q);
+        void recordReview(q.id, false);
+      } else if (examType === 'practice' && answers[q.id]) {
+        void recordReview(q.id, true);
       }
     });
+    // Ensure every weak item has a schedule entry (first time added).
+    const wrongIds = questions.filter(q => answers[q.id] && answers[q.id] !== q.correct_answer).map(q => q.id);
+    void ensureSchedule(wrongIds);
     // Mastery: correctly answering a practice (weak-topic) question removes it
     // from the wrong-answer bank so you only re-quiz what you still miss.
     if (examType === 'practice') {
       questions.forEach(q => {
         if (answers[q.id] && answers[q.id] === q.correct_answer) {
           void removeWrongAnswer(q.id);
+          void clearSchedule(q.id);
         }
       });
     }

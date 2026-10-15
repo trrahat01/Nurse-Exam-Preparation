@@ -22,7 +22,16 @@ export default function MockScreen() {
   const startMock = async () => {
     setMockLoading(true);
     try {
-      const questions = await fetchMockQuestions();
+      const { questions, shortage } = await fetchMockQuestions();
+      if (shortage && shortage.length > 0) {
+        Alert.alert(
+          'Not Enough Questions',
+          `There are not enough unseen questions in: ${shortage.join(', ')}. ` +
+          'The exam needs 60 Nursing, 15 General Knowledge, 15 English and 10 Bangla questions. ' +
+          'Practice these subjects or restart your question cycle from Profile settings.',
+        );
+        return;
+      }
       if (!questions || questions.length === 0) {
         Alert.alert('No Questions', 'No questions found in database. Import questions first.');
         return;

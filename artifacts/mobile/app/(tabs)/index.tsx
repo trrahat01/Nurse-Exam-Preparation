@@ -10,7 +10,11 @@ import { CATEGORY_CONFIG } from '@/src/types';
 import AdBanner from '@/components/AdBanner';
 import ReadyMeter from '@/components/ReadyMeter';
 import { computeReadiness } from '@/src/lib/readiness';
+import { getSmartReviewQueue } from '@/src/lib/spacedRepetition';
 import { useColors } from '@/hooks/useColors';
+import { getStreak, StreakData } from '@/src/lib/streak';
+import { setupNotifications } from '@/src/lib/notifications';
+
 
 const CATEGORIES = Object.values(CATEGORY_CONFIG);
 
@@ -24,14 +28,21 @@ export default function HomeScreen() {
   const [categoryStats, setCategoryStats] = useState<Record<string, { total: number; seen: number; unseen: number }>>({});
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [countsLoaded, setCountsLoaded] = useState(false);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [streak, setStreak] = useState<StreakData | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     loadSavedResults();
     loadQuestionCounts();
+    getSmartReviewQueue().then(q => setReviewCount(q.length)).catch(() => setReviewCount(0));
+    getStreak().then(st => setStreak(st)).catch(() => setStreak(null));
+    setupNotifications();
   }, []);
 
   const loadQuestionCounts = async () => {
     try {
+      setLoadError(null);
       const [counts, total] = await Promise.all([
         fetchCategoryQuestionStats(),
         fetchTotalQuestionCount(),
@@ -40,6 +51,7 @@ export default function HomeScreen() {
       setTotalQuestions(total);
     } catch (e) {
       console.error('Failed to load question counts:', e);
+      setLoadError('Failed to load question data. Please check your internet connection and try again.');
     } finally {
       setCountsLoaded(true);
     }
@@ -58,13 +70,23 @@ export default function HomeScreen() {
   const handleStartMock = async () => {
     setLoading(true);
     try {
-      const questions = await fetchMockQuestions();
+      const { questions, shortage } = await fetchMockQuestions();
+      if (shortage && shortage.length > 0) {
+        setLoadError(
+          'Not enough unseen questions available for a full mock test. Shortage in: ' +
+            shortage.join(', ') + '. Try the category practice screens or restart your question cycle in Profile settings.'
+        );
+        return;
+      }
       if (questions.length > 0) {
         startExam(questions, 'mock');
         router.push('/exam');
+      } else {
+        setLoadError('No eligible questions found. Check your connection and retry, or restart your question cycle in Profile settings.');
       }
     } catch (e) {
       console.error(e);
+      setLoadError('Failed to load questions. Please check your internet connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -73,6 +95,19 @@ export default function HomeScreen() {
   const handleViewResult = (r: any) => {
     viewResult(r);
     router.push('/exam/review');
+  };
+
+  const handleSmartReview = async () => {
+    const queue = await getSmartReviewQueue();
+    if (queue.length === 0) return;
+    // Convert stored wrong items back into full Question objects for the exam flow.
+    const questions: any[] = queue.map(w => ({
+      id: w.id, category: w.category, question: w.question,
+      option_a: w.option_a, option_b: w.option_b, option_c: w.option_c, option_d: w.option_d,
+      correct_answer: w.correct_answer, explanation: w.explanation,
+    }));
+    startExam(questions, 'practice');
+    router.push('/exam');
   };
 
   return (
@@ -109,6 +144,13 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {streak && (
+          <View style={[styles.totalBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.12)', marginTop: 8 }]}>
+            <MaterialCommunityIcons name="fire" size={16} color="#F59E0B" />
+            <Text style={[styles.totalBadgeText, { color: isDark ? colors.mutedForeground : '#fff' }]}>Day {streak.current} Streak 🔥</Text>
+          </View>
+        )}
+
         {/* Total Questions Badge */}
         {totalQuestions > 0 && (
           <View style={[styles.totalBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.12)' }]}>
@@ -119,6 +161,16 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.content}>
+      {loadError && (
+        <View style={[styles.errorContainer, { backgroundColor: isDark ? colors.card : '#FEE2E2' }]}>
+          <MaterialCommunityIcons name="alert-circle-outline" size={32} color="#EF4444" />
+          <Text style={[styles.errorText, { color: isDark ? colors.foreground : '#991B1B' }]}>{loadError}</Text>
+          <Pressable style={styles.retryBtn} onPress={loadQuestionCounts}>
+            <Text style={styles.retryText}>Retry</Text>
+          </Pressable>
+        </View>
+      )}
+
         <ReadyMeter readiness={readiness} />
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Start</Text>
         <View style={styles.actionRow}>
@@ -136,6 +188,21 @@ export default function HomeScreen() {
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color={colors.mutedForeground} />
         </Pressable>
+
+        {reviewCount > 0 && (
+          <Pressable style={[styles.reviewBanner, { backgroundColor: isDark ? colors.card : '#F5F3FF', borderColor: '#C4B5FD' }]} onPress={handleSmartReview}>
+            <View style={[styles.reviewIcon, { backgroundColor: '#EDE9FE' }]}>
+              <MaterialCommunityIcons name="brain" size={22} color="#7C3AED" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.reviewTitle, { color: colors.text }]}>Smart Review</Text>
+              <Text style={[styles.reviewSub, { color: colors.mutedForeground }]}>
+                {reviewCount} question{reviewCount > 1 ? 's' : ''} due today — refresh your memory
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#7C3AED" />
+          </Pressable>
+        )}
 
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Categories</Text>
         <View style={styles.catGrid}>
@@ -232,7 +299,16 @@ const styles = StyleSheet.create({
   readingBanner: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E2E8F0', padding: 14 },
   readingTitle: { fontSize: 15, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
   readingSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2 },
+  reviewBanner: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 14, borderWidth: 1, padding: 14 },
+  reviewIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  reviewTitle: { fontSize: 15, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
+  reviewSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#64748B', marginTop: 2 },
   catCard: { width: '47%', borderRadius: 16, padding: 16, gap: 8 },
+  errorContainer: { margin: 16, padding: 16, borderRadius: 12, alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#FCA5A5' },
+  errorText: { fontSize: 14, fontFamily: 'Inter_500Medium', textAlign: 'center' },
+  retryBtn: { backgroundColor: '#0891B2', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 8, marginTop: 4 },
+  retryText: { color: '#fff', fontSize: 14, fontFamily: 'Inter_600SemiBold' },
+
   catIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   catName: { fontSize: 15, fontFamily: 'Inter_700Bold' },
   catDesc: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#64748B', lineHeight: 16 },

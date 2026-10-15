@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image } from 'react-native';
+import { StyleSheet, Text, View, Image, ActivityIndicator } from 'react-native';
 import { shouldShowAds, getNativeAdUnitId } from '@/src/lib/ads';
+import { useColors } from '@/hooks/useColors';
 
 // Metro's global `require` — used to lazy-load the AdMob module ONLY on real
 // native builds. In Expo Go the module is never imported (it would crash).
 declare const require: (id: string) => any;
 
 let cachedNativeAd: any = null;
+let isPreloading = false;
 
 /**
  * A "native advanced" banner ad (renders as a normal-looking card). Loads a
@@ -16,32 +18,68 @@ let cachedNativeAd: any = null;
 export default function NativeAdBanner() {
   const [ad, setAd] = useState<any>(null);
   const [ui, setUi] = useState<any>(null); // { NativeAdView, NativeAsset, NativeAssetType }
+  const [loading, setLoading] = useState(true);
+  const colors = useColors();
+  const isDark = colors.scheme === 'dark';
 
   useEffect(() => {
-    if (!shouldShowAds()) return;
+    if (!shouldShowAds()) {
+      setLoading(false);
+      return;
+    }
     const unitId = getNativeAdUnitId();
-    if (!unitId) return;
+    if (!unitId) {
+      setLoading(false);
+      return;
+    }
     let mounted = true;
     (async () => {
       try {
         // Lazy-load the AdMob module ONLY here (Expo Go never reaches this).
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const gma = require('react-native-google-mobile-ads');
-        if (!cachedNativeAd) {
-          const created = await gma.NativeAd.createForAdRequest(unitId);
-          if (!mounted) return;
-          cachedNativeAd = created;
+        setUi({ 
+          NativeAdView: gma.NativeAdView, 
+          NativeAsset: gma.NativeAsset, 
+          NativeAssetType: gma.NativeAssetType 
+        });
+
+        if (!cachedNativeAd && !isPreloading) {
+          isPreloading = true;
+          try {
+            const created = await gma.NativeAd.createForAdRequest(unitId);
+            cachedNativeAd = created;
+          } finally {
+            isPreloading = false;
+          }
         }
+
+        // Wait if another component is preloading
+        while (isPreloading && mounted) {
+          await new Promise(r => setTimeout(r, 100));
+        }
+
         if (mounted) {
-          setUi({ NativeAdView: gma.NativeAdView, NativeAsset: gma.NativeAsset, NativeAssetType: gma.NativeAssetType });
           setAd(cachedNativeAd);
+          setLoading(false);
         }
       } catch (err) {
         console.warn('NativeAd load failed:', err);
+        if (mounted) setLoading(false);
       }
     })();
     return () => { mounted = false; };
   }, []);
+
+  if (!shouldShowAds()) return null;
+  
+  if (loading) {
+    return (
+      <View style={[styles.wrap, styles.loadingWrap, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <ActivityIndicator size="small" color={colors.primary} />
+      </View>
+    );
+  }
 
   if (!ad || !ui) return null;
   const { NativeAdView, NativeAsset, NativeAssetType } = ui;
@@ -49,25 +87,25 @@ export default function NativeAdBanner() {
 
   return (
     <NativeAdView nativeAd={nativeAd} style={styles.wrap}>
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.header}>
           <NativeAsset assetType={NativeAssetType.ICON}>
-            <Image style={styles.icon} />
+            <Image style={[styles.icon, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]} />
           </NativeAsset>
           <View style={styles.headerText}>
             <NativeAsset assetType={NativeAssetType.HEADLINE}>
-              <Text numberOfLines={1} style={styles.headline} />
+              <Text numberOfLines={1} style={[styles.headline, { color: colors.text }]} />
             </NativeAsset>
             <NativeAsset assetType={NativeAssetType.ADVERTISER}>
-              <Text numberOfLines={1} style={styles.advertiser} />
+              <Text numberOfLines={1} style={[styles.advertiser, { color: colors.mutedForeground }]} />
             </NativeAsset>
           </View>
         </View>
         <NativeAsset assetType={NativeAssetType.BODY}>
-          <Text numberOfLines={2} style={styles.body} />
+          <Text numberOfLines={2} style={[styles.body, { color: isDark ? '#94A3B8' : '#334155' }]} />
         </NativeAsset>
         <NativeAsset assetType={NativeAssetType.CALL_TO_ACTION}>
-          <Text style={styles.cta} />
+          <Text style={[styles.cta, { backgroundColor: colors.primary }]} />
         </NativeAsset>
       </View>
     </NativeAdView>
@@ -76,18 +114,19 @@ export default function NativeAdBanner() {
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'stretch', marginVertical: 4 },
+  loadingWrap: { height: 100, justifyContent: 'center', alignItems: 'center', borderRadius: 14, borderWidth: 1, borderStyle: 'dashed' },
   card: {
-    backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E2E8F0',
+    borderRadius: 14, borderWidth: 1,
     padding: 12, gap: 8,
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  icon: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#E2E8F0' },
+  icon: { width: 40, height: 40, borderRadius: 10 },
   headerText: { flex: 1 },
-  headline: { fontSize: 14, fontFamily: 'Inter_700Bold', color: '#0C1A2E' },
-  advertiser: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#64748B' },
-  body: { fontSize: 13, fontFamily: 'Inter_400Regular', color: '#334155', lineHeight: 18 },
+  headline: { fontSize: 14, fontFamily: 'Inter_700Bold' },
+  advertiser: { fontSize: 12, fontFamily: 'Inter_400Regular' },
+  body: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 18 },
   cta: {
-    alignSelf: 'flex-start', backgroundColor: '#0891B2', color: '#fff',
+    alignSelf: 'flex-start', color: '#fff',
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
     fontSize: 13, fontFamily: 'Inter_700Bold', overflow: 'hidden',
   },
