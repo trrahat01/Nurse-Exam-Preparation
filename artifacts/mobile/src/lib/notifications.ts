@@ -153,9 +153,6 @@ export async function cancelDailyReminder(): Promise<void> {
 
 // ── Streak reminder ─────────────────────────────────────────
 
-const STREAK_REMINDER_ID = 'streak-reminder';
-const NOTIF_PREF_KEY = 'notifications_enabled';
-
 /** Read the user's notification preference (default: on). */
 export async function getNotificationPref(): Promise<boolean> {
   try {
