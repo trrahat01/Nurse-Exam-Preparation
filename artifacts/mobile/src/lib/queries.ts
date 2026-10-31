@@ -49,11 +49,13 @@ async function getServerSeenQuestionIds(userId: string): Promise<Set<string>> {
 
 async function getMergedSeenQuestionIds(): Promise<Set<string>> {
   const localSeen = await getSeenQuestionIds();
+  const pendingSeen = await getPendingSyncIds();
+  const localAndPending = new Set([...localSeen, ...pendingSeen]);
   const userId = await getCurrentUserId();
-  if (!userId) return localSeen;
+  if (!userId) return localAndPending;
 
   const serverSeen = await getServerSeenQuestionIds(userId);
-  return new Set([...localSeen, ...serverSeen]);
+  return new Set([...localAndPending, ...serverSeen]);
 }
 
 export async function fetchCategoryQuestionStats(): Promise<Record<string, QuestionStats>> {

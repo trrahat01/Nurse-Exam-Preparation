@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SEEN_QUESTIONS_KEY = 'seen_question_ids';
+const PENDING_SYNC_KEY = 'pending_question_exposures';
 const MAX_SEEN = 5000; // Keep last 5000 seen IDs to prevent storage bloat
 
 /**
