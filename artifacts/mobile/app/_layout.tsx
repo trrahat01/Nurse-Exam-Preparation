@@ -53,17 +53,26 @@ export default function RootLayout() {
         const queryParams = parsed.queryParams || {};
         
         let token_hash = (queryParams.token_hash as string) || (queryParams.token as string);
-        let type = (queryParams.type as string) || 'email_change';
+        let type = (queryParams.type as string);
 
         if (!token_hash && url.includes('#')) {
           const fragment = url.split('#')[1];
           const hashParams = new URLSearchParams(fragment);
-          token_hash = hashParams.get('token_hash') || hashParams.get('token') || hashParams.get('access_token') || '';
+          token_hash = hashParams.get('token_hash') || hashParams.get('token') || '';
           type = hashParams.get('type') || type;
         }
 
+        // Validate type parameter - only support explicit types, no heuristics
+        if (!type) {
+          throw new Error('Verification type required');
+        }
+        const supportedTypes = ['signup', 'email_change', 'recovery'] as const;
+        if (!(supportedTypes as readonly string[]).includes(type)) {
+          throw new Error('Unsupported verification type');
+        }
+
         if (token_hash) {
-          await verifyOtp({ token_hash, type });
+          await verifyOtp({ token_hash, type: type as 'signup' | 'email_change' | 'recovery' });
           Alert.alert('Email Verified!', 'Your email has been verified. Please complete your password setup.');
         }
       } catch (err: any) {

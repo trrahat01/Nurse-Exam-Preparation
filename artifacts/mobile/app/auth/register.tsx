@@ -49,14 +49,6 @@ export default function RegisterScreen() {
       Alert.alert('Error', 'Password must be at least 6 characters.');
       return;
     }
-    if (!name || !email || !password) {
-      Alert.alert('Error', 'Please fill all fields.');
-      return;
-    }
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters.');
-      return;
-    }
 
     setLoading(true);
     try {
@@ -100,11 +92,19 @@ export default function RegisterScreen() {
     }
   };
 
-  if (step === 'verifying') {
-    return (
+  return (
     <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }} keyboardShouldPersistTaps='handled'>
       <View style={styles.form}>
-        {step === 'password' ? (
+        {step === 'verifying' ? (
+          <>
+            <Text style={styles.title}>Verify Email</Text>
+            <Text style={styles.sub}>We have sent a verification link to your email. Please check your inbox and verify your account to proceed.</Text>
+            <MaterialCommunityIcons name='email-check-outline' size={48} color='#0891B2' style={{ alignSelf: 'center', marginVertical: 24 }} />
+            <Pressable style={styles.btn} onPress={() => router.back()}>
+              <Text style={styles.btnText}>Back to Sign In</Text>
+            </Pressable>
+          </>
+        ) : step === 'password' ? (
           <>
             <Text style={styles.title}>Set Password</Text>
             <Text style={styles.sub}>Almost there! Set a secure password for your account.</Text>

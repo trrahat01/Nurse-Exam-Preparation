@@ -1,68 +1,20 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const SEEN_QUESTIONS_KEY = 'seen_question_ids';
-const PENDING_SYNC_KEY = 'pending_question_exposures';
-const MAX_SEEN = 5000; // Keep last 5000 seen IDs to prevent storage bloat
+import { getSupabaseClient } from './supabase';
 
 /**
- * Get the set of question IDs the user has already seen
+ * Record question exposures directly to Supabase server.
+ * This is the ONLY way to record exposures.
+ * This function is now integrated into the fetch_unseen_questions_distributed RPC.
+ * Individual calls are no longer needed as exposures are recorded atomically within the RPC.
  */
-export async function getSeenQuestionIds(): Promise<Set<string>> {
-  try {
-    const data = await AsyncStorage.getItem(SEEN_QUESTIONS_KEY);
-    if (!data) return new Set();
-    const arr = JSON.parse(data) as string[];
-    return new Set(arr);
-  } catch {
-    return new Set();
-  }
-}
-
-/**
- * Mark question IDs as seen by the user
- */
-export async function markQuestionsSeen(ids: string[]): Promise<void> {
-  try {
-    const data = await AsyncStorage.getItem(SEEN_QUESTIONS_KEY);
-    let arr: string[] = data ? JSON.parse(data) : [];
-    
-    // Add new IDs
-    const existing = new Set(arr);
-    for (const id of ids) {
-      if (!existing.has(id)) {
-        arr.push(id);
-        existing.add(id);
-      }
-    }
-    
-    // Keep only the most recent MAX_SEEN
-    if (arr.length > MAX_SEEN) {
-      arr = arr.slice(arr.length - MAX_SEEN);
-    }
-    
-    await AsyncStorage.setItem(SEEN_QUESTIONS_KEY, JSON.stringify(arr));
-  } catch (e) {
-    console.error('Failed to mark questions seen:', e);
-  }
-}
-
-/**
- * Filter out questions the user has already seen
- */
-export function filterUnseenQuestions<T extends { id: string }>(
-  questions: T[],
-  seenIds: Set<string>
-): T[] {
-  return questions.filter(q => !seenIds.has(q.id));
+export async function recordExposures(ids: string[], examType: string = 'practice'): Promise<void> {
+  throw new Error('Individual exposure recording is deprecated. All exposures are now handled atomically by the fetch_unseen_questions_distributed RPC.');
 }
 
 /**
  * Clear all seen question history (for reset)
+ * Non-destructive warning-only operation to protect existing exposure data.
  */
 export async function clearSeenQuestions(): Promise<void> {
-  try {
-    await AsyncStorage.removeItem(SEEN_QUESTIONS_KEY);
-  } catch (e) {
-    console.error('Failed to clear seen questions:', e);
-  }
+  // Destructive history reset functionality removed per requirements to preserve data.
+  console.warn('Destructive clearSeenQuestions functionality is disabled in online-only mode. Existing exposure data is protected.');
 }

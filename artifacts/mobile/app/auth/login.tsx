@@ -30,9 +30,17 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGuest = () => {
-    continueAsGuest();
-    router.replace('/(tabs)');
+  const handleGuest = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      await continueAsGuest();
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      Alert.alert('Guest Login Failed', e.message || 'Could not sign in as guest.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -67,9 +75,15 @@ export default function LoginScreen() {
             {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Sign In</Text>}
           </Pressable>
 
-          <Pressable style={[styles.btn, styles.guestBtn]} onPress={handleGuest}>
-            <MaterialCommunityIcons name="account-outline" size={18} color="#0C4A6E" />
-            <Text style={[styles.btnText, { color: '#0C4A6E', fontFamily: 'Inter_600SemiBold' }]}>Continue as Guest</Text>
+          <Pressable style={[styles.btn, styles.guestBtn, loading && { opacity: 0.7 }]} onPress={handleGuest} disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color="#0C4A6E" />
+            ) : (
+              <>
+                <MaterialCommunityIcons name="account-outline" size={18} color="#0C4A6E" />
+                <Text style={[styles.btnText, { color: '#0C4A6E', fontFamily: 'Inter_600SemiBold' }]}>Continue as Guest</Text>
+              </>
+            )}
           </Pressable>
 
           <View style={styles.footer}>

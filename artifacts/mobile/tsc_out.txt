@@ -1,0 +1,9 @@
+app/(tabs)/index.tsx(8,10): error TS2305: Module '"@/src/lib/queries"' has no exported member 'fetchMockQuestions'.
+app/(tabs)/index.tsx(8,58): error TS2305: Module '"@/src/lib/queries"' has no exported member 'fetchTotalQuestionCount'.
+app/(tabs)/mock.tsx(7,10): error TS2305: Module '"@/src/lib/queries"' has no exported member 'fetchMockQuestions'.
+app/_layout.tsx(75,41): error TS2322: Type 'string' is not assignable to type 'SupportedOtpType'.
+src/store/authStore.ts(274,59): error TS2345: Argument of type '{ token_hash?: string | undefined; token?: string | undefined; email?: string | undefined; type: SupportedOtpType; options?: { redirectTo: string; } | undefined; }' is not assignable to parameter of type 'VerifyOtpParams'.
+  Type '{ token_hash?: string | undefined; token?: string | undefined; email?: string | undefined; type: SupportedOtpType; options?: { redirectTo: string; } | undefined; }' is not assignable to type 'VerifyEmailOtpParams'.
+    Types of property 'email' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.

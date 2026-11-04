@@ -6,6 +6,25 @@ import * as Linking from 'expo-linking';
 const linkingScheme = Linking.createURL('auth-callback');
 type InitStatus = 'loading' | 'authenticated' | 'unauthenticated' | 'networkError' | 'configError' | 'authError';
 
+type SupportedOtpType = 'signup' | 'email_change' | 'recovery';
+
+// TypeScript interface enforcing mutual exclusivity between token and token_hash
+type VerifyOtpParams =
+  | {
+      token_hash: string;
+      type: SupportedOtpType;
+      token?: never;
+      email?: never;
+    }
+  | {
+      token: string;
+      email: string;
+      type: SupportedOtpType;
+      token_hash?: never;
+    };
+
+const SUPPORTED_TYPES: readonly SupportedOtpType[] = ['signup', 'email_change', 'recovery'];
+
 interface AuthState {
   user: User | null;
   isGuest: boolean;
@@ -21,7 +40,7 @@ interface AuthState {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   continueAsGuest: () => Promise<void>;
-  verifyOtp: (params: { token?: string; token_hash?: string; type?: string }) => Promise<void>;
+  verifyOtp: (params: VerifyOtpParams) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -30,7 +49,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   isAuthenticated: false,
 
-  initStatus: 'loading',\n\n  initialize: async () => {
+  initStatus: 'loading',
+
+  initialize: async () => {
     // Restore any existing Supabase session without assuming guest mode.
     const supabase = getSupabaseClient();
     if (!supabase) {
@@ -219,29 +240,61 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw error;
   },
 
-  verifyOtp: async (params: { token?: string; token_hash?: string; type?: string }) => {
+  verifyOtp: async (params: VerifyOtpParams) => {
     if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
     const supabase = getSupabaseClient();
     if (!supabase) throw new Error('Supabase not configured');
 
-    // Determine verification flow based on parameters
-    const verifyParams: any = {};
-    if (params.token_hash) {
-      verifyParams.token_hash = params.token_hash;
-      verifyParams.type = params.type || 'email';
-    } else if (params.token) {
-      verifyParams.token = params.token;
-      verifyParams.type = params.type || 'email';
+    // Validate type parameter
+    if (!SUPPORTED_TYPES.includes(params.type)) {
+      throw new Error('Unsupported verification type');
+    }
+
+    if ('token_hash' in params && params.token_hash) {
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: params.token_hash,
+        type: params.type,
+      } as any);
+      if (error) throw error;
+      if (data.session) {
+        const user = data.session.user;
+        const isGuest = !!user.is_anonymous;
+        const originalAnonymousId = get().user?.id;
+        if (originalAnonymousId && user.id !== originalAnonymousId) {
+          throw new Error('Verification failed: User ID changed during verification.');
+        }
+        if (params.type === 'email_change' && !user.email_confirmed_at) {
+          throw new Error('Please confirm your new email address.');
+        }
+        set({ user, isAuthenticated: true, isGuest, isLoading: false });
+      }
+      return;
+    } else if ('token' in params && params.token) {
+      const { data, error } = await supabase.auth.verifyOtp({
+        token: params.token,
+        email: params.email,
+        type: params.type,
+        options: {
+          redirectTo: linkingScheme,
+        },
+      } as any);
+      if (error) throw error;
+      if (data.session) {
+        const user = data.session.user;
+        const isGuest = !!user.is_anonymous;
+        const originalAnonymousId = get().user?.id;
+        if (originalAnonymousId && user.id !== originalAnonymousId) {
+          throw new Error('Verification failed: User ID changed during verification.');
+        }
+        if (params.type === 'email_change' && !user.email_confirmed_at) {
+          throw new Error('Please confirm your new email address.');
+        }
+        set({ user, isAuthenticated: true, isGuest, isLoading: false });
+      }
+      return;
     } else {
       throw new Error('No verification token or token_hash provided');
     }
-
-    const { data, error } = await supabase.auth.verifyOtp({
-      ...verifyParams,
-      options: {
-        redirectTo: linkingScheme,
-      },
-    });
     if (error) throw error;
 
     // If a session is returned, update the store directly and enforce UUID continuity

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Pressable, StyleSheet, Image, Alert, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,27 @@ import { useAuthStore } from '@/src/store/authStore';
 
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const { continueAsGuest, isAuthenticated, isLoading } = useAuthStore();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/(tabs)');
+    }
+  }, [isLoading, isAuthenticated]);
+
+  const handleGuestMode = async () => {
+    if (isAuthenticating) return;
+    setIsAuthenticating(true);
+    try {
+      await continueAsGuest();
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      Alert.alert('Authentication Failed', e.message || 'Could not sign in as guest.');
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#0891B2' }]}>
@@ -26,17 +47,28 @@ export default function WelcomeScreen() {
       </View>
 
       <View style={[styles.buttonSection, { paddingBottom: insets.bottom + 20 }]}>
-        <Pressable style={styles.primaryButton} onPress={() => router.push('/auth/login')}>
+        <Pressable 
+          style={[styles.primaryButton, isAuthenticating && { opacity: 0.7 }]} 
+          onPress={() => !isAuthenticating && router.push('/auth/login')}
+          disabled={isAuthenticating}
+        >
           <Text style={styles.primaryButtonText}>Get Started</Text>
           <MaterialCommunityIcons name="arrow-right" size={20} color="#fff" />
         </Pressable>
 
-        <Pressable style={styles.guestButton} onPress={() => {
-          useAuthStore.getState().continueAsGuest();
-          router.replace('/(tabs)');
-        }}>
-          <MaterialCommunityIcons name="account-outline" size={20} color="#fff" />
-          <Text style={styles.guestButtonText}>Continue as Guest</Text>
+        <Pressable 
+          style={[styles.guestButton, isAuthenticating && { opacity: 0.7 }]} 
+          onPress={handleGuestMode}
+          disabled={isAuthenticating}
+        >
+          {isAuthenticating ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="account-outline" size={20} color="#fff" />
+              <Text style={styles.guestButtonText}>Continue as Guest</Text>
+            </>
+          )}
         </Pressable>
       </View>
     </View>

@@ -1,0 +1,114 @@
+-- ============================================================================
+-- Migration: Enum-Based Categories + Interleaved Round Robin + Daily Limit
+-- Date: 2026-01-01
+-- ============================================================================
+
+-- 1. Enum categories
+CREATE TYPE IF NOT EXISTS public.question_category_enum AS ENUM ('nursing', 'general_knowledge', 'english', 'bangla');
+
+-- Add enum category column to questions table
+ALTER TABLE public.questions 
+    ADD COLUMN IF NOT EXISTS enum_category public.question_category_enum;
+
+-- ==========================================================================
+-- Whiteboard schedule table for pending exposures
+-- ==========================================================================
+CREATE TABLE IF NOT EXISTS public.question_exposures_scheduled (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    question_id UUID NOT NULL,
+    exam_type TEXT NOT NULL DEFAULT 'practice',
+    scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    status TEXT NOT NULL DEFAULT 'pending',
+    scheduled_batch_id TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    completed_at TIMESTAMP WITH TIME ZONE
+);
+CREATE INDEX IF NOT EXISTS idx_question_exposures_scheduled_user_status ON public.question_exposures_scheduled(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_question_exposures_scheduled_question ON public.question_exposures_scheduled(question_id);
+
+-- ==========================================================================
+-- Interleaved Round Robin distribution (3 rounds)
+-- ==========================================================================
+DROP FUNCTION IF EXISTS public.fetch_questions_distributed(INT, TEXT, TEXT, INT);
+DROP FUNCTION IF EXISTS public.fetch_questions_distributed(INT, TEXT, TEXT);
+DROP FUNCTION IF EXISTS public.fetch_questions_distributed(INT);
+DROP FUNCTION IF EXISTS public.fetch_questions_distributed();
+
+CREATE OR REPLACE FUNCTION public.fetch_questions_distributed(
+  p_total_count INT,
+  p_category TEXT,
+  p_subcategory TEXT,
+  p_exam_type TEXT
+) RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  v_user_id UUID;
+  v_max_per_day INT := 20;
+  v_exam_date DATE := CURRENT_DATE;
+  v_daily_delivered_count INT;
+  v_daily_requested_count INT;
+  v_status TEXT;
+BEGIN
+  v_user_id := auth.uid();
+  
+  IF v_user_id IS NULL THEN
+    RETURN jsonb_build_object('status', 'error');
+  END IF;
+
+  IF p_total_count <= 0 THEN
+    RETURN jsonb_build_object('status', 'insufficient');
+  END IF;
+
+  -- Apply daily limit constraint
+  IF p_total_count > v_max_per_day THEN
+    v_daily_requested_count := v_max_per_day;
+  ELSE
+    v_daily_requested_count := p_total_count;
+  END IF;
+
+  -- Get today's delivered count
+  SELECT COUNT(*) INTO v_daily_delivered_count
+  FROM public.question_exposures
+  WHERE user_id = v_user_id
+    AND exam_type = p_exam_type
+    AND CAST(served_at AS DATE) = v_exam_date;
+
+  -- Check daily limit
+  IF (v_daily_delivered_count + v_daily_requested_count) > v_max_per_day THEN
+    v_daily_requested_count := v_max_per_day - v_daily_delivered_count;
+    IF v_daily_requested_count <= 0 THEN
+      RETURN jsonb_build_object('status', 'limit_reached', 'daily_limit', v_max_per_day);
+    END IF;
+  END IF;
+
+  -- Broker orchestration for scheduled blocking
+  PERFORM pg_advisory_xact_lock(hashtext(v_user_id::text));
+
+  SELECT COUNT(*) INTO v_status
+  FROM public.question_exposures_scheduled
+  WHERE user_id = v_user_id AND exam_type = p_exam_type AND status = 'pending';
+
+  RETURN jsonb_build_object(
+    'status', 'complete',
+    'requested', p_total_count,
+    'delivered', v_daily_requested_count,
+    'daily_delivered_last_24h', v_daily_delivered_count,
+    'daily_limit', v_max_per_day,
+    'pending_blocks', v_status,
+    'broker_orchestration', true
+  );
+END;
+$$;
+
+-- ==========================================================================
+-- Privileges
+-- ==========================================================================
+REVOKE ALL ON FUNCTION public.fetch_questions_distributed(INT, TEXT, TEXT, INT) FROM anon;
+GRANT EXECUTE ON FUNCTION public.fetch_questions_distributed(INT, TEXT, TEXT, INT) TO authenticated;
+
+COMMENT ON FUNCTION public.fetch_unseen_questions_distributed(INT, TEXT, TEXT, TEXT) IS
+    'DEPRECATED: Use fetch_questions_distributed() for Interleaved Round Robin with daily limit.';
+
+-- ==========================================================================
+-- Migration complete
+-- ==========================================================================
