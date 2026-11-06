@@ -23,6 +23,10 @@ type VerifyOtpParams =
       token_hash?: never;
     };
 
+// Recovery authorization expiration time (30 minutes)
+const RECOVERY_AUTH_EXPIRATION_MS = 30 * 60 * 1000;
+const RECOVERY_AUTH_STORAGE_KEY = 'recovery_auth_expiry';
+
 const SUPPORTED_TYPES: readonly SupportedOtpType[] = ['signup', 'email_change', 'recovery'];
 
 interface AuthState {
@@ -30,6 +34,8 @@ interface AuthState {
   isGuest: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
+  hasRecoveryAuthorization: boolean;
+  recoveryAuthExpiry: number | null;
   initStatus: InitStatus;
   initialize: () => Promise<void>;
   retryInitialize: () => Promise<void>;
@@ -39,8 +45,10 @@ interface AuthState {
   setGuestPassword: (password: string, originalAnonymousId: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
   continueAsGuest: () => Promise<void>;
   verifyOtp: (params: VerifyOtpParams) => Promise<void>;
+  clearRecoveryAuthorization: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -48,10 +56,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isGuest: false,
   isLoading: true,
   isAuthenticated: false,
+  hasRecoveryAuthorization: false,
+  recoveryAuthExpiry: null,
 
   initStatus: 'loading',
 
   initialize: async () => {
+    // Reset recovery authorization flag during app initialization to prevent stale authorization
+    set({ hasRecoveryAuthorization: false, recoveryAuthExpiry: null });
+
     // Restore any existing Supabase session without assuming guest mode.
     const supabase = getSupabaseClient();
     if (!supabase) {
@@ -240,6 +253,47 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw error;
   },
 
+  updatePassword: async (newPassword: string) => {
+    if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error('Supabase not configured');
+
+    // Security check: Only allow password update if user has valid recovery authorization and unexpired session
+    const currentState = get();
+    if (currentState.isLoading) throw new Error('Password update already in progress.');
+    if (
+      !currentState.hasRecoveryAuthorization ||
+      !currentState.recoveryAuthExpiry ||
+      typeof currentState.recoveryAuthExpiry !== 'number' ||
+      !Number.isFinite(currentState.recoveryAuthExpiry) ||
+      Date.now() >= currentState.recoveryAuthExpiry
+    ) {
+      set({ hasRecoveryAuthorization: false, recoveryAuthExpiry: null });
+      throw new Error('Password update not authorized or session expired. Please complete the recovery process again.');
+    }
+
+    set({ isLoading: true });
+    try {
+      const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      if (data.user) {
+        const isGuest = !!data.user.is_anonymous;
+        // Reset recovery authorization after successful password update to prevent reuse
+        set({
+          user: data.user,
+          isAuthenticated: true,
+          isGuest,
+          isLoading: false,
+          hasRecoveryAuthorization: false,
+          recoveryAuthExpiry: null,
+        });
+      }
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+
   verifyOtp: async (params: VerifyOtpParams) => {
     if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
     const supabase = getSupabaseClient();
@@ -250,70 +304,54 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw new Error('Unsupported verification type');
     }
 
-    if ('token_hash' in params && params.token_hash) {
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: params.token_hash,
-        type: params.type,
-      } as any);
+    const originalAnonymousId = get().user?.id;
+
+    try {
+      const { data, error } = params.token_hash !== undefined
+        ? await supabase.auth.verifyOtp({
+            token_hash: params.token_hash,
+            type: params.type,
+          })
+        : await supabase.auth.verifyOtp({
+            email: params.email,
+            token: params.token,
+            type: params.type,
+          });
       if (error) throw error;
+
+      // If a session is returned, update the store directly and enforce UUID continuity
       if (data.session) {
         const user = data.session.user;
         const isGuest = !!user.is_anonymous;
-        const originalAnonymousId = get().user?.id;
+
+        // Verify UUID continuity
         if (originalAnonymousId && user.id !== originalAnonymousId) {
           throw new Error('Verification failed: User ID changed during verification.');
         }
+
+        // Ensure email is confirmed for email_change flows
         if (params.type === 'email_change' && !user.email_confirmed_at) {
           throw new Error('Please confirm your new email address.');
         }
-        set({ user, isAuthenticated: true, isGuest, isLoading: false });
-      }
-      return;
-    } else if ('token' in params && params.token) {
-      const { data, error } = await supabase.auth.verifyOtp({
-        token: params.token,
-        email: params.email,
-        type: params.type,
-        options: {
-          redirectTo: linkingScheme,
-        },
-      } as any);
-      if (error) throw error;
-      if (data.session) {
-        const user = data.session.user;
-        const isGuest = !!user.is_anonymous;
-        const originalAnonymousId = get().user?.id;
-        if (originalAnonymousId && user.id !== originalAnonymousId) {
-          throw new Error('Verification failed: User ID changed during verification.');
-        }
-        if (params.type === 'email_change' && !user.email_confirmed_at) {
-          throw new Error('Please confirm your new email address.');
-        }
-        set({ user, isAuthenticated: true, isGuest, isLoading: false });
-      }
-      return;
-    } else {
-      throw new Error('No verification token or token_hash provided');
-    }
-    if (error) throw error;
 
-    // If a session is returned, update the store directly and enforce UUID continuity
-    if (data.session) {
-      const user = data.session.user;
-      const isGuest = !!user.is_anonymous;
-      const originalAnonymousId = get().user?.id;
-
-      // Verify UUID continuity
-      if (originalAnonymousId && user.id !== originalAnonymousId) {
-        throw new Error('Verification failed: User ID changed during verification.');
+        // Track recovery authorization for security protection
+        const hasRecoveryAuthorization = params.type === 'recovery';
+        const recoveryAuthExpiry = hasRecoveryAuthorization ? Date.now() + RECOVERY_AUTH_EXPIRATION_MS : null;
+        set({
+          user,
+          isAuthenticated: true,
+          isGuest,
+          isLoading: false,
+          hasRecoveryAuthorization,
+          recoveryAuthExpiry
+        });
       }
-
-      // Ensure email is confirmed for email_change flows
-      if (params.type === 'email_change' && !user.email_confirmed_at) {
-        throw new Error('Please confirm your new email address.');
+    } catch (error) {
+      // Clear recovery authorization flag on failed verification to prevent stale authorization
+      if (params.type === 'recovery') {
+        set({ hasRecoveryAuthorization: false, recoveryAuthExpiry: null });
       }
-
-      set({ user, isAuthenticated: true, isGuest, isLoading: false });
+      throw error;
     }
   },
 
@@ -343,11 +381,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     set({ user: data.user, isAuthenticated: true, isGuest: true, isLoading: false });
   },
+
+  clearRecoveryAuthorization: () => {
+    set({ hasRecoveryAuthorization: false, recoveryAuthExpiry: null });
+  },
 }));
-
-
-
-
-
-
-

@@ -27,6 +27,7 @@ export default function RootLayout() {
   const isLoading = useAuthStore(s => s.isLoading);
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   const initStatus = useAuthStore(s => s.initStatus);
+  const hasRecoveryAuthorization = useAuthStore(s => s.hasRecoveryAuthorization);
   const loadBookmarks = useBookmarkStore(s => s.loadBookmarks);
 
   const [retrying, setRetrying] = useState(false);
@@ -73,7 +74,13 @@ export default function RootLayout() {
 
         if (token_hash) {
           await verifyOtp({ token_hash, type: type as 'signup' | 'email_change' | 'recovery' });
-          Alert.alert('Email Verified!', 'Your email has been verified. Please complete your password setup.');
+          if (type === 'recovery') {
+            Alert.alert('Password Recovery Successful!', 'Your recovery link has been verified. Please set your new password.', [
+              { text: 'OK', onPress: () => router.push('/auth/reset-password') }
+            ]);
+          } else {
+            Alert.alert('Email Verified!', 'Your email has been verified. Please complete your password setup.');
+          }
         }
       } catch (err: any) {
         console.error('Deep link verification failed:', err);
@@ -151,6 +158,7 @@ export default function RootLayout() {
             <Stack.Screen name="auth/login" />
             <Stack.Screen name="auth/register" />
             <Stack.Screen name="auth/forgot-password" />
+            <Stack.Screen name="auth/reset-password" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="exam/index" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="exam/result" options={{ animation: 'slide_from_bottom' }} />

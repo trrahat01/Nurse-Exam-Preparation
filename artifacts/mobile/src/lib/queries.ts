@@ -1,7 +1,11 @@
 import { MockResult, Bookmark } from '@/src/types';
-
 import { getSupabaseClient } from './supabase';
 import type { Question, ExamType } from '@/src/types';
+
+
+
+
+
 
 /**
  * Atomic delivery using PostgreSQL RPC.
@@ -26,35 +30,55 @@ export async function fetchQuestionPool(
   examType: ExamType
 ): Promise<Question[]> {
   const supabase = getSupabaseClient();
-  if (!supabase) throw new Error('Supabase client not initialized.');
+  const cacheKey = CACHE_KEYS.QUESTION_POOL(examType, filters.category);
 
-  const { data, error } = await supabase.rpc('fetch_unseen_questions_distributed', {
-    p_total_count: count,
-    p_category: filters.category || null,
-    p_subcategory: filters.subcategory || null,
-    p_exam_type: examType
-  });
-
-  if (error) {
-    throw new Error(`Failed to fetch questions via RPC: ${error.message}`);
+  if (!supabase) {
+    console.warn('Supabase client not initialized. Falling back to local cache.');
+    const cached = await getCachedData<Question[]>(cacheKey);
+    if (cached && cached.length > 0) return cached;
+    throw new Error('Supabase client not initialized and no offline cache available.');
   }
 
-  validateRPCResponse(data);
-  const response = data as {
-    status: 'complete' | 'partial' | 'insufficient';
-    requested_count: number;
-    delivered_count: number;
-    category_stats: Record<string, { requested: number; delivered: number }>;
-    questions: Question[];
-  };
+  try {
+    const { data, error } = await supabase.rpc('fetch_unseen_questions_distributed', {
+      p_total_count: count,
+      p_category: filters.category || null,
+      p_subcategory: filters.subcategory || null,
+      p_exam_type: examType
+    });
 
-  if (response.status === 'insufficient') {
-    console.warn('No unseen questions available for the requested criteria.');
-  } else if (response.status === 'partial') {
-    console.warn(`Only ${response.delivered_count}/${response.requested_count} questions delivered.`);
+    if (error) {
+      throw new Error(`Failed to fetch questions via RPC: ${error.message}`);
+    }
+
+    validateRPCResponse(data);
+    const response = data as {
+      status: 'complete' | 'partial' | 'insufficient';
+      requested_count: number;
+      delivered_count: number;
+      category_stats: Record<string, { requested: number; delivered: number }>;
+      questions: Question[];
+    };
+
+    if (response.status === 'insufficient') {
+      console.warn('No unseen questions available for the requested criteria.');
+    } else if (response.status === 'partial') {
+      console.warn(`Only ${response.delivered_count}/${response.requested_count} questions delivered.`);
+    }
+
+    const questions = response.questions ?? [];
+    if (questions.length > 0) {
+      await setCachedData(cacheKey, questions);
+    }
+    return questions;
+  } catch (networkError) {
+    console.warn('Network request failed, attempting offline cache fallback:', networkError);
+    const cached = await getCachedData<Question[]>(cacheKey);
+    if (cached && cached.length > 0) {
+      return cached;
+    }
+    throw networkError;
   }
-
-  return response.questions ?? [];
 }
 
 /**
