@@ -1,236 +1,268 @@
-import { MockResult, Bookmark } from '@/src/types';
-import { getSupabaseClient } from './supabase';
-import type { Question, ExamType } from '@/src/types';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient } from './queryClient';
+import { getSupabaseClient } from '../src/lib/supabase';
+import type { Question, MockResult, Bookmark, AnswerOption, ExamType } from '../src/types';
+import { MOCK_DISTRIBUTION } from '../src/types';
+import { fetchMockQuestions as fetchMockQuestionsFromHelper, fetchCategoryQuestions as fetchCategoryQuestionsFromHelper, fetchDailyQuestions as fetchDailyQuestionsFromHelper, fetchQuestionPool, fetchCategoryQuestionStats } from '../src/lib/queries';
 
+// Check if Supabase is configured
+const isSupabaseConfigured = () => {
+  const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+  return !!(url && key);
+};
 
+// ─── Questions ────────────────────────────────────────────────────────────────
 
-
-
-
-/**
- * Atomic delivery using PostgreSQL RPC.
- * This function calls the `fetch_unseen_questions_distributed` RPC.
- * All question fetching and exposure recording happens atomically in a single transaction.
- */
-
-/**
- * Validate RPC Response Structure
- */
-function validateRPCResponse(data: any) {
-  if (typeof data !== 'object' || data === null) throw new Error('Invalid RPC response: Expected object');
-  if (!Array.isArray(data.questions)) throw new Error('Invalid RPC response: Expected questions array');
-  if (typeof data.status !== 'string' || !['complete', 'partial', 'insufficient'].includes(data.status)) throw new Error('Invalid RPC response: Invalid status');
-  if (typeof data.requested_count !== 'number' || typeof data.delivered_count !== 'number') throw new Error('Invalid RPC response: Invalid counts');
-  if (data.delivered_count !== data.questions.length) throw new Error('Invalid RPC response: delivered_count mismatch');
-}
-
-export async function fetchQuestionPool(
-  filters: { category?: string; subcategory?: string },
-  count: number,
-  examType: ExamType
-): Promise<Question[]> {
-  const supabase = getSupabaseClient();
-  const cacheKey = CACHE_KEYS.QUESTION_POOL(examType, filters.category);
-
-  if (!supabase) {
-    console.warn('Supabase client not initialized. Falling back to local cache.');
-    const cached = await getCachedData<Question[]>(cacheKey);
-    if (cached && cached.length > 0) return cached;
-    throw new Error('Supabase client not initialized and no offline cache available.');
-  }
-
-  try {
-    const { data, error } = await supabase.rpc('fetch_unseen_questions_distributed', {
-      p_total_count: count,
-      p_category: filters.category || null,
-      p_subcategory: filters.subcategory || null,
-      p_exam_type: examType
-    });
-
-    if (error) {
-      throw new Error(`Failed to fetch questions via RPC: ${error.message}`);
-    }
-
-    validateRPCResponse(data);
-    const response = data as {
-      status: 'complete' | 'partial' | 'insufficient';
-      requested_count: number;
-      delivered_count: number;
-      category_stats: Record<string, { requested: number; delivered: number }>;
-      questions: Question[];
-    };
-
-    if (response.status === 'insufficient') {
-      console.warn('No unseen questions available for the requested criteria.');
-    } else if (response.status === 'partial') {
-      console.warn(`Only ${response.delivered_count}/${response.requested_count} questions delivered.`);
-    }
-
-    const questions = response.questions ?? [];
-    if (questions.length > 0) {
-      await setCachedData(cacheKey, questions);
-    }
-    return questions;
-  } catch (networkError) {
-    console.warn('Network request failed, attempting offline cache fallback:', networkError);
-    const cached = await getCachedData<Question[]>(cacheKey);
-    if (cached && cached.length > 0) {
-      return cached;
-    }
-    throw networkError;
-  }
-}
-
-/**
- * Get category statistics (total, seen, unseen questions).
- * Used for progress tracking and UI displays.
- * Note: This is a lightweight function that doesn't require exposure recording.
- */
-export async function fetchCategoryQuestionStats(): Promise<Record<string, { total: number; seen: number; unseen: number }>> {
-  const supabase = getSupabaseClient();
-  if (!supabase) throw new Error('Supabase client not initialized.');
-
-  const stats: Record<string, { total: number; seen: number; unseen: number }> = {};
-
-  const { data: questions, error } = await supabase
-    .from('questions')
-    .select('id, category')
-    .eq('active', true);
-
-  if (error) throw new Error(`Failed to fetch category stats: ${error.message}`);
-  
-  // Get current user's exposed question IDs for tracking
-  const { data: exposedData, error: exposedError } = await supabase
-    .from('question_exposures')
-    .select('question_id')
-    .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '');
-  
-  if (exposedError) throw new Error(`Failed to fetch exposure data: ${exposedError.message}`);
-  const seenIds = new Set(exposedData?.map(e => e.question_id) || []);
-  
-  for (const q of (questions ?? [])) {
-    const category = q.category || 'Unknown';
-    if (!stats[category]) stats[category] = { total: 0, seen: 0, unseen: 0 };
-    stats[category].total += 1;
-    if (seenIds.has(q.id)) {
-      stats[category].seen += 1;
-    } else {
-      stats[category].unseen += 1;
-    }
-  }
-
-  return stats;
-}
-
-export async function fetchQuestionsByCategory(category: string, count: number): Promise<Question[]> {
-  return await fetchQuestionPool({ category }, count, 'practice');
-}
-
-export async function fetchQuestionsBySubcategory(subcategory: string, page = 0, limit = 20): Promise<Question[]> {
-  const supabase = getSupabaseClient();
-  if (!supabase) throw new Error('Supabase client not initialized.');
-
-  const { data, error } = await supabase.rpc('fetch_unseen_questions_distributed', {
-    p_total_count: limit,
-    p_subcategory: subcategory,
-    p_page: page,
-    p_exam_type: 'practice'
+export function useSubcategoryQuestions(subcategory: string, userId?: string) {
+  return useQuery({
+    queryKey: ['questions', 'sub', userId, subcategory],
+    queryFn: async () => {
+      if (!isSupabaseConfigured()) {
+        throw new Error('Supabase not configured. Online-only mode requires a valid Supabase configuration.');
+      }
+      // Use the RPC helper for exam delivery
+      return await fetchQuestionPool({ subcategory }, 20, 'practice');
+    },
+    enabled: !!subcategory && !!userId,
+    staleTime: 0, // Force fresh request for each practice attempt to prevent repeats
   });
-
-  if (error) throw new Error(`Failed to fetch questions via RPC: ${error.message}`);
-  
-  validateRPCResponse(data);
-  const response = data as { questions: Question[] };
-  return response.questions ?? [];
 }
 
-export async function fetchDailyQuestions(count: number): Promise<Question[]> {
-  // Map count to valid exam type
-  let examType: ExamType;
-  if (count === 20) examType = 'daily_20';
-  else if (count === 50) examType = 'daily_50';
-  else if (count === 100) examType = 'daily_100';
-  else examType = 'daily_20'; // default fallback
-
-  return await fetchQuestionPool({}, count, examType);
+export function useCategoryQuestions(category: string, count: number, userId?: string) {
+  return useQuery({
+    queryKey: ['questions', 'cat', userId, category, count],
+    queryFn: async () => {
+      if (!isSupabaseConfigured()) {
+        throw new Error('Supabase not configured. Online-only mode requires a valid Supabase configuration.');
+      }
+      return fetchCategoryQuestionsFromHelper(category, count);
+    },
+    enabled: !!category && !!userId,
+    staleTime: 0, // Force fresh request for each practice attempt to prevent repeats
+  });
 }
 
-export async function searchQuestions(query: string): Promise<Question[]> {
+export function useMockQuestions() {
+  return useQuery({
+    queryKey: ['mock-questions'],
+    queryFn: async () => {
+      if (!isSupabaseConfigured()) {
+        throw new Error('Supabase not configured. Online-only mode requires a valid Supabase configuration.');
+      }
+      
+      return fetchMockQuestionsFromHelper();
+    },
+    enabled: false,
+    staleTime: 0,
+  });
+}
+
+export function useDailyQuestions(count: number) {
+  return useQuery({
+    queryKey: ['daily', count],
+    queryFn: async () => {
+      if (!isSupabaseConfigured()) {
+        throw new Error('Supabase not configured. Online-only mode requires a valid Supabase configuration.');
+      }
+      return fetchDailyQuestionsFromHelper(count);
+    },
+    enabled: false,
+    staleTime: 0,
+  });
+}
+
+// ─── Results ──────────────────────────────────────────────────────────────────
+
+export function useMockResults(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['results', userId],
+    queryFn: async () => {
+      if (!isSupabaseConfigured()) {
+        return [] as MockResult[];
+      }
+      const supabase = getSupabaseClient();
+      if (!supabase) return [] as MockResult[];
+      const { data, error } = await supabase
+        .from('mock_results')
+        .select('*')
+        .eq('user_id', userId!)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        return [] as MockResult[];
+      }
+      return data as MockResult[];
+    },
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+// Standalone Supabase function for result saving
+export async function saveExamResultToSupabase(
+  result: Partial<MockResult> & { id?: string; timeTaken?: number; examType?: string; categoryBreakdown?: any },
+  userId: string
+): Promise<void> {
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error('Supabase client not initialized.');
   
-  const { data, error } = await supabase
-    .from('questions')
-    .select('*')
-    .ilike('question', `%${query}%`)
-    .eq('active', true)
-    .limit(50);
-    
-  if (error) throw new Error(`Failed to search questions: ${error.message}`);
-  return data ?? [];
-}
+  // Map fields to Supabase schema (snake_case)
+  const payload: Record<string, any> = {
+    user_id: userId,
+    score: result.score,
+    correct: result.correct,
+    wrong: result.wrong,
+    skipped: result.skipped,
+    percentage: result.percentage,
+    time_taken: result.time_taken ?? result.timeTaken,
+    exam_type: result.exam_type ?? result.examType,
+    total_questions: result.total_questions ?? ((result.correct ?? 0) + (result.wrong ?? 0) + (result.skipped ?? 0)),
+    category_breakdown: result.category_breakdown ?? result.categoryBreakdown,
+  };
 
-export async function fetchResults(userId: string): Promise<MockResult[]> {
-  const supabase = getSupabaseClient();
-  if (!supabase) throw new Error('Supabase client not initialized.');
-  
-  const { data, error } = await supabase
+  if (result.id) {
+    payload.id = result.id;
+  }
+
+  const { error } = await supabase
     .from('mock_results')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(20);
-    
-  if (error) throw new Error(`Failed to fetch results: ${error.message}`);
-  return data ?? [];
-}
-
-export async function saveResult(payload: {
-  user_id: string; score: number; correct: number; wrong: number;
-  skipped: number; percentage: number; time_taken: number; exam_type: ExamType;
-}): Promise<MockResult> {
-  const supabase = getSupabaseClient();
-  if (!supabase) throw new Error('Supabase client not initialized.');
-  
-  const { data, error } = await supabase
-    .from('mock_results')
-    .insert(payload)
+    .upsert(payload, { onConflict: 'id' })
     .select()
     .single();
-    
-  if (error) throw new Error(`Failed to save result: ${error.message}`);
-  return data;
-}
 
-export async function fetchBookmarks(userId: string): Promise<Bookmark[]> {
-  const supabase = getSupabaseClient();
-  if (!supabase) throw new Error('Supabase client not initialized.');
-  
-  const { data, error } = await supabase
-    .from('bookmarks')
-    .select('*, question:questions(*)')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-    
-  if (error) throw new Error(`Failed to fetch bookmarks: ${error.message}`);
-  return data ?? [];
-}
-
-export async function toggleBookmark(userId: string, questionId: string, isBookmarked: boolean): Promise<void> {
-  const supabase = getSupabaseClient();
-  if (!supabase) throw new Error('Supabase client not initialized.');
-  
-  let error;
-  if (isBookmarked) {
-    ({ error } = await supabase.from('bookmarks').delete().eq('user_id', userId).eq('question_id', questionId));
-  } else {
-    ({ error } = await supabase.from('bookmarks').insert({ user_id: userId, question_id: questionId }));
+  if (error) {
+    console.error('Supabase upsert error:', error);
+    throw error;
   }
-  
-  if (error) throw new Error(`Failed to toggle bookmark: ${error.message}`);
+
+  // Invalidate React Query cache so UI refetches fresh data
+  // One authoritative location for cache invalidation
+  await queryClient.invalidateQueries({ queryKey: ['results', userId] });
 }
 
-export async function clearQuestionHistory(): Promise<void> {
-  // Destructive history reset functionality removed per requirements.
-  console.warn('Destructive clearQuestionHistory functionality is disabled in online-only mode.');
+export function useSaveResult() {
+  return useMutation({
+    mutationFn: async (payload: Partial<MockResult> & { user_id: string; timeTaken?: number; examType?: string }) => {
+      await saveExamResultToSupabase(payload, payload.user_id);
+    },
+    // No redundant onSuccess invalidation here, handled in saveExamResultToSupabase
+  });
 }
+
+// ─── Bookmarks ────────────────────────────────────────────────────────────────
+
+export function useBookmarks(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['bookmarks', userId],
+    queryFn: async () => {
+      if (!isSupabaseConfigured()) {
+        return [] as Bookmark[];
+      }
+      const supabase = getSupabaseClient();
+      if (!supabase) return [] as Bookmark[];
+      const { data, error } = await supabase
+        .from('bookmarks')
+        .select('*, question:questions(*)')
+        .eq('user_id', userId!)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      if (!data) return [] as Bookmark[];
+      return data as Bookmark[];
+    },
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useIsBookmarked(userId: string | undefined, questionId: string) {
+  return useQuery({
+    queryKey: ['bookmark-check', userId, questionId],
+    queryFn: async () => {
+      if (!isSupabaseConfigured()) {
+        return false;
+      }
+      const supabase = getSupabaseClient();
+      if (!supabase) return false;
+      const { data } = await supabase
+        .from('bookmarks')
+        .select('id')
+        .eq('user_id', userId!)
+        .eq('question_id', questionId)
+        .single();
+      return !!data;
+    },
+    enabled: !!userId && !!questionId,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useToggleBookmark() {
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      questionId,
+      isBookmarked,
+    }: {
+      userId: string;
+      questionId: string;
+      isBookmarked: boolean;
+    }) => {
+      if (!isSupabaseConfigured()) {
+        // Silently succeed in mock mode
+        return;
+      }
+      const supabase = getSupabaseClient();
+      if (!supabase) throw new Error('Supabase client not initialized.');
+      if (isBookmarked) {
+        const { error } = await supabase
+          .from('bookmarks')
+          .delete()
+          .eq('user_id', userId)
+          .eq('question_id', questionId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('bookmarks')
+          .insert({ user_id: userId, question_id: questionId });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['bookmarks', vars.userId] });
+      queryClient.invalidateQueries({ queryKey: ['bookmark-check', vars.userId, vars.questionId] });
+    },
+  });
+}
+
+// ─── Search ───────────────────────────────────────────────────────────────────
+
+export function useSearchQuestions(query: string) {
+  return useQuery({
+    queryKey: ['search', query],
+    queryFn: async () => {
+      if (!isSupabaseConfigured()) {
+        throw new Error('Supabase not configured. Online-only mode requires a valid Supabase configuration.');
+      }
+      const supabase = getSupabaseClient();
+      if (!supabase) throw new Error('Supabase client not initialized.');
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .ilike('question', `%${query}%`)
+        .eq('active', true)
+        .limit(50);
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        return [] as Question[];
+      }
+      return data as Question[];
+    },
+    enabled: query.trim().length > 2,
+    staleTime: 1000 * 30,
+  });
+}
+
+export { fetchCategoryQuestionStats };
+

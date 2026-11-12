@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -7,7 +7,8 @@ import { useExamStore } from '@/src/store/examStore';
 
 export default function ResultScreen() {
   const insets = useSafeAreaInsets();
-  const { result, clearExam } = useExamStore();
+  const { result, clearExam, submitError, isSubmitting, saveResult } = useExamStore();
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     if (!result) {
@@ -21,8 +22,61 @@ export default function ResultScreen() {
   const mm = Math.floor(timeTaken / 60);
   const ss = timeTaken % 60;
 
+  const handleRetrySave = async () => {
+    if (!result || isSubmitting) return;
+    setSaveSuccess(false);
+    try {
+      await saveResult(result);
+      setSaveSuccess(true);
+    } catch (e) {
+      // submitError is populated in Zustand store
+    }
+  };
+
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }} showsVerticalScrollIndicator={false}>
+      {/* Show submission error warning if there was a save failure */}
+      {submitError && (
+        <View style={styles.errorWarning}>
+          <View style={styles.errorContent}>
+            <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#DC2626" />
+            <Text style={styles.errorWarningText}>Save Failed: {submitError}</Text>
+          </View>
+          <Pressable
+            style={[styles.retryBtn, isSubmitting && styles.retryBtnDisabled]}
+            onPress={handleRetrySave}
+            disabled={isSubmitting}
+            accessibilityRole="button"
+            accessibilityLabel="Retry saving exam result"
+          >
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <MaterialCommunityIcons name="refresh" size={16} color="#FFFFFF" />
+                <Text style={styles.retryBtnText}>Retry Save</Text>
+              </>
+            )}
+          </Pressable>
+        </View>
+      )}
+
+      {/* Show save success message after retry */}
+      {saveSuccess && !submitError && (
+        <View style={styles.successBanner}>
+          <MaterialCommunityIcons name="check-circle-outline" size={20} color="#059669" />
+          <Text style={styles.successBannerText}>Result saved to server successfully!</Text>
+        </View>
+      )}
+
+      {/* Show saving indicator */}
+      {isSubmitting && !submitError && (
+        <View style={styles.savingIndicator}>
+          <MaterialCommunityIcons name="sync" size={20} color="#0891B2" />
+          <Text style={styles.savingIndicatorText}>Saving to server...</Text>
+        </View>
+      )}
+
       <View style={[styles.header, { paddingTop: insets.top + 20, backgroundColor: passed ? '#0891B2' : '#DC2626' }]}>
         <View style={styles.scoreCircle}>
           <Text style={styles.scoreNum}>{percentage}</Text>
@@ -116,4 +170,14 @@ const styles = StyleSheet.create({
   btnText: { color: '#fff', fontSize: 16, fontFamily: 'Inter_700Bold' },
   btnOutline: { borderRadius: 14, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#E2E8F0', backgroundColor: '#fff' },
   btnOutlineText: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: '#0C1A2E' },
+  errorWarning: { flexDirection: 'column', gap: 10, backgroundColor: '#FEE2E2', borderRadius: 12, padding: 12, marginHorizontal: 16, marginTop: 16, marginBottom: 4, borderWidth: 1, borderColor: '#FCA5A5' },
+  errorContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  errorWarningText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: '#DC2626', flex: 1 },
+  retryBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#DC2626', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 14, alignSelf: 'flex-start' },
+  retryBtnText: { color: '#FFFFFF', fontSize: 14, fontFamily: 'Inter_600SemiBold' },
+  retryBtnDisabled: { opacity: 0.6 },
+  successBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#D1FAE5', borderRadius: 12, padding: 12, marginHorizontal: 16, marginTop: 16, marginBottom: 4, borderWidth: 1, borderColor: '#6EE7B7' },
+  successBannerText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: '#059669', flex: 1 },
+  savingIndicator: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#E0F2FE', borderRadius: 12, padding: 12, marginHorizontal: 16, marginTop: 16, marginBottom: 4 },
+  savingIndicatorText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: '#0891B2' },
 });

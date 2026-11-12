@@ -4,7 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, Text, Pressable, StyleSheet, Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/src/lib/queryClient';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as Linking from 'expo-linking';
 import * as SplashScreen from 'expo-splash-screen';
@@ -13,13 +14,24 @@ import { useBookmarkStore } from '@/src/store/bookmarkStore';
 
 SplashScreen.preventAutoHideAsync();
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { retry: 1, staleTime: 1000 * 60 * 5, refetchOnWindowFocus: false },
-  },
-});
-
 export default function RootLayout() {
+  // Subscribe to auth changes to clear query cache on logout or genuine account switch
+  useEffect(() => {
+    let prevUserId = useAuthStore.getState().user?.id || null;
+    const unsubscribe = useAuthStore.subscribe((state, previousState) => {
+      const currentUserId = state.user?.id || null;
+      if (prevUserId !== null && prevUserId !== currentUserId) {
+        // Genuine account switch or logout - clear query cache
+        queryClient.clear();
+      }
+      prevUserId = currentUserId;
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+
   const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
   const verifyOtp = useAuthStore(s => s.verifyOtp);
   const initialize = useAuthStore(s => s.initialize);

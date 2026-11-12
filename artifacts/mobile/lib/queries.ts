@@ -1,13 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from './supabase';
-import type { Question, MockResult, Bookmark, AnswerOption, ExamType } from './types';
-import { MOCK_DISTRIBUTION } from './types';
-import { 
-  getMockQuestionsBySubcategory, 
-  getMockQuestionsByCategory, 
-  getShuffledMockQuestions,
-  MOCK_QUESTIONS 
-} from './mockData';
+import { getSupabaseClient } from '../src/lib/supabase';
+import type { Question, MockResult, Bookmark, AnswerOption, ExamType } from '../src/types';
+import { MOCK_DISTRIBUTION } from '../src/types';
+import { fetchMockQuestions as fetchMockQuestionsFromHelper, fetchCategoryQuestions as fetchCategoryQuestionsFromHelper, fetchDailyQuestions as fetchDailyQuestionsFromHelper, fetchQuestionPool, fetchCategoryQuestionStats } from '../src/lib/queries';
 
 // Check if Supabase is configured
 const isSupabaseConfigured = () => {
@@ -18,54 +13,32 @@ const isSupabaseConfigured = () => {
 
 // ─── Questions ────────────────────────────────────────────────────────────────
 
-export function useSubcategoryQuestions(subcategory: string) {
+export function useSubcategoryQuestions(subcategory: string, userId?: string) {
   return useQuery({
-    queryKey: ['questions', 'sub', subcategory],
+    queryKey: ['questions', 'sub', userId, subcategory],
     queryFn: async () => {
       if (!isSupabaseConfigured()) {
-        // Use mock data when Supabase is not configured
-        return getMockQuestionsBySubcategory(subcategory);
+        throw new Error('Supabase not configured. Online-only mode requires a valid Supabase configuration.');
       }
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('subcategory', subcategory)
-        .eq('active', true)
-        .limit(100);
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        // Fallback to mock if no data from Supabase
-        return getMockQuestionsBySubcategory(subcategory);
-      }
-      return data as Question[];
+      // Use the RPC helper for exam delivery
+      return await fetchQuestionPool({ subcategory }, 20, 'practice');
     },
-    enabled: !!subcategory,
-    staleTime: 1000 * 60 * 10,
+    enabled: !!subcategory && !!userId,
+    staleTime: 0, // Force fresh request for each practice attempt to prevent repeats
   });
 }
 
-export function useCategoryQuestions(category: string, count: number) {
+export function useCategoryQuestions(category: string, count: number, userId?: string) {
   return useQuery({
-    queryKey: ['questions', 'cat', category, count],
+    queryKey: ['questions', 'cat', userId, category, count],
     queryFn: async () => {
       if (!isSupabaseConfigured()) {
-        return getMockQuestionsByCategory(category, count);
+        throw new Error('Supabase not configured. Online-only mode requires a valid Supabase configuration.');
       }
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('category', category)
-        .eq('active', true)
-        .limit(count * 3);
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        return getMockQuestionsByCategory(category, count);
-      }
-      const arr = (data as Question[]).sort(() => Math.random() - 0.5);
-      return arr.slice(0, count);
+      return fetchCategoryQuestionsFromHelper(category, count);
     },
-    enabled: !!category,
-    staleTime: 1000 * 60 * 5,
+    enabled: !!category && !!userId,
+    staleTime: 0, // Force fresh request for each practice attempt to prevent repeats
   });
 }
 
@@ -73,36 +46,11 @@ export function useMockQuestions() {
   return useQuery({
     queryKey: ['mock-questions'],
     queryFn: async () => {
-      const shuffle = (arr: Question[]) => arr.sort(() => Math.random() - 0.5);
-      
       if (!isSupabaseConfigured()) {
-        // Use mock data distribution
-        let allQuestions: Question[] = [];
-        Object.entries(MOCK_DISTRIBUTION).forEach(([cat, count]) => {
-          const catQuestions = MOCK_QUESTIONS.filter(q => q.category === cat);
-          allQuestions = [...allQuestions, ...shuffle(catQuestions).slice(0, count)];
-        });
-        return shuffle(allQuestions);
+        throw new Error('Supabase not configured. Online-only mode requires a valid Supabase configuration.');
       }
       
-      const fetches = Object.entries(MOCK_DISTRIBUTION).map(([cat, count]) =>
-        supabase
-          .from('questions')
-          .select('*')
-          .eq('category', cat)
-          .eq('active', true)
-          .limit(count * 3)
-          .then(({ data, error }) => {
-            if (error) throw error;
-            if (!data || data.length === 0) {
-              const catQuestions = MOCK_QUESTIONS.filter(q => q.category === cat);
-              return shuffle(catQuestions).slice(0, count);
-            }
-            return shuffle(data as Question[]).slice(0, count);
-          })
-      );
-      const results = await Promise.all(fetches);
-      return shuffle(results.flat());
+      return fetchMockQuestionsFromHelper();
     },
     enabled: false,
     staleTime: 0,
@@ -114,18 +62,9 @@ export function useDailyQuestions(count: number) {
     queryKey: ['daily', count],
     queryFn: async () => {
       if (!isSupabaseConfigured()) {
-        return getShuffledMockQuestions(count);
+        throw new Error('Supabase not configured. Online-only mode requires a valid Supabase configuration.');
       }
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('active', true)
-        .limit(count * 4);
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        return getShuffledMockQuestions(count);
-      }
-      return (data as Question[]).sort(() => Math.random() - 0.5).slice(0, count);
+      return fetchDailyQuestionsFromHelper(count);
     },
     enabled: false,
     staleTime: 0,
@@ -141,6 +80,8 @@ export function useMockResults(userId: string | undefined) {
       if (!isSupabaseConfigured()) {
         return [] as MockResult[];
       }
+      const supabase = getSupabaseClient();
+      if (!supabase) return [] as MockResult[];
       const { data, error } = await supabase
         .from('mock_results')
         .select('*')
@@ -171,6 +112,8 @@ export function useSaveResult() {
       time_taken: number;
       exam_type: ExamType;
     }) => {
+      const supabase = getSupabaseClient();
+      if (!supabase) throw new Error('Supabase client not initialized.');
       const { data, error } = await supabase
         .from('mock_results')
         .insert(payload)
@@ -194,6 +137,8 @@ export function useBookmarks(userId: string | undefined) {
       if (!isSupabaseConfigured()) {
         return [] as Bookmark[];
       }
+      const supabase = getSupabaseClient();
+      if (!supabase) return [] as Bookmark[];
       const { data, error } = await supabase
         .from('bookmarks')
         .select('*, question:questions(*)')
@@ -215,6 +160,8 @@ export function useIsBookmarked(userId: string | undefined, questionId: string) 
       if (!isSupabaseConfigured()) {
         return false;
       }
+      const supabase = getSupabaseClient();
+      if (!supabase) return false;
       const { data } = await supabase
         .from('bookmarks')
         .select('id')
@@ -244,6 +191,8 @@ export function useToggleBookmark() {
         // Silently succeed in mock mode
         return;
       }
+      const supabase = getSupabaseClient();
+      if (!supabase) throw new Error('Supabase client not initialized.');
       if (isBookmarked) {
         const { error } = await supabase
           .from('bookmarks')
@@ -272,13 +221,10 @@ export function useSearchQuestions(query: string) {
     queryKey: ['search', query],
     queryFn: async () => {
       if (!isSupabaseConfigured()) {
-        // Search in mock data
-        const lowerQuery = query.toLowerCase();
-        return MOCK_QUESTIONS.filter(q => 
-          q.question.toLowerCase().includes(lowerQuery) ||
-          q.subcategory.toLowerCase().includes(lowerQuery)
-        ).slice(0, 50);
+        throw new Error('Supabase not configured. Online-only mode requires a valid Supabase configuration.');
       }
+      const supabase = getSupabaseClient();
+      if (!supabase) throw new Error('Supabase client not initialized.');
       const { data, error } = await supabase
         .from('questions')
         .select('*')
@@ -287,11 +233,7 @@ export function useSearchQuestions(query: string) {
         .limit(50);
       if (error) throw error;
       if (!data || data.length === 0) {
-        const lowerQuery = query.toLowerCase();
-        return MOCK_QUESTIONS.filter(q => 
-          q.question.toLowerCase().includes(lowerQuery) ||
-          q.subcategory.toLowerCase().includes(lowerQuery)
-        ).slice(0, 50);
+        return [] as Question[];
       }
       return data as Question[];
     },
@@ -299,3 +241,6 @@ export function useSearchQuestions(query: string) {
     staleTime: 1000 * 30,
   });
 }
+
+export { fetchCategoryQuestionStats };
+

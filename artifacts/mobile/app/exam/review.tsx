@@ -10,7 +10,7 @@ type Filter = 'all' | 'correct' | 'wrong' | 'skipped';
 
 export default function ReviewScreen() {
   const insets = useSafeAreaInsets();
-  const { result, clearExam } = useExamStore();
+  const { result, clearExam, submitError, isSubmitting } = useExamStore();
   const [filter, setFilter] = useState<Filter>('all');
 
   useEffect(() => {
@@ -40,6 +40,22 @@ export default function ReviewScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Show submission error warning if there was a save failure */}
+      {submitError && (
+        <View style={styles.errorWarning}>
+          <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#DC2626" />
+          <Text style={styles.errorWarningText}>Save Failed: {submitError}</Text>
+        </View>
+      )}
+
+      {/* Show saving indicator */}
+      {isSubmitting && (
+        <View style={styles.savingIndicator}>
+          <MaterialCommunityIcons name="sync" size={20} color="#0891B2" />
+          <Text style={styles.savingIndicatorText}>Saving to server...</Text>
+        </View>
+      )}
+
       <View style={[styles.filterBar, { paddingTop: insets.top + 8 }]}>
         {FILTERS.map(f => (
           <Pressable key={f.key} style={[styles.filterBtn, filter === f.key ? { backgroundColor: f.color + '18', borderColor: f.color } : { backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }]} onPress={() => setFilter(f.key)}>
@@ -105,6 +121,10 @@ export default function ReviewScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
+  errorWarning: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FEE2E2', borderRadius: 12, padding: 12, marginHorizontal: 16, marginTop: 16 },
+  errorWarningText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: '#DC2626', flex: 1 },
+  savingIndicator: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#E0F2FE', borderRadius: 12, padding: 12, marginHorizontal: 16, marginTop: 16 },
+  savingIndicatorText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: '#0891B2' },
   filterBar: { flexDirection: 'row', padding: 12, gap: 8, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
   filterBtn: { flex: 1, borderRadius: 20, paddingVertical: 8, alignItems: 'center', borderWidth: 1 },
   filterText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },

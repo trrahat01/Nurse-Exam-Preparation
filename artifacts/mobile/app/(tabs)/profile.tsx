@@ -4,12 +4,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/authStore';
-import { useExamStore } from '@/src/store/examStore';
+import { useMockResults } from '@/lib/queries';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, isGuest, signOut } = useAuthStore();
-  const { savedResults } = useExamStore();
+  const { data: savedResults = [] } = useMockResults(user?.id);
 
   const name = user?.user_metadata?.full_name ?? (isGuest ? 'Guest User' : 'Student');
   const email = user?.email ?? '';

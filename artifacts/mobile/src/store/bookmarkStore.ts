@@ -1,84 +1,185 @@
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Question } from '@/src/types';
-
-const BOOKMARKS_KEY = 'local_bookmarks';
-
-export interface BookmarkItem {
-  id: string;
-  question_id: string;
-  question: Question;
-  created_at: string;
-}
+import type { Bookmark, Question } from '@/src/types';
+import { fetchBookmarks, toggleBookmark as apiToggleBookmark } from '@/src/lib/queries';
+import { useAuthStore } from './authStore';
 
 interface BookmarkState {
-  bookmarks: BookmarkItem[];
-  serverBookmarks: BookmarkItem[];
+  bookmarks: Bookmark[];
   isLoading: boolean;
+  error: string | null;
+  pendingQuestionIds: Record<string, boolean>;
   loadBookmarks: () => Promise<void>;
-  loadServerBookmarks: (bookmarks: BookmarkItem[]) => void;
+  toggleBookmark: (question: Question) => Promise<void>;
   addBookmark: (question: Question) => Promise<void>;
   removeBookmark: (questionId: string) => Promise<void>;
   isBookmarked: (questionId: string) => boolean;
-  findBookmark: (questionId: string) => BookmarkItem | undefined;
+  findBookmark: (questionId: string) => Bookmark | undefined;
+  clearBookmarks: () => void;
 }
 
 export const useBookmarkStore = create<BookmarkState>((set, get) => ({
   bookmarks: [],
-  serverBookmarks: [],
   isLoading: false,
+  error: null,
+  pendingQuestionIds: {},
 
   loadBookmarks: async () => {
+    const user = useAuthStore.getState().user;
+    if (!user) {
+      set({ bookmarks: [], isLoading: false, error: null });
+      return;
+    }
+
+    const targetUserId = user.id;
+    set({ isLoading: true, error: null });
+
     try {
-      const data = await AsyncStorage.getItem(BOOKMARKS_KEY);
-      if (data) {
-        set({ bookmarks: JSON.parse(data) });
+      const serverBookmarks = await fetchBookmarks(targetUserId);
+
+      // Verify user hasn't switched accounts while request was in-flight
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.id !== targetUserId) {
+        return;
       }
-    } catch (e) {
-      console.error('Failed to load bookmarks:', e);
+
+      set({ bookmarks: serverBookmarks, isLoading: false, error: null });
+    } catch (e: any) {
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.id !== targetUserId) {
+        return;
+      }
+
+      console.error('Failed to load bookmarks from Supabase:', e);
+      set({ isLoading: false, error: e?.message || 'Failed to load bookmarks' });
     }
   },
 
-  loadServerBookmarks: (bookmarks) => {
-    set({ serverBookmarks: bookmarks });
-  },
+  toggleBookmark: async (question: Question) => {
+    const user = useAuthStore.getState().user;
+    if (!user) {
+      set({ error: 'User not authenticated' });
+      return;
+    }
 
-  addBookmark: async (question) => {
-    const { bookmarks } = get();
-    if (bookmarks.some(b => b.question_id === question.id)) return;
-    const item: BookmarkItem = {
-      id: `local_${Date.now()}_${question.id}`,
-      question_id: question.id,
-      question,
-      created_at: new Date().toISOString(),
-    };
-    const updated = [item, ...bookmarks];
-    set({ bookmarks: updated });
+    const questionId = question.id;
+    const targetUserId = user.id;
+    const { pendingQuestionIds, bookmarks } = get();
+
+    if (pendingQuestionIds[questionId]) return;
+
+    set({ pendingQuestionIds: { ...pendingQuestionIds, [questionId]: true }, error: null });
+
+    const currentlyBookmarked = bookmarks.some((b) => b.question_id === questionId);
+
     try {
-      await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updated));
-    } catch (e) {
-      console.error('Failed to save bookmark:', e);
+      await apiToggleBookmark(targetUserId, questionId, currentlyBookmarked);
+
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.id !== targetUserId) {
+        set({
+          pendingQuestionIds: { ...get().pendingQuestionIds, [questionId]: false },
+        });
+        return;
+      }
+
+      let updated: Bookmark[];
+      const latestBookmarks = get().bookmarks;
+      if (currentlyBookmarked) {
+        updated = latestBookmarks.filter((b) => b.question_id !== questionId);
+      } else {
+        const newBookmark: Bookmark = {
+          id: `bm_${Date.now()}_${questionId}`,
+          user_id: targetUserId,
+          question_id: questionId,
+          created_at: new Date().toISOString(),
+          question,
+        };
+        if (!latestBookmarks.some((b) => b.question_id === questionId)) {
+          updated = [newBookmark, ...latestBookmarks];
+        } else {
+          updated = latestBookmarks;
+        }
+      }
+
+      set({
+        bookmarks: updated,
+        pendingQuestionIds: { ...get().pendingQuestionIds, [questionId]: false },
+        error: null,
+      });
+    } catch (e: any) {
+      console.error('Failed to toggle bookmark on server:', e);
+      set({
+        error: e?.message || 'Failed to update bookmark',
+        pendingQuestionIds: { ...get().pendingQuestionIds, [questionId]: false },
+      });
     }
   },
 
-  removeBookmark: async (questionId) => {
+  // Legacy/Explicit Aliases
+  addBookmark: async (question: Question) => {
+    const { isBookmarked, toggleBookmark } = get();
+    if (!isBookmarked(question.id)) {
+      await toggleBookmark(question);
+    }
+  },
+
+  removeBookmark: async (questionId: string) => {
+    const { findBookmark, toggleBookmark } = get();
+    const bookmark = findBookmark(questionId);
+    if (bookmark && bookmark.question) {
+      await toggleBookmark(bookmark.question);
+    } else {
+      const user = useAuthStore.getState().user;
+      if (!user) return;
+
+      const targetUserId = user.id;
+      const { pendingQuestionIds } = get();
+
+      if (pendingQuestionIds[questionId]) return;
+
+      set({ pendingQuestionIds: { ...pendingQuestionIds, [questionId]: true }, error: null });
+      try {
+        await apiToggleBookmark(targetUserId, questionId, true);
+
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser?.id === targetUserId) {
+          set({
+            bookmarks: get().bookmarks.filter(b => b.question_id !== questionId),
+            pendingQuestionIds: { ...get().pendingQuestionIds, [questionId]: false },
+            error: null,
+          });
+        }
+      } catch (e: any) {
+        set({
+          error: e?.message || 'Failed to remove bookmark',
+          pendingQuestionIds: { ...get().pendingQuestionIds, [questionId]: false },
+        });
+      }
+    }
+  },
+
+  isBookmarked: (questionId: string) => {
     const { bookmarks } = get();
-    const updated = bookmarks.filter(b => b.question_id !== questionId);
-    set({ bookmarks: updated });
-    try {
-      await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updated));
-    } catch (e) {
-      console.error('Failed to remove bookmark:', e);
-    }
+    return bookmarks.some(b => b.question_id === questionId);
   },
 
-  isBookmarked: (questionId) => {
-    const { bookmarks, serverBookmarks } = get();
-    return bookmarks.some(b => b.question_id === questionId) || serverBookmarks.some(b => b.question_id === questionId);
+  findBookmark: (questionId: string) => {
+    const { bookmarks } = get();
+    return bookmarks.find(b => b.question_id === questionId);
   },
 
-  findBookmark: (questionId) => {
-    const { bookmarks, serverBookmarks } = get();
-    return bookmarks.find(b => b.question_id === questionId) || serverBookmarks.find(b => b.question_id === questionId);
+  clearBookmarks: () => {
+    set({ bookmarks: [], isLoading: false, error: null, pendingQuestionIds: {} });
   },
 }));
+
+// Automatically sync bookmarks when auth user changes / account switches
+useAuthStore.subscribe((state, previousState) => {
+  if (state.user?.id !== previousState.user?.id) {
+    if (!state.user) {
+      useBookmarkStore.getState().clearBookmarks();
+    } else {
+      useBookmarkStore.getState().loadBookmarks();
+    }
+  }
+});

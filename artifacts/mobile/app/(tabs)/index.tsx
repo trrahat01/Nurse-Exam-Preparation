@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/authStore';
 import { useExamStore } from '@/src/store/examStore';
 import { fetchMockQuestions, fetchCategoryQuestionStats, fetchTotalQuestionCount } from '@/src/lib/queries';
+import { useMockResults } from '@/lib/queries';
 import { CATEGORY_CONFIG } from '@/src/types';
 
 const CATEGORIES = Object.values(CATEGORY_CONFIG);
@@ -13,13 +14,13 @@ const CATEGORIES = Object.values(CATEGORY_CONFIG);
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { user, isGuest } = useAuthStore();
-  const { savedResults, loadSavedResults, startExam, viewResult } = useExamStore();
+  const { startExam, viewResult } = useExamStore();
+  const { data: savedResults = [] } = useMockResults(user?.id);
   const [loading, setLoading] = useState(false);
   const [categoryStats, setCategoryStats] = useState<Record<string, { total: number; seen: number; unseen: number }>>({});
   const [totalQuestions, setTotalQuestions] = useState(0);
 
   useEffect(() => {
-    loadSavedResults();
     loadQuestionCounts();
   }, []);
 
@@ -146,25 +147,32 @@ export default function HomeScreen() {
         {savedResults.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>Recent Results</Text>
-            {savedResults.slice(0, 3).map((r, i) => (
-              <Pressable
-                key={i}
-                style={styles.resultRow}
-                onPress={() => handleViewResult(r)}
-              >
-                <View style={[styles.resultIcon, { backgroundColor: r.passed ? '#D1FAE5' : '#FEE2E2' }]}>
-                  <MaterialCommunityIcons name={r.passed ? 'check' : 'close'} size={16} color={r.passed ? '#059669' : '#EF4444'} />
-                </View>
-                <View style={styles.resultInfo}>
-                  <Text style={styles.resultType}>{r.examType.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())} Test</Text>
-                  <Text style={styles.resultDate}>{new Date().toLocaleDateString()}</Text>
-                </View>
-                <View style={styles.resultScore}>
-                  <Text style={[styles.scorePct, { color: r.passed ? '#059669' : '#EF4444' }]}>{r.percentage}%</Text>
-                  <Text style={styles.scoreDetail}>{r.correct}/{r.questions.length}</Text>
-                </View>
-              </Pressable>
-            ))}
+            {savedResults.slice(0, 3).map((r, i) => {
+              const passed = (r as any).passed ?? (r.percentage >= 50);
+              const examTypeStr = ((r as any).exam_type || (r as any).examType || 'mock').replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+              const totalQ = r.total_questions || (r as any).questions?.length || 100;
+              const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString() : new Date().toLocaleDateString();
+
+              return (
+                <Pressable
+                  key={r.id || i}
+                  style={styles.resultRow}
+                  onPress={() => handleViewResult(r)}
+                >
+                  <View style={[styles.resultIcon, { backgroundColor: passed ? '#D1FAE5' : '#FEE2E2' }]}>
+                    <MaterialCommunityIcons name={passed ? 'check' : 'close'} size={16} color={passed ? '#059669' : '#EF4444'} />
+                  </View>
+                  <View style={styles.resultInfo}>
+                    <Text style={styles.resultType}>{examTypeStr} Test</Text>
+                    <Text style={styles.resultDate}>{dateStr}</Text>
+                  </View>
+                  <View style={styles.resultScore}>
+                    <Text style={[styles.scorePct, { color: passed ? '#059669' : '#EF4444' }]}>{r.percentage}%</Text>
+                    <Text style={styles.scoreDetail}>{r.correct}/{totalQ}</Text>
+                  </View>
+                </Pressable>
+              );
+            })}
           </>
         )}
       </View>

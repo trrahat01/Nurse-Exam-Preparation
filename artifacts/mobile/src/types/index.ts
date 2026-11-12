@@ -67,6 +67,7 @@ export interface Question {
   language: Language;
   verified: boolean;
   active: boolean;
+  isBookmarked?: boolean;
   created_at?: string;
 }
 
@@ -127,6 +128,7 @@ export interface ExamSession {
 }
 
 export interface ExamResult {
+  id: string;
   score: number;
   correct: number;
   wrong: number;

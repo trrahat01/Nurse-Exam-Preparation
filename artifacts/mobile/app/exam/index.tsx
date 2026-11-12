@@ -7,7 +7,6 @@ import * as Haptics from 'expo-haptics';
 import { useExamStore } from '@/src/store/examStore';
 import { useBookmarkStore } from '@/src/store/bookmarkStore';
 import { useAuthStore } from '@/src/store/authStore';
-import { toggleBookmark } from '@/src/lib/queries';
 import type { AnswerOption } from '@/src/types';
 
 export default function ExamScreen() {
@@ -15,14 +14,16 @@ export default function ExamScreen() {
   const { questionId } = useLocalSearchParams<{ questionId?: string }>();
   const { session, result, submitExam, setAnswer, toggleMark, goToQuestion, clearExam, tickTimer, startExam } = useExamStore();
   const { user } = useAuthStore();
-  const { loadBookmarks, addBookmark, removeBookmark, isBookmarked: checkBookmarked, findBookmark } = useBookmarkStore();
+  const { loadBookmarks, isBookmarked: checkBookmarked, findBookmark, toggleBookmark, pendingQuestionIds } = useBookmarkStore();
   const [showGrid, setShowGrid] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Load bookmarks on mount
   useEffect(() => {
-    loadBookmarks();
-  }, []);
+    if (user?.id) {
+      loadBookmarks();
+    }
+  }, [user?.id]);
 
   // Handle opening a specific question from bookmarks
   useEffect(() => {
@@ -55,6 +56,7 @@ export default function ExamScreen() {
     };
   }, [session?.isRunning]);
 
+
   if (!session) return null;
 
   const { questions, answers, markedForReview, currentIndex, timeLeft, examType } = session;
@@ -66,6 +68,7 @@ export default function ExamScreen() {
   const selectedAnswer = answers[question.id] ?? null;
   const isMarked = markedForReview.includes(question.id);
   const isBookmarked = checkBookmarked(question.id);
+  const isPending = !!pendingQuestionIds[question.id];
   const answered = Object.keys(answers).length;
   const marked = markedForReview.length;
 
@@ -79,27 +82,29 @@ export default function ExamScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
-  const handleSubmit = () => {
+  const handleBookmark = async () => {
+    if (!question || isPending) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await toggleBookmark(question);
+  };
+
+  const handleSubmit = async () => {
     const unanswered = questions.length - answered;
     Alert.alert('Submit Exam', unanswered > 0 ? `${unanswered} questions unanswered. Submit anyway?` : 'Are you sure you want to submit?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Submit', style: 'destructive', onPress: () => { submitExam(); router.replace('/exam/result'); } },
+      { text: 'Submit', style: 'destructive', onPress: async () => {
+        try {
+          await submitExam();
+          router.replace('/exam/result');
+        } catch (error) {
+          // Error is already handled in examStore with submitError state
+          // The result will still be available in memory for the user to see
+          Alert.alert('Submission Failed', 'Your exam result could not be saved to the server. You can still review your result locally, but it will need to be submitted again when you have a connection.', [
+            { text: 'OK' }
+          ]);
+        }
+      } },
     ]);
-  };
-
-  const handleBookmark = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (user?.id) {
-      await toggleBookmark(user.id, question.id, isBookmarked);
-      // Refresh server bookmarks
-      loadBookmarks();
-    } else {
-      if (isBookmarked) {
-        await removeBookmark(question.id);
-      } else {
-        await addBookmark(question);
-      }
-    }
   };
 
   const opts: AnswerOption[] = ['a', 'b', 'c', 'd'];
@@ -121,7 +126,7 @@ export default function ExamScreen() {
             <Text style={styles.qNum}>{currentIndex + 1} / {questions.length}</Text>
           </View>
           <View style={styles.topActions}>
-            <Pressable onPress={handleBookmark} style={styles.bookmarkBtn}>
+            <Pressable onPress={handleBookmark} style={[styles.bookmarkBtn, isPending && { opacity: 0.5 }]} disabled={isPending}>
               <MaterialCommunityIcons name={isBookmarked ? 'bookmark' : 'bookmark-outline'} size={24} color={isBookmarked ? '#7C3AED' : '#0C1A2E'} />
             </Pressable>
             <Pressable onPress={() => setShowGrid(g => !g)}>

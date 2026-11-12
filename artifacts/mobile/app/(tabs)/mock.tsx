@@ -3,30 +3,48 @@ import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, StyleSheet
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useAuthStore } from '@/src/store/authStore';
 import { useExamStore } from '@/src/store/examStore';
-import { fetchMockQuestions, fetchDailyQuestions } from '@/src/lib/queries';
+import { useMockQuestions, useDailyQuestions, useMockResults } from '@/lib/queries';
 import { MOCK_DISTRIBUTION } from '@/src/types';
 
 export default function MockScreen() {
   const insets = useSafeAreaInsets();
-  const { startExam, savedResults } = useExamStore();
+  const { user } = useAuthStore();
+  const { startExam } = useExamStore();
+  const { data: savedResults = [] } = useMockResults(user?.id);
   const [mockLoading, setMockLoading] = useState(false);
   const [dailyLoading, setDailyLoading] = useState<'20' | '50' | '100' | null>(null);
 
-  const mockResults = savedResults.filter(r => r.examType === 'mock');
+  const mockResults = savedResults.filter(r => (r.exam_type || (r as any).examType) === 'mock');
+
+  const { refetch: refetchMockQuestions } = useMockQuestions();
+  const { refetch: refetchDaily20 } = useDailyQuestions(20);
+  const { refetch: refetchDaily50 } = useDailyQuestions(50);
+  const { refetch: refetchDaily100 } = useDailyQuestions(100);
 
   const startMock = async () => {
     setMockLoading(true);
     try {
-      const questions = await fetchMockQuestions();
+      const result = await refetchMockQuestions();
+      if (result.isError || result.error) {
+        const errorMsg = result.error instanceof Error ? result.error.message : 'Failed to load questions';
+        Alert.alert('Error', errorMsg);
+        return;
+      }
+      const questions = result.data;
       if (!questions || questions.length === 0) {
-        Alert.alert('No Questions', 'No questions found in database. Import questions first.');
+        Alert.alert('No Questions', 'No questions found in database.');
+        return;
+      }
+      if (questions.length < 100) {
+        Alert.alert('Insufficient Questions', `Only ${questions.length}/100 questions delivered from server.`);
         return;
       }
       startExam(questions, 'mock');
       router.push('/exam');
-    } catch (e) {
-      Alert.alert('Error', 'Failed to load questions');
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to load questions');
     } finally {
       setMockLoading(false);
     }
@@ -35,16 +53,31 @@ export default function MockScreen() {
   const startDaily = async (count: 20 | 50 | 100) => {
     setDailyLoading(String(count) as any);
     try {
-      const questions = await fetchDailyQuestions(count);
+      let result;
+      if (count === 20) result = await refetchDaily20();
+      else if (count === 50) result = await refetchDaily50();
+      else result = await refetchDaily100();
+
+      if (result?.isError || result?.error) {
+        const errorMsg = result?.error instanceof Error ? result.error.message : 'Failed to load questions';
+        Alert.alert('Error', errorMsg);
+        return;
+      }
+
+      const questions = result?.data;
       if (!questions || questions.length === 0) {
         Alert.alert('No Questions', 'No questions found in database.');
+        return;
+      }
+      if (questions.length < count) {
+        Alert.alert('Insufficient Questions', `Only ${questions.length}/${count} questions delivered from server.`);
         return;
       }
       const type = count === 20 ? 'daily_20' as const : count === 50 ? 'daily_50' as const : 'daily_100' as const;
       startExam(questions.slice(0, count), type, count * 60);
       router.push('/exam');
-    } catch (e) {
-      Alert.alert('Error', 'Failed to load questions');
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to load questions');
     } finally {
       setDailyLoading(null);
     }
@@ -102,18 +135,25 @@ export default function MockScreen() {
         {mockResults.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>Recent Mock Tests</Text>
-            {mockResults.slice(0, 5).map((r, i) => (
-              <View key={i} style={styles.histRow}>
-                <View style={[styles.histBadge, { backgroundColor: r.percentage >= 50 ? '#D1FAE5' : '#FEE2E2' }]}>
-                  <Text style={[styles.histPct, { color: r.percentage >= 50 ? '#059669' : '#EF4444' }]}>{r.percentage}%</Text>
+            {mockResults.slice(0, 5).map((r, i) => {
+              const passed = (r as any).passed ?? (r.percentage >= 50);
+              const examTypeStr = ((r as any).exam_type || (r as any).examType || 'mock').replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+              const totalQ = r.total_questions || (r as any).questions?.length || 100;
+              const timeVal = r.time_taken || r.timeTaken;
+
+              return (
+                <View key={r.id || i} style={styles.histRow}>
+                  <View style={[styles.histBadge, { backgroundColor: passed ? '#D1FAE5' : '#FEE2E2' }]}>
+                    <Text style={[styles.histPct, { color: passed ? '#059669' : '#EF4444' }]}>{r.percentage}%</Text>
+                  </View>
+                  <View style={styles.histInfo}>
+                    <Text style={styles.histScore}>{r.correct}/{totalQ} Correct</Text>
+                    <Text style={styles.histDate}>{Math.floor(timeVal / 60)}m {timeVal % 60}s</Text>
+                  </View>
+                  <Text style={[styles.histStatus, { color: passed ? '#059669' : '#EF4444' }]}>{passed ? 'Pass' : 'Fail'}</Text>
                 </View>
-                <View style={styles.histInfo}>
-                  <Text style={styles.histScore}>{r.correct}/{r.questions.length} Correct</Text>
-                  <Text style={styles.histDate}>{Math.floor(r.timeTaken / 60)}m {r.timeTaken % 60}s</Text>
-                </View>
-                <Text style={[styles.histStatus, { color: r.percentage >= 50 ? '#059669' : '#EF4444' }]}>{r.percentage >= 50 ? 'Pass' : 'Fail'}</Text>
-              </View>
-            ))}
+              );
+            })}
           </>
         )}
       </View>

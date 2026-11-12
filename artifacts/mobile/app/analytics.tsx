@@ -3,11 +3,13 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useExamStore } from '@/src/store/examStore';
+import { useAuthStore } from '@/src/store/authStore';
+import { useMockResults } from '@/lib/queries';
 
 export default function AnalyticsScreen() {
   const insets = useSafeAreaInsets();
-  const { savedResults } = useExamStore();
+  const { user } = useAuthStore();
+  const { data: savedResults = [] } = useMockResults(user?.id);
 
   const totalExams = savedResults.length;
   const avgScore = totalExams ? Math.round(savedResults.reduce((s, r) => s + r.percentage, 0) / totalExams) : 0;
@@ -16,7 +18,7 @@ export default function AnalyticsScreen() {
   const totalCorrect = savedResults.reduce((s, r) => s + r.correct, 0);
   const totalWrong = savedResults.reduce((s, r) => s + r.wrong, 0);
   const totalSkipped = savedResults.reduce((s, r) => s + r.skipped, 0);
-  const totalQuestions = savedResults.reduce((s, r) => s + r.questions.length, 0);
+  const totalQuestions = savedResults.reduce((s, r) => s + (r.total_questions || (r as any).questions?.length || 100), 0);
   const overallAccuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 
   return (
@@ -81,25 +83,32 @@ export default function AnalyticsScreen() {
           </View>
 
           <Text style={styles.sectionTitle}>All Results</Text>
-          {savedResults.map((r, i) => (
-            <View key={i} style={styles.resultCard}>
-              <View style={styles.resultLeft}>
-                <Text style={styles.resultType}>{r.examType.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}</Text>
-                <Text style={styles.resultDate}>Exam #{totalExams - i}</Text>
+          {savedResults.map((r, i) => {
+            const passed = (r as any).passed ?? (r.percentage >= 50);
+            const examTypeStr = ((r as any).exam_type || (r as any).examType || 'mock').replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+            const totalQ = r.total_questions || (r as any).questions?.length || 100;
+            const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString() : `Exam #${totalExams - i}`;
+
+            return (
+              <View key={r.id || i} style={styles.resultCard}>
+                <View style={styles.resultLeft}>
+                  <Text style={styles.resultType}>{examTypeStr}</Text>
+                  <Text style={styles.resultDate}>{dateStr}</Text>
+                </View>
+                <View style={styles.resultRight}>
+                  <Text style={[styles.resultScore, { color: passed ? '#10B981' : '#EF4444' }]}>{r.percentage}%</Text>
+                  <Text style={styles.resultSub}>{r.correct}/{totalQ}</Text>
+                </View>
+                <View style={[styles.resultTrend, { backgroundColor: passed ? '#D1FAE5' : '#FEE2E2' }]}>
+                  <MaterialCommunityIcons
+                    name={i > 0 && r.percentage > savedResults[i - 1].percentage ? 'trending-up' : i > 0 && r.percentage < savedResults[i - 1].percentage ? 'trending-down' : 'minus'}
+                    size={16}
+                    color={passed ? '#059669' : '#DC2626'}
+                  />
+                </View>
               </View>
-              <View style={styles.resultRight}>
-                <Text style={[styles.resultScore, { color: r.passed ? '#10B981' : '#EF4444' }]}>{r.percentage}%</Text>
-                <Text style={styles.resultSub}>{r.correct}/{r.questions.length}</Text>
-              </View>
-              <View style={[styles.resultTrend, { backgroundColor: r.percentage >= 50 ? '#D1FAE5' : '#FEE2E2' }]}>
-                <MaterialCommunityIcons
-                  name={i > 0 && r.percentage > savedResults[i - 1].percentage ? 'trending-up' : i > 0 && r.percentage < savedResults[i - 1].percentage ? 'trending-down' : 'minus'}
-                  size={16}
-                  color={r.percentage >= 50 ? '#059669' : '#DC2626'}
-                />
-              </View>
-            </View>
-          ))}
+            );
+          })}
         </>
       )}
     </ScrollView>

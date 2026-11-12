@@ -2,18 +2,19 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { useExamStore } from '@/src/store/examStore';
+import { useAuthStore } from '@/src/store/authStore';
+import { useMockResults } from '@/lib/queries';
 
 export default function AnalyticsTabScreen() {
   const insets = useSafeAreaInsets();
-  const { savedResults } = useExamStore();
+  const { user } = useAuthStore();
+  const { data: savedResults = [] } = useMockResults(user?.id);
 
   const totalExams = savedResults.length;
   const avgScore = totalExams ? Math.round(savedResults.reduce((s, r) => s + r.percentage, 0) / totalExams) : 0;
   const bestScore = totalExams ? Math.max(...savedResults.map(r => r.percentage)) : 0;
   const totalCorrect = savedResults.reduce((s, r) => s + r.correct, 0);
-  const totalQuestions = savedResults.reduce((s, r) => s + r.questions.length, 0);
+  const totalQuestions = savedResults.reduce((s, r) => s + (r.total_questions || (r as any).questions?.length || 100), 0);
   const overallAccuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 
   return (
