@@ -1,0 +1,19 @@
+app/(tabs)/index.tsx(8,10): error TS2724: '"@/src/lib/queries"' has no exported member named 'fetchMockQuestions'. Did you mean 'useMockQuestions'?
+app/(tabs)/index.tsx(8,58): error TS2305: Module '"@/src/lib/queries"' has no exported member 'fetchTotalQuestionCount'.
+app/(tabs)/mock.tsx(142,49): error TS2551: Property 'timeTaken' does not exist on type 'MockResult'. Did you mean 'time_taken'?
+app/_layout.tsx(91,44): error TS2304: Cannot find name 'router'.
+app/daily.tsx(7,10): error TS2724: '"@/src/lib/queries"' has no exported member named 'fetchDailyQuestions'. Did you mean 'useDailyQuestions'?
+app/search.tsx(6,10): error TS2724: '"@/src/lib/queries"' has no exported member named 'searchQuestions'. Did you mean 'useSearchQuestions'?
+app/search.tsx(21,42): error TS7006: Parameter 'res' implicitly has an 'any' type.
+app/settings.tsx(7,10): error TS2305: Module '"@/src/lib/queries"' has no exported member 'clearQuestionHistory'.
+lib/queries.ts(5,10): error TS2724: '"../src/lib/queries"' has no exported member named 'fetchMockQuestions'. Did you mean 'useMockQuestions'?
+lib/queries.ts(5,62): error TS2724: '"../src/lib/queries"' has no exported member named 'fetchCategoryQuestions'. Did you mean 'fetchCategoryQuestionStats'?
+lib/queries.ts(5,122): error TS2724: '"../src/lib/queries"' has no exported member named 'fetchDailyQuestions'. Did you mean 'useDailyQuestions'?
+lib/queries.ts(5,176): error TS2460: Module '"../src/lib/queries"' declares 'fetchQuestionPool' locally, but it is exported as 'fetchCategoryQuestionStats'.
+src/lib/queries.ts(3,35): error TS2307: Cannot find module '../src/lib/supabase' or its corresponding type declarations.
+src/lib/queries.ts(4,77): error TS2307: Cannot find module '../src/types' or its corresponding type declarations.
+src/lib/queries.ts(5,35): error TS2307: Cannot find module '../src/types' or its corresponding type declarations.
+src/lib/queries.ts(6,229): error TS2307: Cannot find module '../src/lib/queries' or its corresponding type declarations.
+src/store/bookmarkStore.ts(3,10): error TS2305: Module '"@/src/lib/queries"' has no exported member 'fetchBookmarks'.
+src/store/bookmarkStore.ts(3,26): error TS2724: '"@/src/lib/queries"' has no exported member named 'toggleBookmark'. Did you mean 'useToggleBookmark'?
+[ELIFECYCLE] Command failed with exit code 2.
