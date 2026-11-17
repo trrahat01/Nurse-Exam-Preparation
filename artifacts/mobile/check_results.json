@@ -1,0 +1,245 @@
+[
+  {
+    "file": "app\\(tabs)\\analytics.tsx",
+    "matches": [
+      "17: const totalQuestions = savedResults.reduce((s, r) => s + (r.total_questions || (r as any).questions?.length || 100), 0);"
+    ]
+  },
+  {
+    "file": "app\\(tabs)\\index.tsx",
+    "matches": [
+      "17: const { startExam, viewResult } = useExamStore();",
+      "52: const questions = await fetchMockQuestions();",
+      "53: if (questions.length > 0) {",
+      "54: startExam(questions, 'mock');",
+      "153: const totalQ = r.total_questions || (r as any).questions?.length || 100;"
+    ]
+  },
+  {
+    "file": "app\\(tabs)\\mock.tsx",
+    "matches": [
+      "14: const { startExam } = useExamStore();",
+      "31: const errorMsg = result.error instanceof Error ? result.error.message : 'Failed to load questions';",
+      "35: const questions = result.data;",
+      "36: if (!questions || questions.length === 0) {",
+      "37: Alert.alert('No Questions', 'No questions found in database.');",
+      "40: if (questions.length < 100) {",
+      "41: Alert.alert('Insufficient Questions', `Only ${questions.length}/100 questions delivered from server.`);",
+      "44: startExam(questions, 'mock');",
+      "47: Alert.alert('Error', e.message || 'Failed to load questions');",
+      "62: const errorMsg = result?.error instanceof Error ? result.error.message : 'Failed to load questions';",
+      "67: const questions = result?.data;",
+      "68: if (!questions || questions.length === 0) {",
+      "69: Alert.alert('No Questions', 'No questions found in database.');",
+      "72: if (questions.length < count) {",
+      "73: Alert.alert('Insufficient Questions', `Only ${questions.length}/${count} questions delivered from server.`);",
+      "77: startExam(questions.slice(0, count), type, count * 60);",
+      "80: Alert.alert('Error', e.message || 'Failed to load questions');",
+      "122: ['check-circle-outline', 'Exactly 100 questions from all 4 subjects', '#10B981'],",
+      "125: ['flag', 'Mark questions for review', '#F59E0B'],",
+      "141: const totalQ = r.total_questions || (r as any).questions?.length || 100;"
+    ]
+  },
+  {
+    "file": "app\\(tabs)\\practice.tsx",
+    "matches": []
+  },
+  {
+    "file": "app\\(tabs)\\profile.tsx",
+    "matches": [
+      "103: <Pressable style={styles.menuItem} onPress={() => Alert.alert('About Us', 'Nurse Exam Preparation\\n\\n40,000+ MCQs for all nursing exams\\n\\nFor any questions, issues, or suggestions, contact us at:\\ntrdevworks@gmail.com')}>",
+      "111: <Pressable style={styles.menuItem} onPress={() => Alert.alert('Contact Us', 'For any questions, issues, or suggestions, please email us at:\\n\\ntrdevworks@gmail.com\\n\\nWe typically respond within 24-48 hours.')}>"
+    ]
+  },
+  {
+    "file": "app\\(tabs)\\_layout.tsx",
+    "matches": []
+  },
+  {
+    "file": "app\\+not-found.tsx",
+    "matches": []
+  },
+  {
+    "file": "app\\analytics.tsx",
+    "matches": [
+      "21: const totalQuestions = savedResults.reduce((s, r) => s + (r.total_questions || (r as any).questions?.length || 100), 0);",
+      "89: const totalQ = r.total_questions || (r as any).questions?.length || 100;"
+    ]
+  },
+  {
+    "file": "app\\auth\\forgot-password.tsx",
+    "matches": []
+  },
+  {
+    "file": "app\\auth\\login.tsx",
+    "matches": []
+  },
+  {
+    "file": "app\\auth\\register.tsx",
+    "matches": []
+  },
+  {
+    "file": "app\\auth\\reset-password.tsx",
+    "matches": []
+  },
+  {
+    "file": "app\\bookmarks.tsx",
+    "matches": [
+      "65: <Text style={styles.emptySub}>Bookmark questions during practice to review them later.</Text>"
+    ]
+  },
+  {
+    "file": "app\\category\\[id].tsx",
+    "matches": [
+      "15: const { startExam } = useExamStore();",
+      "27: const { data: questions, refetch, isLoading, isFetching, error } = useSubcategoryQuestions(",
+      "44: startExam(result.data, 'practice');",
+      "47: Alert.alert('Notice', 'No questions available for this chapter.');",
+      "59: }, [chapter, refetch, startExam]);",
+      "119: {stats[catName]?.total ? `${stats[catName].total.toLocaleString()} total questions · ${stats[catName].unseen.toLocaleString()} new` : 'Loading question counts...'}"
+    ]
+  },
+  {
+    "file": "app\\daily.tsx",
+    "matches": [
+      "11: const { startExam } = useExamStore();",
+      "17: const questions = await fetchDailyQuestions(count);",
+      "18: if (!questions.length) {",
+      "19: Alert.alert('No Questions', 'No questions found in the database yet.');",
+      "23: startExam(questions.slice(0, count), examType, count * 60);",
+      "35: const questions = await fetchDailyQuestions(20);",
+      "36: if (!questions.length) {",
+      "37: Alert.alert('No Questions', 'No questions found in the database yet.');",
+      "40: startExam(questions.slice(0, 20), 'challenge', 20 * 60);"
+    ]
+  },
+  {
+    "file": "app\\exam\\index.tsx",
+    "matches": [
+      "15: const { session, result, submitExam, setAnswer, toggleMark, goToQuestion, clearExam, tickTimer, startExam } = useExamStore();",
+      "33: startExam([bookmark.question], 'practice');",
+      "62: const { questions, answers, markedForReview, currentIndex, timeLeft, examType } = session;",
+      "65: const question = questions[currentIndex];",
+      "92: const unanswered = questions.length - answered;",
+      "93: Alert.alert('Submit Exam', unanswered > 0 ? `${unanswered} questions unanswered. Submit anyway?` : 'Are you sure you want to submit?', [",
+      "126: <Text style={styles.qNum}>{currentIndex + 1} / {questions.length}</Text>",
+      "153: <View style={styles.badge}><View style={[styles.badgeDot, { backgroundColor: '#CBD5E1' }]} /><Text style={styles.badgeText}>{questions.length - answered} Left</Text></View>",
+      "161: {questions.map((q, i) => {",
+      "225: {currentIndex < questions.length - 1 ? ("
+    ]
+  },
+  {
+    "file": "app\\exam\\result.tsx",
+    "matches": [
+      "21: const { correct, wrong, skipped, percentage, timeTaken, passed, questions } = result;",
+      "95: <StatCard icon=\"check-circle-outline\" iconColor=\"#059669\" iconBg=\"#D1FAE5\" label=\"Correct\" value={correct} subtitle={`${questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0}%`} />",
+      "103: ['Total Questions', questions.length, '#0C1A2E'],",
+      "105: ['Score', `${correct} / ${questions.length}`, '#0891B2'],"
+    ]
+  },
+  {
+    "file": "app\\exam\\review.tsx",
+    "matches": [
+      "24: const { questions, answers } = result;",
+      "25: const filtered = questions.filter(q => {",
+      "35: { key: 'all', label: `All (${questions.length})`, color: '#0891B2' },",
+      "81: <Text style={styles.qNum}>Q{questions.indexOf(q) + 1}</Text>",
+      "109: ListEmptyComponent={<View style={styles.empty}><Text style={styles.emptyText}>No questions in this filter.</Text></View>}"
+    ]
+  },
+  {
+    "file": "app\\index.tsx",
+    "matches": []
+  },
+  {
+    "file": "app\\search.tsx",
+    "matches": [
+      "12: const { startExam } = useExamStore();",
+      "28: startExam([question], 'practice');",
+      "38: placeholder=\"Search questions...\""
+    ]
+  },
+  {
+    "file": "app\\settings.tsx",
+    "matches": [
+      "16: 'This will allow previously seen questions to appear again in your exams. Continue?',",
+      "24: Alert.alert('Done', 'Question history has been reset. You may now see previously answered questions again.');",
+      "60: <Text style={styles.rowSub}>Allow old questions to appear again</Text>",
+      "88: <Pressable style={styles.row} onPress={() => Alert.alert('About Nurse Exam Preparation', 'Nurse Exam Preparation v1.0.0\\n\\nAll-in-one nursing exam preparation app\\n\\n40,000+ MCQs covering all nursing subjects\\n\\nDeveloped for nursing professionals preparing for all nursing exams.\\n\\nFeatures: 40,000+ MCQs, Mock Tests, Performance Analytics, Smart Review\\n\\nFor any questions, issues, or suggestions, contact us at:\\ntrdevworks@gmail.com')}>"
+    ]
+  },
+  {
+    "file": "app\\_layout.tsx",
+    "matches": []
+  },
+  {
+    "file": "src\\lib\\queryClient.ts",
+    "matches": []
+  },
+  {
+    "file": "src\\lib\\seenQuestions.ts",
+    "matches": [
+      "6: * This function is now integrated into the fetch_unseen_questions_distributed RPC.",
+      "10: throw new Error('Individual exposure recording is deprecated. All exposures are now handled atomically by the fetch_unseen_questions_distributed RPC.');"
+    ]
+  },
+  {
+    "file": "src\\lib\\supabase.ts",
+    "matches": []
+  },
+  {
+    "file": "src\\store\\authStore.ts",
+    "matches": []
+  },
+  {
+    "file": "src\\store\\bookmarkStore.ts",
+    "matches": []
+  },
+  {
+    "file": "src\\store\\examStore.ts",
+    "matches": [
+      "44: startExam: (questions: Question[], type: ExamType, timeLimit?: number) => void;",
+      "65: startExam: (questions, type, timeLimit) => {",
+      "70: questions: questions.map(q => ({ ...q, isBookmarked: false })),",
+      "102: const question = session.questions.find(q => q.id === questionId);",
+      "128: const { questions, answers, examType, startTime } = session;",
+      "132: questions.forEach(q => {",
+      "139: const percentage = Math.round((correct / questions.length) * 100);",
+      "142: result = { id: resultId, score: correct, correct, wrong, skipped, percentage, timeTaken, passed, examType, answers, questions, categoryBreakdown };",
+      "209: total_questions: result.questions?.length ?? (result.correct + result.wrong + result.skipped),"
+    ]
+  },
+  {
+    "file": "src\\types\\index.ts",
+    "matches": [
+      "84: total_questions: number;",
+      "121: questions: Question[];",
+      "141: questions: Question[];",
+      "165: total_questions: number;"
+    ]
+  },
+  {
+    "file": "lib\\queries.ts",
+    "matches": [
+      "13: queryKey: ['questions', 'sub', userId, subcategory],",
+      "18: const { data, error } = await supabase.from('questions').select('*').eq('subcategory', subcategory).eq('active', true).limit(50);",
+      "28: queryKey: ['questions', 'cat', userId, category, count],",
+      "33: const { data, error } = await supabase.from('questions').select('*').eq('category', category).eq('active', true).limit(count);",
+      "48: const { data, error } = await supabase.from('bookmarks').select('*, question:questions(*)').eq('user_id', userId!).order('created_at', { ascending: false });",
+      "56: export async function fetchUnseenQuestions(",
+      "66: const { data, error } = await supabase.rpc('fetch_unseen_questions_distributed', {",
+      "74: return (data as any).questions as Question[];"
+    ]
+  },
+  {
+    "file": "lib\\supabase.ts",
+    "matches": []
+  },
+  {
+    "file": "lib\\types.ts",
+    "matches": [
+      "70: questions: Question[];",
+      "86: questions: Question[];"
+    ]
+  }
+]

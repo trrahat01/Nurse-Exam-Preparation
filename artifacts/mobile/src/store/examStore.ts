@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { ExamSession, ExamResult, ExamType, Question, AnswerOption, MockResult } from '@/src/types';
 import { useBookmarkStore } from './bookmarkStore';
-import { saveExamResultToSupabase } from '@/src/lib/queries';
+import { saveExamResultToSupabase } from '@/lib/queries';
 import { useAuthStore } from './authStore';
 
 export const generateUUID = (): string => {

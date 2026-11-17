@@ -1,0 +1,12 @@
+(tabs)
++not-found.tsx
+analytics.tsx
+auth
+bookmarks.tsx
+category
+daily.tsx
+exam
+index.tsx
+search.tsx
+settings.tsx
+_layout.tsx
